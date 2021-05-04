@@ -22,6 +22,7 @@ func New(client *firestore.Client) chi.Router {
 	r.Post("/dataproducts", api.createDataproduct)
 	r.Put("/dataproducts/{productID}", api.updateDataproduct)
 	r.Get("/dataproducts/{productID}", api.getDataproduct)
+	r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
 
 	return r
 }

@@ -207,6 +207,20 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
+	dpc := a.client.Collection("dp")
+	articleID := chi.URLParam(r, "productID")
+	documentRef := dpc.Doc(articleID)
+
+	if _, err := documentRef.Delete(r.Context()); err != nil {
+		log.Errorf("Deleting document: %v", err)
+		respondf(w, http.StatusBadRequest, "unable to delete document\n")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func respondf(w http.ResponseWriter, statusCode int, format string, args ...interface{}) {
 	w.WriteHeader(statusCode)
 
