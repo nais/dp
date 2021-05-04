@@ -1,26 +1,49 @@
 package api
 
 import (
+	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/api/iterator"
 	"net/http"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type api struct {
-	//db *database.APIServerDB
+	client *firestore.Client
 }
 
 type DataProduct struct {
-	Name        string `firestore:"name"`
-	Description string `firestore:"description"`
-	Type        string `firestore:"type"`
-	URI         string `firestore:"uri"`
+	Name        string `firestore:"name" json:"name"`
+	Description string `firestore:"description" json:"description"`
+	Type        string `firestore:"type" json:"type"`
+	URI         string `firestore:"uri" json:"uri"`
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dataproducts := []DataProduct{{Name: "my_dp", Description: "description of dp", Type: "bigquery", URI: "https://google.com/dp/x"}}
+	dpc := a.client.Collection("dp")
+
+	dataproducts := []DataProduct{}
+
+	documentIterator := dpc.Documents(r.Context())
+	for {
+		document, err := documentIterator.Next()
+		fmt.Println(document, err)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Errorf("Query error getting dataproducts: %v", err)
+		}
+
+		var dp DataProduct
+		err = document.DataTo(&dp)
+		if err != nil {
+			log.Errorf("Could not deserialize document into DataProduct: %v", err)
+		}
+		dataproducts = append(dataproducts, dp)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	err := json.NewEncoder(w).Encode(dataproducts)
