@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi"
 	"google.golang.org/api/iterator"
 	"net/http"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -15,17 +16,27 @@ type api struct {
 	client *firestore.Client
 }
 
-type DataProduct struct {
+type DataProductRequest struct {
 	Name        string `firestore:"name" json:"name,omitempty"`
 	Description string `firestore:"description" json:"description,omitempty"`
 	Type        string `firestore:"type" json:"type,omitempty"`
 	URI         string `firestore:"uri" json:"uri,omitempty"`
 }
 
+type DataProductResponse struct {
+	ID    		string 	  `json:"id"`
+	Name        string    `firestore:"name" json:"name,omitempty"`
+	Description string    `firestore:"description" json:"description,omitempty"`
+	Type        string    `firestore:"type" json:"type,omitempty"`
+	URI         string 	  `firestore:"uri" json:"uri,omitempty"`
+	Updated     time.Time `json:"updated"`
+	Created     time.Time `json:"created"`
+}
+
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection("dp")
 
-	dataproducts := []DataProduct{}
+	var dataproducts []DataProductResponse
 
 	documentIterator := dpc.Documents(r.Context())
 	for {
@@ -38,11 +49,17 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 			log.Errorf("Query error getting dataproducts: %v", err)
 		}
 
-		var dp DataProduct
+		var dp DataProductResponse
 		err = document.DataTo(&dp)
+
 		if err != nil {
-			log.Errorf("Could not deserialize document into DataProduct: %v", err)
+			log.Errorf("Could not deserialize document into DataProductRequest: %v", err)
 		}
+
+		dp.ID = document.Ref.ID
+		dp.Updated = document.UpdateTime
+		dp.Created = document.CreateTime
+
 		dataproducts = append(dataproducts, dp)
 	}
 
@@ -58,11 +75,32 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection("dp")
-	var dp DataProduct
+	var dp DataProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		log.Errorf("Deserializing document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to deserialize document\n")
+		return
+	}
+
+	if len(dp.Name) == 0 {
+		log.Errorf("Missing required field: name")
+		respondf(w, http.StatusBadRequest, "Missing required field: name")
+		return
+	}
+	if len(dp.URI) == 0 {
+		log.Errorf("Missing required field: uri")
+		respondf(w, http.StatusBadRequest, "Missing required field: uri")
+		return
+	}
+	if len(dp.Description) == 0 {
+		log.Errorf("Missing required field: description")
+		respondf(w, http.StatusBadRequest, "Missing required field: description")
+		return
+	}
+	if len(dp.Type) == 0 {
+		log.Errorf("Missing required field: type")
+		respondf(w, http.StatusBadRequest, "Missing required field: type")
 		return
 	}
 
@@ -81,7 +119,7 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
-	var dp DataProduct
+	var dp DataProductRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		log.Errorf("Deserializing document: %v", err)
@@ -137,7 +175,19 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(document.Data()); err != nil {
+	var dp DataProductResponse
+
+	err = document.DataTo(&dp)
+
+	if err != nil {
+		log.Errorf("Could not deserialize document into DataProductRequest: %v", err)
+	}
+
+	dp.ID = document.Ref.ID
+	dp.Updated = document.UpdateTime
+	dp.Created = document.CreateTime
+
+	if err := json.NewEncoder(w).Encode(dp); err != nil {
 		log.Errorf("Serializing document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to serialize document\n")
 		return
