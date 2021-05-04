@@ -21,6 +21,7 @@ type DataProductRequest struct {
 	Description string `firestore:"description" json:"description,omitempty"`
 	Type        string `firestore:"type" json:"type,omitempty"`
 	URI         string `firestore:"uri" json:"uri,omitempty"`
+	Owner		string `firestore:"owner" json:"owner,omitempty"`
 }
 
 type DataProductResponse struct {
@@ -29,6 +30,7 @@ type DataProductResponse struct {
 	Description string    `firestore:"description" json:"description,omitempty"`
 	Type        string    `firestore:"type" json:"type,omitempty"`
 	URI         string 	  `firestore:"uri" json:"uri,omitempty"`
+	Owner		string    `firestore:"owner" json:"owner,omitempty"`
 	Updated     time.Time `json:"updated"`
 	Created     time.Time `json:"created"`
 }
@@ -103,6 +105,11 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusBadRequest, "Missing required field: type")
 		return
 	}
+	if len(dp.Owner) == 0 {
+		log.Errorf("Missing required field: owner")
+		respondf(w, http.StatusBadRequest, "Missing required field: owner")
+		return
+	}
 
 	documentRef, _, err := dpc.Add(r.Context(), dp)
 	if err != nil {
@@ -129,28 +136,34 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 
 	var updates []firestore.Update
 
-	if dp.Name != "" {
+	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:      "name",
 			Value:     dp.Name,
 		})
 	}
-	if dp.URI != "" {
+	if len(dp.URI) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:      "uri",
 			Value:     dp.URI,
 		})
 	}
-	if dp.Description != "" {
+	if len(dp.Description) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:      "description",
 			Value:     dp.Description,
 		})
 	}
-	if dp.Type != "" {
+	if len(dp.Type) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:      "type",
 			Value:     dp.Type,
+		})
+	}
+	if len(dp.Owner) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:      "owner",
+			Value:     dp.Owner,
 		})
 	}
 	_, err := documentRef.Update(r.Context(), updates)
