@@ -55,6 +55,26 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
+	dpc := a.client.Collection("dp")
+	var dp DataProduct
+
+	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
+		log.Errorf("Deserializing document: %v", err)
+		respondf(w, http.StatusBadRequest, "unable to deserialize document\n")
+		return
+	}
+
+	_, _, err := dpc.Add(r.Context(), dp)
+	if err != nil {
+		log.Errorf("Adding dataproduct to collection: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to add dataproduct to collection\n")
+		return
+	}
+	
+	w.WriteHeader(http.StatusCreated)
+}
+
 func respondf(w http.ResponseWriter, statusCode int, format string, args ...interface{}) {
 	w.WriteHeader(statusCode)
 

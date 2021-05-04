@@ -19,6 +19,7 @@ func New(client *firestore.Client) chi.Router {
 	r.Use(prometheusMiddleware.Handler())
 
 	r.Get("/dataproducts", api.dataproducts)
+	r.Post("/dataproducts", api.createDataproduct)
 
 	return r
 }

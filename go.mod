@@ -4,7 +4,6 @@ go 1.16
 
 require (
 	cloud.google.com/go/firestore v1.5.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1
