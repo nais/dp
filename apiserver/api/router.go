@@ -3,6 +3,7 @@ package api
 import (
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/nais/dp/apiserver/middleware"
 	"net/http"
 )
@@ -17,6 +18,9 @@ func New(client *firestore.Client) chi.Router {
 	r := chi.NewRouter()
 
 	r.Use(prometheusMiddleware.Handler())
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+	}))
 
 	r.Get("/dataproducts", api.dataproducts)
 	r.Post("/dataproducts", api.createDataproduct)

@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go/bigquery v1.8.0
 	cloud.google.com/go/firestore v1.5.0
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/go-chi/cors v1.2.0
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
