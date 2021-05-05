@@ -8,12 +8,16 @@ import {
   Link,
   useParams,
 } from "react-router-dom";
+import ProduktDetalj from "./produktDetalj";
 
 const App = (): JSX.Element => {
   return (
     <div className="app">
       <Router>
-        <ProduktListe />
+        <Switch>
+          <Route path="/produkt/:produktID" children={<ProduktDetalj />} />
+          <Route path="/" children={<ProduktListe />} />
+        </Switch>
       </Router>
     </div>
   );

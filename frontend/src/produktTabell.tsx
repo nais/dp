@@ -3,7 +3,7 @@ import "nav-frontend-tabell-style";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import { DataProdukt } from "./produktAPI";
 import { ProduktListeState } from "./produktListe";
-
+import { Link } from "react-router-dom";
 interface ProduktProps {
   produkt: DataProdukt;
 }
@@ -13,8 +13,9 @@ const Produkt = ({ produkt }: ProduktProps) => {
   return (
     <tr>
       <td>{produkt.data_product.owner}</td>
-
-      <td>{produkt.data_product.name}</td>
+      <td>
+        <Link to={`/produkt/${produkt.id}`}>{produkt.data_product.name}</Link>
+      </td>
       <td>{produkt.data_product.description}</td>
     </tr>
   );
