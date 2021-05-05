@@ -1,6 +1,7 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Select } from "nav-frontend-skjema";
 import { ProduktListeState } from "./produktListe";
+import "./produktFilter.less";
 
 interface ProduktFilterProps {
   state: ProduktListeState;

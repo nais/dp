@@ -4,6 +4,7 @@ import NavFrontendSpinner from "nav-frontend-spinner";
 import { DataProdukt } from "./produktAPI";
 import { ProduktListeState } from "./produktListe";
 import { Link } from "react-router-dom";
+import "./produktTabell.less";
 interface ProduktProps {
   produkt: DataProdukt;
 }

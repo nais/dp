@@ -22,18 +22,25 @@ interface ProduktInfotabellProps {
 
 const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
   return (
-    <div className={"produkt-detaljer-faktaboks"}>
+    <div className={"produkt-detaljer"}>
       <Systemtittel>{produkt.data_product?.name}</Systemtittel>
-      <Ingress>Produkteier: {produkt.data_product?.owner || "uvisst"}</Ingress>
-      <Normaltekst>
-        URI: <code>{produkt.data_product?.uri || "uvisst"}</code>
-      </Normaltekst>
-      <Normaltekst>{produkt.data_product?.description || "uvisst"}</Normaltekst>
-      <ul>
-        <li>ID: {produkt.id}</li>
-        <li>Opprettet: {produkt.created}</li>
-        <li>Oppdatert: {produkt.updated}</li>
-      </ul>
+
+      <div className={"produkt-detaljer-faktaboks"}>
+        <Ingress>
+          Produkteier: {produkt.data_product?.owner || "uvisst"}
+        </Ingress>
+        <Normaltekst>
+          URI: <code>{produkt.data_product?.uri || "uvisst"}</code>
+        </Normaltekst>
+        <Normaltekst>
+          {produkt.data_product?.description || "uvisst"}
+        </Normaltekst>
+        <ul>
+          <li>ID: {produkt.id}</li>
+          <li>Opprettet: {produkt.created}</li>
+          <li>Oppdatert: {produkt.updated}</li>
+        </ul>
+      </div>
     </div>
   );
 };
@@ -63,8 +70,6 @@ export const ProduktDetalj = (): JSX.Element => {
 
   return (
     <div>
-      <Sidetittel>Dataprodukt</Sidetittel>
-
       <Container fluid>
         <Row>
           <Col sm={3}>

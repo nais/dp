@@ -66,7 +66,6 @@ export const ProduktListe = (): JSX.Element => {
   }, []);
   return (
     <div>
-      <Sidetittel>Dataprodukter dashboard</Sidetittel>
       <ProduktFilter state={state} dispatch={dispatch} />
       <ProduktTabell state={state} dispatch={dispatch} />
     </div>
