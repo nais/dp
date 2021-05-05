@@ -1,14 +1,16 @@
 package api
 
 import (
+	"net/http"
+
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
 	"github.com/nais/dp/apiserver/middleware"
-	"net/http"
+	"gopkg.in/go-playground/validator.v8"
 )
 
-func New(client *firestore.Client) chi.Router {
-	api := api{client}
+func New(client *firestore.Client, validate *validator.Validate) chi.Router {
+	api := api{client, validate}
 
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("apiserver", latencyHistBuckets...)
