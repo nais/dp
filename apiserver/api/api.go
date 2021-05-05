@@ -1,40 +1,43 @@
 package api
 
 import (
-	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
-	"github.com/go-chi/chi"
-	"google.golang.org/api/iterator"
 	"net/http"
 	"time"
+
+	"cloud.google.com/go/firestore"
+	"github.com/go-chi/chi"
+	"google.golang.org/api/iterator"
+	"gopkg.in/go-playground/validator.v8"
 
 	log "github.com/sirupsen/logrus"
 )
 
 type api struct {
-	client *firestore.Client
+	client   *firestore.Client
+	validate *validator.Validate
 }
 
 type AccessEntry struct {
-	Subject string    `firestore:"subject" json:"subject"`
-	Start   time.Time `firestore:"start" json:"start"`
-	End     time.Time `firestore:"end" json:"end"`
+	Subject string    `firestore:"subject" json:"subject,omitempty" validate:"required"`
+	Start   time.Time `firestore:"start" json:"start,omitempty" validate:"required"`
+	End     time.Time `firestore:"end" json:"end,omitempty" validate:"required"`
 }
 
 type Resource struct {
-	ProjectId string `firestore:"project_id" json:"project_id"`
-	DatesetID string `firestore:"dataset_id" json:"dateset_id"`
-	Type      string `firestore:"type" json:"type,omitempty"`
+	ProjectID string `firestore:"project_id" json:"project_id,omitempty" validate:"required"`
+	DatasetID string `firestore:"dataset_id" json:"dataset_id,omitempty" validate:"required"`
+	Type      string `firestore:"type" json:"type,omitempty" validate:"required"`
 }
 
 type DataProduct struct {
-	Name        string        `firestore:"name" json:"name,omitempty"`
-	Description string        `firestore:"description" json:"description,omitempty"`
-	Resource    Resource      `firestore:"resource" json:"resource"`
-	URI         string        `firestore:"uri" json:"uri,omitempty"`
-	Owner       string        `firestore:"owner" json:"owner,omitempty"`
-	Access      []AccessEntry `firestore:"access" json:"access"`
+	Name        string         `firestore:"name" json:"name,omitempty" validate:"required"`
+	Description string         `firestore:"description" json:"description,omitempty" validate:"required"`
+	Resource    Resource       `firestore:"resource" json:"resource,omitempty" validate:"required"`
+	URI         string         `firestore:"uri" json:"uri,omitempty" validate:"required"`
+	Owner       string         `firestore:"owner" json:"owner,omitempty" validate:"required"`
+	Access      []*AccessEntry `firestore:"access" json:"access,omitempty" validate:"required,dive"`
 }
 
 type DataProductResponse struct {
@@ -97,30 +100,9 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(dp.Name) == 0 {
-		log.Errorf("Missing required field: name")
-		respondf(w, http.StatusBadRequest, "Missing required field: name")
-		return
-	}
-	if len(dp.URI) == 0 {
-		log.Errorf("Missing required field: uri")
-		respondf(w, http.StatusBadRequest, "Missing required field: uri")
-		return
-	}
-	if len(dp.Description) == 0 {
-		log.Errorf("Missing required field: description")
-		respondf(w, http.StatusBadRequest, "Missing required field: description")
-		return
-	}
-	if len(dp.Resource.Type) == 0 {
-		log.Errorf("Missing required field: type")
-		respondf(w, http.StatusBadRequest, "Missing required field: type")
-		return
-	}
-	if len(dp.Owner) == 0 {
-		log.Errorf("Missing required field: owner")
-		respondf(w, http.StatusBadRequest, "Missing required field: owner")
-		return
+	if errs := a.validate.Struct(dp); errs != nil {
+		log.Errorf("Validation fails: %v", errs)
+		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 	}
 
 	documentRef, _, err := dpc.Add(r.Context(), dp)
@@ -168,8 +150,20 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(dp.Resource.Type) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:  "type",
+			Path:  "resource.type",
 			Value: dp.Resource.Type,
+		})
+	}
+	if len(dp.Resource.DatasetID) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "resource.dataset_id",
+			Value: dp.Resource.DatasetID,
+		})
+	}
+	if len(dp.Resource.ProjectID) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "resource.project_id",
+			Value: dp.Resource.ProjectID,
 		})
 	}
 	if len(dp.Owner) > 0 {
