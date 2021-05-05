@@ -9,7 +9,7 @@ import (
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
 	"google.golang.org/api/iterator"
-	"gopkg.in/go-playground/validator.v8"
+	"gopkg.in/go-playground/validator.v9"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -35,7 +35,6 @@ type DataProduct struct {
 	Name        string         `firestore:"name" json:"name,omitempty" validate:"required"`
 	Description string         `firestore:"description" json:"description,omitempty" validate:"required"`
 	Resource    Resource       `firestore:"resource" json:"resource,omitempty" validate:"required"`
-	URI         string         `firestore:"uri" json:"uri,omitempty" validate:"required"`
 	Owner       string         `firestore:"owner" json:"owner,omitempty" validate:"required"`
 	Access      []*AccessEntry `firestore:"access" json:"access,omitempty" validate:"required,dive"`
 }
@@ -103,6 +102,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	if errs := a.validate.Struct(dp); errs != nil {
 		log.Errorf("Validation fails: %v", errs)
 		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+		return
 	}
 
 	documentRef, _, err := dpc.Add(r.Context(), dp)
@@ -119,9 +119,22 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection("dp")
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
+	document, err := documentRef.Get(r.Context())
+	if err != nil {
+		log.Errorf("Getting document: %v", err)
+		respondf(w, http.StatusNotFound, "unable to get document\n")
+		return
+	}
+
+	var firebaseDp DataProduct
+	if err := document.DataTo(&firebaseDp); err != nil {
+		log.Errorf("Deserializing firestore document: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to deserialize firestore document\n")
+		return
+	}
+	newAccess := firebaseDp.Access
 
 	var dp DataProduct
-
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		log.Errorf("Deserializing document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to deserialize document\n")
@@ -134,12 +147,6 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		updates = append(updates, firestore.Update{
 			Path:  "name",
 			Value: dp.Name,
-		})
-	}
-	if len(dp.URI) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "uri",
-			Value: dp.URI,
 		})
 	}
 	if len(dp.Description) > 0 {
@@ -172,7 +179,21 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 			Value: dp.Owner,
 		})
 	}
-	_, err := documentRef.Update(r.Context(), updates)
+	if len(dp.Access) > 0 {
+		for _, access := range dp.Access {
+			if errs := a.validate.Struct(access); errs != nil {
+				log.Errorf("Validation fails: %v", errs)
+				respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+				return
+			}
+		}
+		newAccess = append(newAccess, dp.Access...)
+		updates = append(updates, firestore.Update{
+			Path:  "access",
+			Value: newAccess,
+		})
+	}
+	_, err = documentRef.Update(r.Context(), updates)
 	if err != nil {
 		log.Errorf("Updating document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to update document\n")

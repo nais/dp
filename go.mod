@@ -7,6 +7,8 @@ require (
 	cloud.google.com/go/firestore v1.5.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.2.0
+	github.com/go-playground/universal-translator v0.17.0 // indirect
+	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -15,4 +17,5 @@ require (
 	google.golang.org/api v0.46.0
 	google.golang.org/genproto v0.0.0-20210503173045-b96a97608f20 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2
+	gopkg.in/go-playground/validator.v9 v9.31.0
 )

@@ -9,7 +9,7 @@ import (
 	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/apiserver/api"
 	flag "github.com/spf13/pflag"
-	"gopkg.in/go-playground/validator.v8"
+	"gopkg.in/go-playground/validator.v9"
 )
 
 var validate *validator.Validate
@@ -26,8 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Initializing firestore client: %v", err)
 	}
-	config := &validator.Config{TagName: "validate"}
-	validate = validator.New(config)
+	validate = validator.New()
 	router := api.New(client, validate)
 	fmt.Println("running @", "localhost:8080")
 	fmt.Println(http.ListenAndServe("localhost:8080", router))
