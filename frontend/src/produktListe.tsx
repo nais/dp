@@ -8,24 +8,27 @@ export type ProduktListeState = {
   loading: boolean;
   error: string | null;
   products: DataProduktListe;
+  filtered_products: DataProduktListe;
   filter: string | null;
 };
 
 const initialState: ProduktListeState = {
   loading: true,
   products: [],
+  filtered_products: [],
   error: null,
-  filter: null,
+  filter: "",
 };
 
 interface ProduktListeAction {
   type: string;
   results: DataProduktListe;
+  filter: string | undefined;
 }
 
 const ProduktTabellReducer = (
   prevState: ProduktListeState,
-  action: ProduktListeAction
+  action: Partial<ProduktListeAction>
 ): ProduktListeState => {
   switch (action.type) {
     case "FETCH_DONE":
@@ -36,6 +39,9 @@ const ProduktTabellReducer = (
         error: null,
       };
     case "FILTER_CHANGE":
+      prevState.products.filter((x) => {
+        x == action.filter;
+      });
       return {
         ...prevState,
       };

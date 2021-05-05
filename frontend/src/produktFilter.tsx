@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
 import { Select } from "nav-frontend-skjema";
 import { ProduktListeState } from "./produktListe";
 
@@ -27,10 +27,19 @@ export const ProduktFilter = ({
     });
   }, [state.products]);
 
+  const selectTeam = (e: ChangeEvent<HTMLSelectElement>) => {
+    dispatch({
+      type: "FILTER_CHANGE",
+      filter: e.target.value,
+    });
+  };
+
   return (
-    <Select label={"Filtrer på produkteier"}>
+    <Select label={"Filtrer på produkteier"} onChange={(e) => selectTeam(e)}>
       {productOwners.map((o) => (
-        <option value={o}>{o}</option>
+        <option key={o} value={o}>
+          {o}
+        </option>
       ))}
     </Select>
   );

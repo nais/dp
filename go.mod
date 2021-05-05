@@ -16,6 +16,6 @@ require (
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816
 	google.golang.org/api v0.46.0
 	google.golang.org/genproto v0.0.0-20210503173045-b96a97608f20 // indirect
-	gopkg.in/go-playground/validator.v8 v8.18.2
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )
