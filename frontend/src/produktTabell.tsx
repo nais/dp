@@ -41,7 +41,9 @@ export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
           {state.loading ? (
             <NavFrontendSpinner />
           ) : (
-            state.products.map((x) => <Produkt key={x.id} produkt={x} />)
+            state.filtered_products.map((x) => (
+              <Produkt key={x.id} produkt={x} />
+            ))
           )}
         </tbody>
       </table>

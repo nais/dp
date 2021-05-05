@@ -20,30 +20,34 @@ const initialState: ProduktListeState = {
   filter: "",
 };
 
-interface ProduktListeAction {
-  type: string;
+type ProduktListeFetch = {
+  type: "FETCH_DONE";
   results: DataProduktListe;
-  filter: string | undefined;
-}
-
+};
+type ProduktListeFilter = {
+  type: "FILTER_CHANGE";
+  filter: string;
+};
 const ProduktTabellReducer = (
   prevState: ProduktListeState,
-  action: Partial<ProduktListeAction>
+  action: ProduktListeFetch | ProduktListeFilter
 ): ProduktListeState => {
   switch (action.type) {
     case "FETCH_DONE":
       return {
         ...prevState,
         products: action.results,
+        filtered_products: action.results,
         loading: false,
         error: null,
       };
     case "FILTER_CHANGE":
-      prevState.products.filter((x) => {
-        x == action.filter;
-      });
       return {
         ...prevState,
+        filtered_products: prevState.products.filter((p) => {
+          if (action.filter == "") return true;
+          return p.data_product?.owner == action.filter;
+        }),
       };
   }
   return prevState;

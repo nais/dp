@@ -36,6 +36,9 @@ export const ProduktFilter = ({
 
   return (
     <Select label={"Filtrer på produkteier"} onChange={(e) => selectTeam(e)}>
+      <option key="xxx" value="">
+        {"Velg team"}
+      </option>
       {productOwners.map((o) => (
         <option key={o} value={o}>
           {o}
