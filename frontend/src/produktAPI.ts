@@ -9,6 +9,8 @@ const DataProduktSchema = z
       .object({
         name: z.string(),
         description: z.string(),
+        owner: z.string(),
+
         uri: z.string(),
       })
       .nonstrict()
@@ -19,9 +21,9 @@ const DataProduktSchema = z
 const DataProduktListSchema = DataProduktSchema.array();
 
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
-export type DataProduktList = z.infer<typeof DataProduktListSchema>;
+export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
 
-export const hentProdukter = async (): Promise<DataProduktList> => {
+export const hentProdukter = async (): Promise<DataProduktListe> => {
   let apiURL = "http://localhost:8080/dataproducts";
   const res = await fetch(apiURL);
   const json = await res.json();

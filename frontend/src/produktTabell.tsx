@@ -1,41 +1,8 @@
-import React, { useEffect, useReducer } from "react";
+import React from "react";
 import "nav-frontend-tabell-style";
 import NavFrontendSpinner from "nav-frontend-spinner";
-import { Select } from "nav-frontend-skjema";
-import { DataProdukt, DataProduktList, hentProdukter } from "./produktAPI";
-
-type ProduktTabellState = {
-  loading: boolean;
-  error: string | null;
-  products: DataProduktList;
-};
-
-const initialState: ProduktTabellState = {
-  loading: true,
-  products: [],
-  error: null,
-};
-
-interface ProduktTabellAction {
-  type: string;
-  results: DataProduktList;
-}
-
-const ProduktTabellReducer = (
-  prevState: ProduktTabellState,
-  action: ProduktTabellAction
-): ProduktTabellState => {
-  switch (action.type) {
-    case "FETCH_DONE":
-      return {
-        ...prevState,
-        products: action.results,
-        loading: false,
-        error: null,
-      };
-  }
-  return prevState;
-};
+import { DataProdukt } from "./produktAPI";
+import { ProduktListeState } from "./produktListe";
 
 interface ProduktProps {
   produkt: DataProdukt;
@@ -45,29 +12,29 @@ const Produkt = ({ produkt }: ProduktProps) => {
   if (!produkt.data_product) return null;
   return (
     <tr>
-      <td>{produkt.data_product ? produkt.data_product.name : "tom"}</td>
+      <td>{produkt.data_product.owner}</td>
+
+      <td>{produkt.data_product.name}</td>
+      <td>{produkt.data_product.description}</td>
     </tr>
   );
 };
 
-export const ProduktTabell = () => {
-  const [state, dispatch] = useReducer(ProduktTabellReducer, initialState);
+interface ProduktTabellProps {
+  state: ProduktListeState;
+  dispatch: any; // chickening out again
+}
 
-  useEffect(() => {
-    hentProdukter().then((produkter) => {
-      dispatch({
-        type: "FETCH_DONE",
-        results: produkter,
-      });
-    });
-  }, []);
-
+export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
   return (
     <div>
       <table className={"tabell"}>
         <thead>
           <tr>
+            <th>Produkteier</th>
+
             <th>Navn</th>
+            <th>Beskrivelse</th>
           </tr>
         </thead>
         <tbody>
