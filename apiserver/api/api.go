@@ -16,23 +16,32 @@ type api struct {
 	client *firestore.Client
 }
 
-type DataProductRequest struct {
-	Name        string `firestore:"name" json:"name,omitempty"`
-	Description string `firestore:"description" json:"description,omitempty"`
-	Type        string `firestore:"type" json:"type,omitempty"`
-	URI         string `firestore:"uri" json:"uri,omitempty"`
-	Owner		string `firestore:"owner" json:"owner,omitempty"`
+type AccessEntry struct {
+	Subject string    `firestore:"subject" json:"subject"`
+	Start   time.Time `firestore:"start" json:"start"`
+	End     time.Time `firestore:"end" json:"end"`
+}
+
+type Resource struct {
+	ProjectId string `firestore:"project_id" json:"project_id"`
+	DatesetID string `firestore:"dataset_id" json:"dateset_id"`
+	Type      string `firestore:"type" json:"type,omitempty"`
+}
+
+type DataProduct struct {
+	Name        string        `firestore:"name" json:"name,omitempty"`
+	Description string        `firestore:"description" json:"description,omitempty"`
+	Resource    Resource      `firestore:"resource" json:"resource"`
+	URI         string        `firestore:"uri" json:"uri,omitempty"`
+	Owner       string        `firestore:"owner" json:"owner,omitempty"`
+	Access      []AccessEntry `firestore:"access" json:"access"`
 }
 
 type DataProductResponse struct {
-	ID    		string 	  `json:"id"`
-	Name        string    `firestore:"name" json:"name,omitempty"`
-	Description string    `firestore:"description" json:"description,omitempty"`
-	Type        string    `firestore:"type" json:"type,omitempty"`
-	URI         string 	  `firestore:"uri" json:"uri,omitempty"`
-	Owner		string    `firestore:"owner" json:"owner,omitempty"`
-	Updated     time.Time `json:"updated"`
-	Created     time.Time `json:"created"`
+	ID          string      `json:"id"`
+	DataProduct DataProduct `json:"data_product"`
+	Updated     time.Time   `json:"updated"`
+	Created     time.Time   `json:"created"`
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
@@ -51,18 +60,21 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 			log.Errorf("Query error getting dataproducts: %v", err)
 		}
 
-		var dp DataProductResponse
+		var dpr DataProductResponse
+		var dp DataProduct
+
 		err = document.DataTo(&dp)
 
 		if err != nil {
-			log.Errorf("Could not deserialize document into DataProductRequest: %v", err)
+			log.Errorf("Could not deserialize document into DataProduct: %v", err)
 		}
 
-		dp.ID = document.Ref.ID
-		dp.Updated = document.UpdateTime
-		dp.Created = document.CreateTime
+		dpr.ID = document.Ref.ID
+		dpr.Updated = document.UpdateTime
+		dpr.Created = document.CreateTime
 
-		dataproducts = append(dataproducts, dp)
+		dpr.DataProduct = dp
+		dataproducts = append(dataproducts, dpr)
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -77,7 +89,7 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection("dp")
-	var dp DataProductRequest
+	var dp DataProduct
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		log.Errorf("Deserializing document: %v", err)
@@ -100,7 +112,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusBadRequest, "Missing required field: description")
 		return
 	}
-	if len(dp.Type) == 0 {
+	if len(dp.Resource.Type) == 0 {
 		log.Errorf("Missing required field: type")
 		respondf(w, http.StatusBadRequest, "Missing required field: type")
 		return
@@ -126,7 +138,7 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
-	var dp DataProductRequest
+	var dp DataProduct
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
 		log.Errorf("Deserializing document: %v", err)
@@ -138,32 +150,32 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 
 	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:      "name",
-			Value:     dp.Name,
+			Path:  "name",
+			Value: dp.Name,
 		})
 	}
 	if len(dp.URI) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:      "uri",
-			Value:     dp.URI,
+			Path:  "uri",
+			Value: dp.URI,
 		})
 	}
 	if len(dp.Description) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:      "description",
-			Value:     dp.Description,
+			Path:  "description",
+			Value: dp.Description,
 		})
 	}
-	if len(dp.Type) > 0 {
+	if len(dp.Resource.Type) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:      "type",
-			Value:     dp.Type,
+			Path:  "type",
+			Value: dp.Resource.Type,
 		})
 	}
 	if len(dp.Owner) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:      "owner",
-			Value:     dp.Owner,
+			Path:  "owner",
+			Value: dp.Owner,
 		})
 	}
 	_, err := documentRef.Update(r.Context(), updates)
@@ -188,19 +200,20 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dp DataProductResponse
-
+	var dpr DataProductResponse
+	var dp DataProduct
 	err = document.DataTo(&dp)
 
 	if err != nil {
-		log.Errorf("Could not deserialize document into DataProductRequest: %v", err)
+		log.Errorf("Could not deserialize document into DataProduct: %v", err)
 	}
 
-	dp.ID = document.Ref.ID
-	dp.Updated = document.UpdateTime
-	dp.Created = document.CreateTime
+	dpr.ID = document.Ref.ID
+	dpr.Updated = document.UpdateTime
+	dpr.Created = document.CreateTime
+	dpr.DataProduct = dp
 
-	if err := json.NewEncoder(w).Encode(dp); err != nil {
+	if err := json.NewEncoder(w).Encode(dpr); err != nil {
 		log.Errorf("Serializing document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to serialize document\n")
 		return
