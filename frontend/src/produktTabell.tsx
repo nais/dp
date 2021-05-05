@@ -1,39 +1,8 @@
 import React, { useEffect, useReducer } from "react";
-import * as z from "zod";
 import "nav-frontend-tabell-style";
-
-//import ReactDOM from "react-dom";
-//import "./index.less";
-/*
-    "id": "1JgfSOUm0ztjhiUljZHX",
-    "name": "container resource usage 2",
-    "description": "beskrivelse",
-    "uri": "https://uri.com",
-    "updated": "2021-05-04T13:28:47.474283Z",
-    "created": "2021-05-04T09:54:26.129149Z"
- */
-const DataProduktSchema = z
-  .object({
-    id: z.string(),
-    name: z.string(),
-    description: z.string(),
-    uri: z.string(),
-    updated: z.string(),
-    created: z.string(),
-  })
-  .nonstrict()
-  .partial();
-export const DataProduktListSchema = DataProduktSchema.array();
-
-type DataProdukt = z.infer<typeof DataProduktSchema>;
-type DataProduktList = z.infer<typeof DataProduktListSchema>;
-
-export const getProducts = async (): Promise<DataProduktList> => {
-  let apiURL = "http://localhost:8080/dataproducts";
-  const res = await fetch(apiURL);
-  const json = await res.json();
-  return DataProduktListSchema.parse(json);
-};
+import NavFrontendSpinner from "nav-frontend-spinner";
+import { Select } from "nav-frontend-skjema";
+import { DataProdukt, DataProduktList, hentProdukter } from "./produktAPI";
 
 type ProduktTabellState = {
   loading: boolean;
@@ -72,20 +41,23 @@ interface ProduktProps {
   produkt: DataProdukt;
 }
 
-const Produkt = ({ produkt }: ProduktProps) => (
-  <tr>
-    <td>{produkt.name}</td>
-  </tr>
-);
+const Produkt = ({ produkt }: ProduktProps) => {
+  if (!produkt.data_product) return null;
+  return (
+    <tr>
+      <td>{produkt.data_product ? produkt.data_product.name : "tom"}</td>
+    </tr>
+  );
+};
 
 export const ProduktTabell = () => {
   const [state, dispatch] = useReducer(ProduktTabellReducer, initialState);
 
   useEffect(() => {
-    getProducts().then((products) => {
+    hentProdukter().then((produkter) => {
       dispatch({
         type: "FETCH_DONE",
-        results: products,
+        results: produkter,
       });
     });
   }, []);
@@ -99,9 +71,11 @@ export const ProduktTabell = () => {
           </tr>
         </thead>
         <tbody>
-          {state.products.map((x) => (
-            <Produkt key={x.id} produkt={x} />
-          ))}
+          {state.loading ? (
+            <NavFrontendSpinner />
+          ) : (
+            state.products.map((x) => <Produkt key={x.id} produkt={x} />)
+          )}
         </tbody>
       </table>
     </div>

@@ -1,7 +1,6 @@
 import React from "react";
 import "./App.less";
-import { Sidetittel } from "nav-frontend-typografi";
-import ProduktTabell from "./produktTabell";
+import { ProduktListe } from "./produktListe";
 import {
   BrowserRouter as Router,
   Switch,
@@ -14,9 +13,7 @@ const App = (): JSX.Element => {
   return (
     <div className="app">
       <Router>
-        <Sidetittel>Dataprodukter dashboard</Sidetittel>
-
-        <ProduktTabell />
+        <ProduktListe />
       </Router>
     </div>
   );
