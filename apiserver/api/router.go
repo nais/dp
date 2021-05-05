@@ -5,6 +5,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
+	"github.com/go-chi/cors"
 	"github.com/nais/dp/apiserver/middleware"
 	"gopkg.in/go-playground/validator.v8"
 )
@@ -19,6 +20,9 @@ func New(client *firestore.Client, validate *validator.Validate) chi.Router {
 	r := chi.NewRouter()
 
 	r.Use(prometheusMiddleware.Handler())
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+	}))
 
 	r.Get("/dataproducts", api.dataproducts)
 	r.Post("/dataproducts", api.createDataproduct)
