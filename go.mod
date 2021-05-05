@@ -3,6 +3,7 @@ module github.com/nais/dp
 go 1.16
 
 require (
+	cloud.google.com/go/bigquery v1.8.0
 	cloud.google.com/go/firestore v1.5.0
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/prometheus/client_golang v1.10.0
