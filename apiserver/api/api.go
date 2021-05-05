@@ -132,7 +132,6 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusInternalServerError, "unable to deserialize firestore document\n")
 		return
 	}
-	newAccess := firebaseDp.Access
 
 	var dp DataProduct
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
@@ -141,57 +140,11 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updates []firestore.Update
-
-	if len(dp.Name) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "name",
-			Value: dp.Name,
-		})
-	}
-	if len(dp.Description) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "description",
-			Value: dp.Description,
-		})
-	}
-	if len(dp.Resource.Type) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "resource.type",
-			Value: dp.Resource.Type,
-		})
-	}
-	if len(dp.Resource.DatasetID) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "resource.dataset_id",
-			Value: dp.Resource.DatasetID,
-		})
-	}
-	if len(dp.Resource.ProjectID) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "resource.project_id",
-			Value: dp.Resource.ProjectID,
-		})
-	}
-	if len(dp.Owner) > 0 {
-		updates = append(updates, firestore.Update{
-			Path:  "owner",
-			Value: dp.Owner,
-		})
-	}
-	if len(dp.Access) > 0 {
-		for _, access := range dp.Access {
-			if errs := a.validate.Struct(access); errs != nil {
-				log.Errorf("Validation fails: %v", errs)
-				respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-				return
-			}
-		}
-		newAccess = append(newAccess, dp.Access...)
-		updates = append(updates, firestore.Update{
-			Path:  "access",
-			Value: newAccess,
-		})
+	updates, err := a.createUpdates(dp, firebaseDp)
+	if err != nil {
+		log.Errorf("Validation fails: %v", err)
+		respondf(w, http.StatusBadRequest, "Validation failed: %v", err)
+		return
 	}
 	_, err = documentRef.Update(r.Context(), updates)
 	if err != nil {
@@ -255,4 +208,60 @@ func respondf(w http.ResponseWriter, statusCode int, format string, args ...inte
 	if _, wErr := w.Write([]byte(fmt.Sprintf(format, args...))); wErr != nil {
 		log.Errorf("unable to write response: %v", wErr)
 	}
+}
+
+func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore.Update, error) {
+	var updates []firestore.Update
+	newAccess := existingDp.Access
+
+	if len(dp.Name) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "name",
+			Value: dp.Name,
+		})
+	}
+	if len(dp.Description) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "description",
+			Value: dp.Description,
+		})
+	}
+	if len(dp.Resource.Type) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "resource.type",
+			Value: dp.Resource.Type,
+		})
+	}
+	if len(dp.Resource.DatasetID) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "resource.dataset_id",
+			Value: dp.Resource.DatasetID,
+		})
+	}
+	if len(dp.Resource.ProjectID) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "resource.project_id",
+			Value: dp.Resource.ProjectID,
+		})
+	}
+	if len(dp.Owner) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "owner",
+			Value: dp.Owner,
+		})
+	}
+	if len(dp.Access) > 0 {
+		for _, access := range dp.Access {
+			if errs := a.validate.Struct(access); errs != nil {
+				return nil, errs
+			}
+		}
+		newAccess = append(newAccess, dp.Access...)
+		updates = append(updates, firestore.Update{
+			Path:  "access",
+			Value: newAccess,
+		})
+	}
+
+	return updates, nil
 }
