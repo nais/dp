@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Redirect, useParams, useHistory } from "react-router-dom";
+import { useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import ModalWrapper from "nav-frontend-modal";
 import { Ingress, Normaltekst, Systemtittel } from "nav-frontend-typografi";
@@ -7,7 +7,6 @@ import { DataProdukt } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import { Col, Container, Row } from "react-bootstrap";
 import "./produktDetalj.less";
-import { Feiloppsummering } from "nav-frontend-skjema";
 
 interface ProduktDetaljProps {
   produktID: string;
