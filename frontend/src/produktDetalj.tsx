@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import ModalWrapper from "nav-frontend-modal";
-
 import {
   Ingress,
   Normaltekst,
@@ -90,6 +89,9 @@ export const ProduktDetalj = (): JSX.Element => {
                 closeButton={true}
                 contentLabel="Min modalrute"
               >
+                <Fareknapp onClick={() => toggleOpen(true)}>
+                  Slett på ordentlig
+                </Fareknapp>
                 <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
               </ModalWrapper>
             </div>

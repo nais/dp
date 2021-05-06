@@ -3,6 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
+	"github.com/go-chi/cors"
+	"github.com/nais/dp/apiserver/auth"
+	"github.com/nais/dp/apiserver/middleware"
+	"golang.org/x/oauth2"
 	"net/http"
 	"time"
 
@@ -44,6 +49,37 @@ type DataProductResponse struct {
 	DataProduct DataProduct `json:"data_product"`
 	Updated     time.Time   `json:"updated"`
 	Created     time.Time   `json:"created"`
+}
+
+func New(client *firestore.Client, validate *validator.Validate, jwtValidator jwt.Keyfunc) chi.Router {
+	api := api{client, validate}
+
+	jwtValidatorMiddleware := auth.TokenValidatorMiddleware(jwtValidator)
+
+	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
+	prometheusMiddleware := middleware.PrometheusMiddleware("apiserver", latencyHistBuckets...)
+	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
+
+	r := chi.NewRouter()
+
+	r.Use(prometheusMiddleware.Handler())
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins: []string{"https://*", "http://*"},
+	}))
+
+	// requires valid access token
+	r.Group(func(r chi.Router) {
+		r.Use(jwtValidatorMiddleware)
+		r.Post("/dataproducts", api.createDataproduct)
+		r.Put("/dataproducts/{productID}", api.updateDataproduct)
+		r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+	})
+
+	r.Get("/callback", api.callback)
+	r.Get("/dataproducts", api.dataproducts)
+	r.Get("/dataproducts/{productID}", api.getDataproduct)
+
+	return r
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
@@ -264,4 +300,33 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 	}
 
 	return updates, nil
+}
+
+func (a *api) callback(w http.ResponseWriter, r *http.Request) {
+	cfg := oauth2.Config{
+		ClientID:     "854073996265-riks3c6p36oh3ijgef8tvlk3367ab9sq.apps.googleusercontent.com",
+		ClientSecret: "secret",
+		Endpoint:     oauth2.Endpoint{},
+		RedirectURL:  "http://localhost:8080/callback",
+		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/groups"},
+	}
+
+	//state := "veryrandomstring"
+	//consentUrl := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("redirect_uri", "http://localhost:8080/callback") )
+	//fmt.Println(consentUrl)
+
+	code := r.URL.Query().Get("code")
+	if len(code) == 0 {
+		respondf(w, http.StatusForbidden, "No code in query params")
+		return
+	}
+
+	token, err := cfg.Exchange(r.Context(), code, nil)
+	if err != nil {
+		log.Errorf("Exchanging authorization code for tokens: %v", err)
+		respondf(w, http.StatusForbidden, "uh oh")
+		return
+	}
+
+	fmt.Println(token)
 }
