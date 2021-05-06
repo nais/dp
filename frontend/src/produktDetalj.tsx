@@ -1,18 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Route, Redirect, useParams } from "react-router-dom";
+import { Redirect, useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import ModalWrapper from "nav-frontend-modal";
-import {
-  Ingress,
-  Normaltekst,
-  Sidetittel,
-  Systemtittel,
-  Undertittel,
-} from "nav-frontend-typografi";
+import { Ingress, Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import { DataProdukt } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import { Col, Container, Row } from "react-bootstrap";
 import "./produktDetalj.less";
+import { Feiloppsummering } from "nav-frontend-skjema";
 
 interface ProduktDetaljProps {
   produktID: string;
@@ -47,6 +42,77 @@ const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
   );
 };
 
+interface SlettProduktProps {
+  produktID: string;
+  isOpen: boolean;
+}
+const SlettProdukt = ({
+  produktID,
+  isOpen,
+}: SlettProduktProps): JSX.Element => {
+  const toggleOpen = (f: boolean) => {};
+  const [error, setError] = useState<string | null>(null);
+  let history = useHistory();
+
+  const deleteProduct = (id: string) => {
+    fetch(`http://localhost:8080/dataproducts/${id}`, {
+      method: "delete",
+    })
+      .then((res) => {
+        if (res.status % 100 !== 2) {
+          res.text().then((t) => {
+            setError(t);
+          });
+        } else {
+          history.push("/");
+        }
+      })
+      .catch((e) => {
+        setError(`Nettverksfeil: ${e}`);
+        console.log(e);
+      });
+    console.log("delete this:", { id });
+  };
+  /*
+<ModalWrapper
+          isOpen={isOpen}
+          onRequestClose={() => toggleOpen(false)}
+          closeButton={true}
+          contentLabel="Min modalrute"
+      >.
+
+        <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
+
+ */
+
+  return (
+    <div
+      style={{ border: "1px solid black", display: isOpen ? "block" : "none" }}
+    >
+      <Systemtittel>Er du sikker?</Systemtittel>
+      {error ? <p>{error}</p> : null}
+      <Fareknapp onClick={() => deleteProduct(produktID)}>
+        {error ? "Prøv igjen" : "Ja"}
+      </Fareknapp>
+    </div>
+  );
+};
+
+export const ProduktTilganger = ({
+  produkt,
+}: ProduktInfotabellProps): JSX.Element => {
+  return (
+    <div className={"produkt-detaljer-tilganger"}>
+      <Ingress>Tilganger</Ingress>
+      <ul>
+        {produkt.data_product.access.map((a) => (
+          <li>{}</li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 export const ProduktDetalj = (): JSX.Element => {
   let { produktID } = useParams<ProduktDetaljProps>();
 
@@ -56,26 +122,21 @@ export const ProduktDetalj = (): JSX.Element => {
   const toggleOpen = (input: boolean) => {
     setToggleOpen(input);
   };
-  const deleteProduct = (id: string) => {
-    fetch(`http://localhost:8080/dataproducts/${id}`, {
-      method: "delete",
-    }).then((res) => {
-      if (res.status != 204) {
-        console.log("unable to delete");
-      }
-      return <Redirect to={"/"} />;
-    });
-    console.log("delete this:", { id });
-  };
 
   useEffect(() => {
-    fetch(`http://localhost:8080/dataproducts/${produktID}`)
-      .then((res) => res.json())
-      .then((json) => {
-        setError(null);
-        setProdukt(json);
-      });
-  }, []);
+    fetch(`http://localhost:8080/dataproducts/${produktID}`).then((res) => {
+      if (!res.ok) {
+        res.text().then((text) => setError(`HTTP ${res.status}: ${text}`));
+      } else {
+        res.json().then((json) => {
+          setError(null);
+          setProdukt(json);
+        });
+      }
+    });
+  }, [produktID]);
+
+  if (error) return <div>{error}</div>;
 
   if (typeof produkt == "undefined")
     return (
@@ -83,18 +144,9 @@ export const ProduktDetalj = (): JSX.Element => {
         <NavFrontendSpinner />
       </div>
     );
-  if (error) return <div>{error}</div>;
 
   return (
     <div>
-      <ModalWrapper
-        isOpen={isOpen}
-        onRequestClose={() => toggleOpen(false)}
-        closeButton={true}
-        contentLabel="Min modalrute"
-      >
-        <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
-      </ModalWrapper>
       <Container fluid>
         <Row>
           <Col sm={3}>
@@ -102,17 +154,19 @@ export const ProduktDetalj = (): JSX.Element => {
               <Knapp>Gi tilgang</Knapp>
               <Knapp>Fjern tilgang</Knapp>
               <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
-              <Fareknapp onClick={() => deleteProduct(produktID)}>
-                Slett på ordentlig
-              </Fareknapp>
             </div>
           </Col>
           <Col sm={9}>
             {produkt ? <ProduktInfoFaktaboks produkt={produkt} /> : null}
+            {produkt ? <ProduktTilganger produkt={produkt} /> : null}
+            {produkt?.id ? (
+              <SlettProdukt isOpen={isOpen} produktID={produkt.id} />
+            ) : null}
           </Col>
         </Row>
       </Container>
     </div>
   );
 };
+
 export default ProduktDetalj;

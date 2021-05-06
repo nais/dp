@@ -40,15 +40,22 @@ export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
           </tr>
         </thead>
         <tbody>
-          {state.loading ? (
-            <NavFrontendSpinner />
-          ) : (
+          {state.loading ||
             state.filtered_products.map((x) => (
               <Produkt key={x.id} produkt={x} />
-            ))
-          )}
+            ))}
         </tbody>
       </table>
+      {!state.loading && !state.products.length ? (
+        <p style={{ textAlign: "center", fontStyle: "italic", margin: "2%" }}>
+          Ingen dataprodukter i katalogen
+        </p>
+      ) : null}
+      {state.loading ? (
+        <p style={{ textAlign: "center", margin: "2%" }}>
+          <NavFrontendSpinner />
+        </p>
+      ) : null}
     </div>
   );
 };

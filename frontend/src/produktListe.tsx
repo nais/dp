@@ -1,7 +1,8 @@
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import ProduktTabell from "./produktTabell";
 import { DataProduktListe, hentProdukter } from "./produktAPI";
 import ProduktFilter from "./produktFilter";
+import NavFrontendSpinner from "nav-frontend-spinner";
 
 export type ProduktListeState = {
   loading: boolean;
@@ -23,10 +24,12 @@ type ProduktListeFetch = {
   type: "FETCH_DONE";
   results: DataProduktListe;
 };
+
 type ProduktListeFilter = {
   type: "FILTER_CHANGE";
   filter: string;
 };
+
 const ProduktTabellReducer = (
   prevState: ProduktListeState,
   action: ProduktListeFetch | ProduktListeFilter
@@ -54,15 +57,38 @@ const ProduktTabellReducer = (
 
 export const ProduktListe = (): JSX.Element => {
   const [state, dispatch] = useReducer(ProduktTabellReducer, initialState);
+  const [error, setError] = useState<string | null>();
 
-  useEffect(() => {
-    hentProdukter().then((produkter) => {
-      dispatch({
-        type: "FETCH_DONE",
-        results: produkter,
+  const loadProducts = () => {
+    hentProdukter()
+      .then((produkter) => {
+        setError(null);
+
+        dispatch({
+          type: "FETCH_DONE",
+          results: produkter,
+        });
+      })
+      .catch((e) => {
+        setError(`${e}`);
       });
-    });
-  }, []);
+  };
+
+  useEffect(loadProducts, []);
+
+  if (error) {
+    setTimeout(loadProducts, 1500);
+    // log:           {error}
+    return (
+      <div>
+        <h1>Kunne ikke hente produkter</h1>
+        <h2>
+          <NavFrontendSpinner /> Prøver på nytt...
+        </h2>
+      </div>
+    );
+  }
+
   return (
     <div>
       <ProduktFilter state={state} dispatch={dispatch} />
