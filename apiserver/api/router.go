@@ -1,6 +1,8 @@
 package api
 
 import (
+	"github.com/dgrijalva/jwt-go"
+	"github.com/nais/dp/apiserver/auth"
 	"net/http"
 
 	"cloud.google.com/go/firestore"
@@ -10,8 +12,10 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-func New(client *firestore.Client, validate *validator.Validate) chi.Router {
+func New(client *firestore.Client, validate *validator.Validate, jwtValidator jwt.Keyfunc) chi.Router {
 	api := api{client, validate}
+
+	jwtValidatorMiddleware := auth.TokenValidatorMiddleware(jwtValidator)
 
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("apiserver", latencyHistBuckets...)
@@ -24,11 +28,15 @@ func New(client *firestore.Client, validate *validator.Validate) chi.Router {
 		AllowedOrigins: []string{"https://*", "http://*"},
 	}))
 
+	r.Group(func(r chi.Router) {
+		r.Use(jwtValidatorMiddleware)
+		r.Post("/dataproducts", api.createDataproduct)
+		r.Put("/dataproducts/{productID}", api.updateDataproduct)
+		r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+	})
+
 	r.Get("/dataproducts", api.dataproducts)
-	r.Post("/dataproducts", api.createDataproduct)
-	r.Put("/dataproducts/{productID}", api.updateDataproduct)
 	r.Get("/dataproducts/{productID}", api.getDataproduct)
-	r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
 
 	return r
 }

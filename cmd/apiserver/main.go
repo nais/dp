@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/nais/dp/apiserver/auth"
 	"log"
 	"net/http"
 
@@ -12,7 +13,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-var validate *validator.Validate
+var inputValidator *validator.Validate
 
 func init() {
 	//flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address")
@@ -26,8 +27,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Initializing firestore client: %v", err)
 	}
-	validate = validator.New()
-	router := api.New(client, validate)
+
+	jwtValidator, err := auth.CreateJWTValidator(auth.Google{
+		DiscoveryURL: "https://accounts.google.com/.well-known/openid-configuration",
+		ClientID:     "854073996265-riks3c6p36oh3ijgef8tvlk3367ab9sq.apps.googleusercontent.com",
+	})
+
+	inputValidator = validator.New()
+	router := api.New(client, inputValidator, jwtValidator)
 	fmt.Println("running @", "localhost:8080")
 	fmt.Println(http.ListenAndServe("localhost:8080", router))
 }
