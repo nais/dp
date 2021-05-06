@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { Knapp, Fareknapp } from "nav-frontend-knapper";
+import ModalWrapper from "nav-frontend-modal";
+
 import {
   Ingress,
   Normaltekst,
@@ -50,6 +53,10 @@ export const ProduktDetalj = (): JSX.Element => {
 
   const [produkt, setProdukt] = useState<DataProdukt | undefined>(undefined);
   const [error, setError] = useState<string | null>();
+  const [isOpen, setToggleOpen] = useState<boolean>(false);
+  const toggleOpen = (input: boolean) => {
+    setToggleOpen(input);
+  };
 
   useEffect(() => {
     fetch(`http://localhost:8080/dataproducts/${produktID}`)
@@ -73,7 +80,19 @@ export const ProduktDetalj = (): JSX.Element => {
       <Container fluid>
         <Row>
           <Col sm={3}>
-            <div>Actions go here</div>
+            <div className="produktdetalj-knapper">
+              <Knapp>Gi tilgang</Knapp>
+              <Knapp>Fjern tilgang</Knapp>
+              <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
+              <ModalWrapper
+                isOpen={isOpen}
+                onRequestClose={() => toggleOpen(false)}
+                closeButton={true}
+                contentLabel="Min modalrute"
+              >
+                <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
+              </ModalWrapper>
+            </div>
           </Col>
           <Col sm={9}>
             {produkt ? <ProduktInfoFaktaboks produkt={produkt} /> : null}
