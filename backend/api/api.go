@@ -39,7 +39,7 @@ type DataProduct struct {
 	Description string         `firestore:"description" json:"description,omitempty" validate:"required"`
 	Resource    Resource       `firestore:"resource" json:"resource,omitempty" validate:"required"`
 	Owner       string         `firestore:"owner" json:"owner,omitempty" validate:"required"`
-	Access      []*AccessEntry `firestore:"access" json:"access,omitempty" validate:"required,dive"`
+	Access      []*AccessEntry `firestore:"access" json:"access" validate:"required,dive"`
 }
 
 type DataProductResponse struct {
@@ -102,6 +102,10 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 		var dp DataProduct
 
 		err = document.DataTo(&dp)
+
+		if dp.Access == nil {
+			dp.Access = make([]*AccessEntry, 0)
+		}
 
 		if err != nil {
 			log.Errorf("Could not deserialize document into DataProduct: %v", err)
