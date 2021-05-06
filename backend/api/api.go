@@ -3,10 +3,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/cors"
-	"github.com/nais/dp/apiserver/auth"
-	"github.com/nais/dp/apiserver/middleware"
+	"github.com/nais/dp/backend/middleware"
 	"golang.org/x/oauth2"
 	"net/http"
 	"time"
@@ -51,13 +49,11 @@ type DataProductResponse struct {
 	Created     time.Time   `json:"created"`
 }
 
-func New(client *firestore.Client, validate *validator.Validate, jwtValidator jwt.Keyfunc) chi.Router {
-	api := api{client, validate}
-
-	jwtValidatorMiddleware := auth.TokenValidatorMiddleware(jwtValidator)
+func New(client *firestore.Client, jwtValidatorMiddleware func(http.Handler) http.Handler) chi.Router {
+	api := api{client, validator.New()}
 
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
-	prometheusMiddleware := middleware.PrometheusMiddleware("apiserver", latencyHistBuckets...)
+	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
 	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
 
 	r := chi.NewRouter()
@@ -68,17 +64,20 @@ func New(client *firestore.Client, validate *validator.Validate, jwtValidator jw
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	}))
 
-	// requires valid access token
-	r.Group(func(r chi.Router) {
-		r.Use(jwtValidatorMiddleware)
-		r.Post("/dataproducts", api.createDataproduct)
-		r.Put("/dataproducts/{productID}", api.updateDataproduct)
-		r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+	r.Route("/api/v1", func(r chi.Router) {
+		// requires valid access token
+		r.Group(func(r chi.Router) {
+			r.Use(jwtValidatorMiddleware)
+			r.Post("/dataproducts", api.createDataproduct)
+			r.Put("/dataproducts/{productID}", api.updateDataproduct)
+			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+		})
+
+		r.Get("/dataproducts", api.dataproducts)
+		r.Get("/dataproducts/{productID}", api.getDataproduct)
 	})
 
 	r.Get("/callback", api.callback)
-	r.Get("/dataproducts", api.dataproducts)
-	r.Get("/dataproducts/{productID}", api.getDataproduct)
 
 	return r
 }

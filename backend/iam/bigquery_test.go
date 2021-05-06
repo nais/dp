@@ -2,7 +2,7 @@ package iam_test
 
 import (
 	"fmt"
-	"github.com/nais/dp/apiserver/iam"
+	"github.com/nais/dp/backend/iam"
 	"testing"
 )
 
