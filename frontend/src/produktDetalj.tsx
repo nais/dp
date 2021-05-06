@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Route, Redirect, useParams } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import ModalWrapper from "nav-frontend-modal";
 import {
@@ -56,6 +56,17 @@ export const ProduktDetalj = (): JSX.Element => {
   const toggleOpen = (input: boolean) => {
     setToggleOpen(input);
   };
+  const deleteProduct = (id: string) => {
+    fetch(`http://localhost:8080/dataproducts/${id}`, {
+      method: "delete",
+    }).then((res) => {
+      if (res.status != 204) {
+        console.log("unable to delete");
+      }
+      return <Redirect to={"/"} />;
+    });
+    console.log("delete this:", { id });
+  };
 
   useEffect(() => {
     fetch(`http://localhost:8080/dataproducts/${produktID}`)
@@ -76,6 +87,14 @@ export const ProduktDetalj = (): JSX.Element => {
 
   return (
     <div>
+      <ModalWrapper
+        isOpen={isOpen}
+        onRequestClose={() => toggleOpen(false)}
+        closeButton={true}
+        contentLabel="Min modalrute"
+      >
+        <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
+      </ModalWrapper>
       <Container fluid>
         <Row>
           <Col sm={3}>
@@ -83,17 +102,9 @@ export const ProduktDetalj = (): JSX.Element => {
               <Knapp>Gi tilgang</Knapp>
               <Knapp>Fjern tilgang</Knapp>
               <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
-              <ModalWrapper
-                isOpen={isOpen}
-                onRequestClose={() => toggleOpen(false)}
-                closeButton={true}
-                contentLabel="Min modalrute"
-              >
-                <Fareknapp onClick={() => toggleOpen(true)}>
-                  Slett på ordentlig
-                </Fareknapp>
-                <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
-              </ModalWrapper>
+              <Fareknapp onClick={() => deleteProduct(produktID)}>
+                Slett på ordentlig
+              </Fareknapp>
             </div>
           </Col>
           <Col sm={9}>

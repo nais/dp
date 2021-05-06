@@ -65,6 +65,7 @@ func New(client *firestore.Client, validate *validator.Validate, jwtValidator jw
 	r.Use(prometheusMiddleware.Handler())
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"https://*", "http://*"},
+		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 	}))
 
 	// requires valid access token
