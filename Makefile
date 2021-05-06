@@ -10,4 +10,4 @@ test:
 	go test ./... -count=1
 
 local:
-	go run ./... --development-mode=true --bind-address=127.0.0.1:8080
+	go run cmd/backend/main.go --development-mode=true --bind-address=127.0.0.1:8080
