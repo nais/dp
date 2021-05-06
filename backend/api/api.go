@@ -85,7 +85,7 @@ func New(client *firestore.Client, jwtValidatorMiddleware func(http.Handler) htt
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection("dp")
 
-	var dataproducts []DataProductResponse
+	dataproducts := make([]DataProductResponse, 0)
 
 	documentIterator := dpc.Documents(r.Context())
 	for {
