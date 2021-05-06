@@ -1,13 +1,7 @@
 import React from "react";
 import "./App.less";
 import { ProduktListe } from "./produktListe";
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-  useParams,
-} from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
 import { Sidetittel } from "nav-frontend-typografi";
 

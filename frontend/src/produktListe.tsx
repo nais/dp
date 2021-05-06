@@ -1,6 +1,5 @@
 import React, { useEffect, useReducer } from "react";
 import ProduktTabell from "./produktTabell";
-import { Sidetittel } from "nav-frontend-typografi";
 import { DataProduktListe, hentProdukter } from "./produktAPI";
 import ProduktFilter from "./produktFilter";
 
@@ -45,8 +44,8 @@ const ProduktTabellReducer = (
       return {
         ...prevState,
         filtered_products: prevState.products.filter((p) => {
-          if (action.filter == "") return true;
-          return p.data_product?.owner == action.filter;
+          if (action.filter === "") return true;
+          return p.data_product?.owner === action.filter;
         }),
       };
   }
