@@ -6,26 +6,39 @@ import (
 )
 
 func TestBigqueryIam(t *testing.T) {
-	member := "user:christine.teig@nav.no"
+
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
-	iam.UpdateDatasetAccessControl(member, projectID, datasetID)
+	member := "user:christine.teig@nav.no"
+
+	err := iam.UpdateDatasetAccessControl(member, projectID, datasetID)
+	if err != nil {
+		return
+	}
 }
 
 func TestBigqueryTableIam(t *testing.T) {
 
-	member := "user:christine.teig@nav.no"
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
 	tableID := "container_resource_usage"
-	iam.UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID)
+	member := "user:christine.teig@nav.no"
+
+	err := iam.UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID)
+	if err != nil {
+		return
+	}
 }
 
 func TestBigqueryViewIam(t *testing.T) {
 
-	member := "user:johnny.horvi@nav.no"
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
 	viewID := "container_resource_usage_aura"
-	iam.UpdateBigqueryViewAccessControl(member, projectID, datasetID, viewID)
+	member := "user:johnny.horvi@nav.no"
+
+	err := iam.UpdateBigqueryViewAccessControl(member, projectID, datasetID, viewID)
+	if err != nil {
+		return
+	}
 }
