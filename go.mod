@@ -3,8 +3,10 @@ module github.com/nais/dp
 go 1.16
 
 require (
+	cloud.google.com/go v0.81.0 // indirect
 	cloud.google.com/go/bigquery v1.17.0
 	cloud.google.com/go/firestore v1.5.0
+	cloud.google.com/go/storage v1.10.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-chi/cors v1.2.0
