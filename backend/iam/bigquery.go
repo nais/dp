@@ -19,6 +19,7 @@ func UpdateDatasetAccessControl(entity, projectID, datasetID string) error {
 	if err != nil {
 		return err
 	}
+
 	// Append a new access control entry to the existing access list.
 	update := bigquery.DatasetMetadataToUpdate{
 		Access: append(meta.Access, &bigquery.AccessEntry{

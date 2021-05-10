@@ -83,13 +83,19 @@ func New(client *firestore.Client, jwtValidatorMiddleware func(http.Handler) htt
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dp")
+	dpc := a.client.Collection("dev")
 
 	dataproducts := make([]DataProductResponse, 0)
 
 	documentIterator := dpc.Documents(r.Context())
 	for {
 		document, err := documentIterator.Next()
+		if document == nil {
+			if err != nil {
+				log.Errorf("Iterating documents: %v", err)
+			}
+			break
+		}
 		fmt.Println(document, err)
 		if err == iterator.Done {
 			break
@@ -328,5 +334,6 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(token)
+	w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", token.AccessToken, "dp.dev.intern.nav.no"))
+
 }

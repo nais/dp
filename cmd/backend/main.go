@@ -20,6 +20,7 @@ func init() {
 	flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address")
 	flag.StringVar(&cfg.OAuth2.ClientID, "oauth2-client-id", os.Getenv("OAUTH2_CLIENT_ID"), "OAuth2 client ID")
 	flag.StringVar(&cfg.OAuth2.ClientSecret, "oauth2-client-secret", os.Getenv("OAUTH2_CLIENT_SECRET"), "OAuth2 client secret")
+	flag.StringVar(&cfg.FirestoreGoogleProjectId, "firestore-google-project-id", os.Getenv("FIRESTORE_GOOGLE_PROJECT_ID"), "Firestore Google project ID")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
 }
@@ -27,14 +28,14 @@ func init() {
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client, err := firestore.NewClient(ctx, "aura-dev-d9f5")
+	client, err := firestore.NewClient(ctx, cfg.FirestoreGoogleProjectId)
 	if err != nil {
 		log.Fatalf("Initializing firestore client: %v", err)
 	}
 
 	router := api.New(client, jwtValidatorMiddleware(cfg))
-	fmt.Println("running @", "localhost:8080")
-	fmt.Println(http.ListenAndServe("localhost:8080", router))
+	fmt.Println("running @", cfg.BindAddress)
+	fmt.Println(http.ListenAndServe(cfg.BindAddress, router))
 }
 
 func jwtValidatorMiddleware(c config.Config) func(http.Handler) http.Handler {
