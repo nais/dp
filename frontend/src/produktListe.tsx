@@ -78,6 +78,7 @@ export const ProduktListe = (): JSX.Element => {
 
   if (error) {
     setTimeout(loadProducts, 1500);
+    console.log(error);
     // log:           {error}
     return (
       <div>

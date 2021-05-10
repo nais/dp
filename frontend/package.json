@@ -39,7 +39,6 @@
     "nav-frontend-typografi-style": "^1.1.1",
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
-    "react-bootstrap": "^1.5.2",
     "react-datepicker": "^3.8.0",
     "react-dom": "^16.8.0",
     "react-modal": "^3.13.1",

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
+import { DataProduktSchema } from "./produktAPI";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { date } from "zod";
@@ -20,6 +21,25 @@ export const ProduktNytt = (): JSX.Element => {
     setBigqueryView("");
     setBucket("");
   }, [ressursType]);
+
+  const createProduct = () => {
+    const nyttProdukt = DataProduktSchema.parse({
+      name: navn,
+      description: beskrivelse,
+      resource: {
+        type: ressursType,
+        project_id: "placeholder",
+        dataset_id: "placeholder",
+      },
+      owner: eier,
+      access: [],
+    });
+
+    fetch("http://localhost:8080/api/v1/dataproducts", {
+      method: "POST",
+      body: JSON.stringify(nyttProdukt),
+    }).then((x) => console.log(x, x.status));
+  };
 
   const validForm = () => {
     if (
@@ -90,7 +110,8 @@ export const ProduktNytt = (): JSX.Element => {
       <Hovedknapp
         disabled={validForm()}
         onClick={() => {
-          console.log(navn, beskrivelse, bucket);
+          createProduct();
+          //console.log(navn, beskrivelse, bucket);
         }}
       >
         Submit
