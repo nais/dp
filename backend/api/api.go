@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/cors"
+	"github.com/nais/dp/backend/config"
 	"github.com/nais/dp/backend/middleware"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -22,6 +23,7 @@ import (
 type api struct {
 	client   *firestore.Client
 	validate *validator.Validate
+	config   config.Config
 }
 
 type AccessEntry struct {
@@ -30,7 +32,7 @@ type AccessEntry struct {
 	End     time.Time `firestore:"end" json:"end,omitempty" validate:"required"`
 }
 
-type Resource struct {
+type Datastore struct {
 	ProjectID string `firestore:"project_id" json:"project_id,omitempty" validate:"required"`
 	DatasetID string `firestore:"dataset_id" json:"dataset_id,omitempty" validate:"required"`
 	Type      string `firestore:"type" json:"type,omitempty" validate:"required"`
@@ -39,7 +41,7 @@ type Resource struct {
 type DataProduct struct {
 	Name        string         `firestore:"name" json:"name,omitempty" validate:"required"`
 	Description string         `firestore:"description" json:"description,omitempty" validate:"required"`
-	Resource    Resource       `firestore:"resource" json:"resource,omitempty" validate:"required"`
+	Datastore   Datastore      `firestore:"datastore" json:"datastore,omitempty" validate:"required"`
 	Owner       string         `firestore:"owner" json:"owner,omitempty" validate:"required"`
 	Access      []*AccessEntry `firestore:"access" json:"access" validate:"required,dive"`
 }
@@ -51,8 +53,8 @@ type DataProductResponse struct {
 	Created     time.Time   `json:"created"`
 }
 
-func New(client *firestore.Client, jwtValidatorMiddleware func(http.Handler) http.Handler) chi.Router {
-	api := api{client, validator.New()}
+func New(client *firestore.Client, config config.Config) chi.Router {
+	api := api{client, validator.New(), config}
 
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
@@ -69,13 +71,13 @@ func New(client *firestore.Client, jwtValidatorMiddleware func(http.Handler) htt
 	r.Route("/api/v1", func(r chi.Router) {
 		// requires valid access token
 		r.Group(func(r chi.Router) {
-			r.Use(jwtValidatorMiddleware)
+			r.Use(jwtValidatorMiddleware(config))
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
-			r.Get("/dataproducts", api.dataproducts)
 		})
 
+		r.Get("/dataproducts", api.dataproducts)
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
 	})
 
@@ -98,7 +100,6 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 			}
 			break
 		}
-		fmt.Println(document, err)
 		if err == iterator.Done {
 			break
 		}
@@ -138,7 +139,7 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dp")
+	dpc := a.client.Collection("dev")
 	var dp DataProduct
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
@@ -164,7 +165,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dp")
+	dpc := a.client.Collection("dev")
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -205,7 +206,7 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dp")
+	dpc := a.client.Collection("dev")
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
@@ -237,7 +238,7 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dp")
+	dpc := a.client.Collection("dev")
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
@@ -274,22 +275,22 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 			Value: dp.Description,
 		})
 	}
-	if len(dp.Resource.Type) > 0 {
+	if len(dp.Datastore.Type) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:  "resource.type",
-			Value: dp.Resource.Type,
+			Value: dp.Datastore.Type,
 		})
 	}
-	if len(dp.Resource.DatasetID) > 0 {
+	if len(dp.Datastore.DatasetID) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:  "resource.dataset_id",
-			Value: dp.Resource.DatasetID,
+			Value: dp.Datastore.DatasetID,
 		})
 	}
-	if len(dp.Resource.ProjectID) > 0 {
+	if len(dp.Datastore.ProjectID) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:  "resource.project_id",
-			Value: dp.Resource.ProjectID,
+			Value: dp.Datastore.ProjectID,
 		})
 	}
 	if len(dp.Owner) > 0 {
@@ -316,8 +317,8 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 
 func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	cfg := oauth2.Config{
-		ClientID:     "854073996265-riks3c6p36oh3ijgef8tvlk3367ab9sq.apps.googleusercontent.com",
-		ClientSecret: "supersecret",
+		ClientID:     a.config.OAuth2.ClientID,
+		ClientSecret: a.config.OAuth2.ClientSecret,
 		Endpoint:     google.Endpoint,
 		RedirectURL:  "http://localhost:8080/callback",
 		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/groups"},
@@ -340,7 +341,21 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		log.Errorf("Exchanging authorization code for tokens: %v", err)
+		respondf(w, http.StatusForbidden, "uh oh")
+		return
+	}
+
 	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", token.AccessToken, "dp.dev.intern.nav.no"))
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", token.AccessToken))
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", rawIDToken))
 	w.WriteHeader(http.StatusOK)
+}
+
+func jwtValidatorMiddleware(c config.Config) func(http.Handler) http.Handler {
+	if c.DevMode {
+		return middleware.MockJWTValidatorMiddleware()
+	}
+	return middleware.JWTValidatorMiddleware(c.OAuth2)
 }

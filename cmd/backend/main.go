@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/nais/dp/backend/config"
-	"github.com/nais/dp/backend/middleware"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/nais/dp/backend/config"
 
 	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/backend/api"
@@ -33,14 +33,7 @@ func main() {
 		log.Fatalf("Initializing firestore client: %v", err)
 	}
 
-	router := api.New(client, jwtValidatorMiddleware(cfg))
+	router := api.New(client, cfg)
 	fmt.Println("running @", cfg.BindAddress)
 	fmt.Println(http.ListenAndServe(cfg.BindAddress, router))
-}
-
-func jwtValidatorMiddleware(c config.Config) func(http.Handler) http.Handler {
-	if c.DevMode {
-		return middleware.MockJWTValidatorMiddleware()
-	}
-	return middleware.JWTValidatorMiddleware(cfg.OAuth2)
 }

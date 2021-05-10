@@ -4,8 +4,10 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
-	log "github.com/sirupsen/logrus"
 	"io"
+
+	log "github.com/sirupsen/logrus"
+
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -46,7 +48,7 @@ type KeyDiscovery struct {
 
 type Key struct {
 	Kid string               `json:"kid"`
-	X5c []EncodedCertificate `json:"x5c"`
+	X5c []EncodedCertificate `json:"n"`
 }
 
 func DiscoverURL(url string) (*KeyDiscovery, error) {

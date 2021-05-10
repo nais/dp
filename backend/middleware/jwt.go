@@ -3,19 +3,21 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/jwtauth"
 	"github.com/nais/dp/backend/auth"
 	log "github.com/sirupsen/logrus"
-	"net/http"
+	"google.golang.org/api/idtoken"
 )
 
 func JWTValidatorMiddleware(oAuth2Config auth.Google) func(http.Handler) http.Handler {
-	jwtValidator, err := CreateJWTValidator(oAuth2Config)
+	jwtValidator, err := idtoken.NewValidator(context.Background())
 	if err != nil {
 		log.Fatalf("Creating JWT validator: %v", err)
 	}
-	return TokenValidatorMiddleware(jwtValidator)
+	return TokenValidatorMiddleware(jwtValidator, oAuth2Config.ClientID)
 }
 
 func MockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
@@ -39,16 +41,15 @@ func CreateJWTValidator(google auth.Google) (jwt.Keyfunc, error) {
 	return JWTValidator(certificates, google.ClientID), nil
 }
 
-func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) http.Handler {
+func TokenValidatorMiddleware(validator *idtoken.Validator, clientId string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			var claims jwt.MapClaims
 
 			token := jwtauth.TokenFromCookie(r)
 
-			_, err := jwt.ParseWithClaims(token, &claims, jwtValidator)
+			payload, err := validator.Validate(context.Background(), token, clientId)
 			if err != nil {
-				log.Errorf("parsing token: %v", err)
+				log.Errorf("validating token: %v", err)
 				w.WriteHeader(http.StatusForbidden)
 				_, err = fmt.Fprintf(w, "Unauthorized access: %s", err.Error())
 				if err != nil {
@@ -57,16 +58,16 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) 
 				return
 			}
 
-			var groups []string
-			groupInterface := claims["groups"].([]interface{})
-			groups = make([]string, len(groupInterface))
-			for i, v := range groupInterface {
-				groups[i] = v.(string)
-			}
-			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
+			// var groups []string
+			// groupInterface := payload.Claims["groups"].(interface{})
+			// groups = make([]string, len(groupInterface))
+			// for i, v := range groupInterface {
+			// 	groups[i] = v.(string)
+			// }
+			// r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
 
-			username := claims["preferred_username"].(string)
-			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", username))
+			username := payload.Claims["email"].(string)
+			r = r.WithContext(context.WithValue(r.Context(), "email", username))
 
 			next.ServeHTTP(w, r)
 		})
