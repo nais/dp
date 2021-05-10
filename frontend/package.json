@@ -40,6 +40,7 @@
     "prop-types": "^15.7.2",
     "react": "^17.0.2",
     "react-bootstrap": "^1.5.2",
+    "react-datepicker": "^3.8.0",
     "react-dom": "^16.8.0",
     "react-modal": "^3.13.1",
     "react-router-dom": "^5.2.0",
@@ -50,6 +51,7 @@
   },
   "devDependencies": {
     "@types/react-bootstrap": "^0.32.25",
+    "@types/react-datepicker": "^3.1.8",
     "@types/react-router-dom": "^5.1.7",
     "husky": "^4.3.6",
     "prettier": "^2.2.1",

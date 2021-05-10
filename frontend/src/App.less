@@ -1,5 +1,37 @@
-@import (reference) "nav-frontend-core";
+@import (reference) "~nav-frontend-core";
 
-.typo-sidetittel {
-  padding: 0.2em 0 0.5em 0;
+header {
+  align-content: center;
+  width: 100vw;
+  display: flex;
+  padding: 8px 32px;
+  border-bottom: 4px solid @navLysGra;
+
+  & a {
+    display: inline-flex;
+    text-decoration: none;
+    color: black;
+
+    & :hover {
+      text-decoration: underline;
+      color: #0067c5;
+    }
+
+    & .typo-systemtittel {
+      padding-left: 1rem;
+      padding-right: 1rem;
+      margin: 2.2rem 0 0;
+    }
+  }
+}
+
+body {
+  background-color: white;
+}
+
+main {
+  margin: 0 auto;
+  width: 80vw;
+  min-height: 100vh;
+  padding: 2%;
 }
