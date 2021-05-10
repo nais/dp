@@ -96,9 +96,9 @@ export const ProduktNytt = (): JSX.Element => {
   return (
     <div>
       <SkjemaGruppe>
-        <Input label="navn" onChange={(e) => setNavn(e.target.value)} />
+        <Input label="Navn" onChange={(e) => setNavn(e.target.value)} />
         <Input
-          label="beskrivelse"
+          label="Beskrivelse"
           onChange={(e) => setBeskrivelse(e.target.value)}
         />
         <Input label="Eier (team)" onChange={(e) => setEier(e.target.value)} />
