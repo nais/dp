@@ -10,6 +10,7 @@ type Config struct {
 	LogLevel                 string
 	DevMode                  bool
 	FirestoreGoogleProjectId string
+	FirestoreCollection      string
 }
 
 func DefaultConfig() Config {

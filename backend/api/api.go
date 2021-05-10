@@ -86,7 +86,7 @@ func New(client *firestore.Client, config config.Config) chi.Router {
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dev")
+	dpc := a.client.Collection(a.config.FirestoreCollection)
 
 	dataproducts := make([]DataProductResponse, 0)
 
@@ -138,7 +138,7 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dev")
+	dpc := a.client.Collection(a.config.FirestoreCollection)
 	var dp DataProduct
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
@@ -172,7 +172,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dev")
+	dpc := a.client.Collection(a.config.FirestoreCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -213,7 +213,7 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dev")
+	dpc := a.client.Collection(a.config.FirestoreCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
@@ -245,7 +245,7 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection("dev")
+	dpc := a.client.Collection(a.config.FirestoreCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
