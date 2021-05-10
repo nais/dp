@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
 import { Select } from "nav-frontend-skjema";
-import { ProduktListeState } from "./produktListe";
+import { ProduktListeState } from "./hovedside";
 import "./produktFilter.less";
 
 interface ProduktFilterProps {
@@ -36,7 +36,11 @@ export const ProduktFilter = ({
   };
 
   return (
-    <Select label={"Filtrer på produkteier"} onChange={(e) => selectTeam(e)}>
+    <Select
+      className="produkt-filter"
+      label={"Filtrer på produkteier"}
+      onChange={(e) => selectTeam(e)}
+    >
       <option key="xxx" value="">
         {"Velg team"}
       </option>

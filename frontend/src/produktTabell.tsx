@@ -1,12 +1,12 @@
 import React from "react";
 import "nav-frontend-tabell-style";
 import NavFrontendSpinner from "nav-frontend-spinner";
-import { DataProdukt } from "./produktAPI";
-import { ProduktListeState } from "./produktListe";
+import { DataProduktResponse } from "./produktAPI";
+import { ProduktListeState } from "./hovedside";
 import { Link } from "react-router-dom";
 import "./produktTabell.less";
 interface ProduktProps {
-  produkt: DataProdukt;
+  produkt: DataProduktResponse;
 }
 
 const Produkt = ({ produkt }: ProduktProps) => {

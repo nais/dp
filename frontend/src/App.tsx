@@ -1,6 +1,6 @@
 import React from "react";
 import "./App.less";
-import { ProduktListe } from "./produktListe";
+import { Hovedside } from "./hovedside";
 import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
 import ProduktNytt from "./produktNytt";
@@ -21,7 +21,7 @@ const App = (): JSX.Element => {
           <Switch>
             <Route path="/produkt/nytt" children={<ProduktNytt />} />
             <Route path="/produkt/:produktID" children={<ProduktDetalj />} />
-            <Route exact path="/" children={<ProduktListe />} />
+            <Route exact path="/" children={<Hovedside />} />
             <Route path="*">
               <Systemtittel>404 - ikke funnet</Systemtittel>
             </Route>

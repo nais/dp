@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
+import { DataProduktSchema } from "./produktAPI";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { date } from "zod";
+import { useHistory } from "react-router-dom";
 
 export const ProduktNytt = (): JSX.Element => {
   const [ressursType, setRessursType] = useState<string>("");
@@ -14,12 +16,34 @@ export const ProduktNytt = (): JSX.Element => {
   const [bigqueryView, setBigqueryView] = useState<string>("");
   const [bigqueryTable, setBigqueryTable] = useState<string>("");
   const [bucket, setBucket] = useState<string>("");
+  const history = useHistory();
 
   useEffect(() => {
     setBigqueryTable("");
     setBigqueryView("");
     setBucket("");
   }, [ressursType]);
+
+  const createProduct = async () => {
+    const nyttProdukt = DataProduktSchema.parse({
+      name: navn,
+      description: beskrivelse,
+      datastore: {
+        type: ressursType,
+        project_id: "placeholder",
+        dataset_id: "placeholder",
+      },
+      owner: eier,
+      access: [],
+    });
+
+    const res = await fetch("http://localhost:8080/api/v1/dataproducts", {
+      method: "POST",
+      body: JSON.stringify(nyttProdukt),
+    });
+    const newID = await res.text();
+    history.push(`/produkt/${newID}`);
+  };
 
   const validForm = () => {
     if (
@@ -90,7 +114,8 @@ export const ProduktNytt = (): JSX.Element => {
       <Hovedknapp
         disabled={validForm()}
         onClick={() => {
-          console.log(navn, beskrivelse, bucket);
+          createProduct();
+          //console.log(navn, beskrivelse, bucket);
         }}
       >
         Submit
