@@ -20,8 +20,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const BucketType = "Bucket"
-const BigQueryType = "BigQuery"
+const (
+	BucketType   = "bucket"
+	BigQueryType = "bigquery"
+)
 
 type api struct {
 	client   *firestore.Client
@@ -152,7 +154,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(dp.Datastore) > 0 {
-		if errs := validateDatastore(dp.Datastore[0]); errs != nil {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
 			log.Errorf("Validation fails: %v", errs)
 			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 			return
@@ -281,7 +283,7 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 		})
 	}
 	if len(dp.Datastore) > 0 {
-		if errs := validateDatastore(dp.Datastore[0]); errs != nil {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
 			return nil, errs
 		}
 		updates = append(updates, firestore.Update{
@@ -356,31 +358,27 @@ func jwtValidatorMiddleware(c config.Config) func(http.Handler) http.Handler {
 	return middleware.JWTValidatorMiddleware(c.OAuth2)
 }
 
-func validateDatastore(store map[string]string) error {
-	keys := []string{}
-	for k := range store {
-		keys = append(keys, k)
+func ValidateDatastore(store map[string]string) error {
+	datastoreType := store["type"]
+	if len(datastoreType) == 0 {
+		return fmt.Errorf("no type defined")
 	}
-	if len(keys) == 2 {
-		if _, ok := store["bucket_id"]; !ok {
-			return fmt.Errorf("Key: 'DataProduct.Datastore.BucketId' Error:Field validation for 'DatasetID' failed on the 'required' tag")
-		}
-		if _, ok := store["project_id"]; !ok {
-			return fmt.Errorf("Key: 'DataProduct.Datastore.ProjectId' Error:Field validation for 'ProjectId' failed on the 'required' tag")
-		}
-		return nil
+
+	switch datastoreType {
+	case BucketType:
+		return hasKeys(store, "project_id", "bucket_id")
+	case BigQueryType:
+		return hasKeys(store, "dataset_id", "project_id", "resource_id")
 	}
-	if len(keys) == 3 {
-		if _, ok := store["dataset_id"]; !ok {
-			return fmt.Errorf("Key: 'DataProduct.Datastore.DatasetId' Error:Field validation for 'DatasetId' failed on the 'required' tag")
+
+	return fmt.Errorf("unknown datastore type: %v", datastoreType)
+}
+
+func hasKeys(m map[string]string, keys ...string) error {
+	for _, k := range keys {
+		if _, ok := m[k]; !ok {
+			return fmt.Errorf("missing key: %v", k)
 		}
-		if _, ok := store["project_id"]; !ok {
-			return fmt.Errorf("Key: 'DataProduct.Datastore.ProjectId' Error:Field validation for 'ProjectId' failed on the 'required' tag")
-		}
-		if _, ok := store["resource_id"]; !ok {
-			return fmt.Errorf("Key: 'DataProduct.Datastore.ResourceId' Error:Field validation for 'ResourceId' failed on the 'required' tag")
-		}
-		return nil
 	}
-	return fmt.Errorf("Incoming DataProduct.Datastore is neither Bucket or BigQuery")
+	return nil
 }
