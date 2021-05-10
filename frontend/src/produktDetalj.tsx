@@ -41,39 +41,35 @@ interface SlettProduktProps {
   produktID: string;
   isOpen: boolean;
 }
+
 const SlettProdukt = ({
   produktID,
   isOpen,
 }: SlettProduktProps): JSX.Element => {
   const toggleOpen = (f: boolean) => {};
   const [error, setError] = useState<string | null>(null);
-  let history = useHistory();
+  const history = useHistory();
 
-  const deleteProduct = (id: string) => {
-    fetch(`http://localhost:8080/dataproducts/${id}`, {
-      method: "delete",
-    })
-      .then((res) => {
-        if (res.status % 100 !== 2) {
-          res.text().then((t) => {
-            setError(t);
-          });
-        } else {
-          history.push("/");
+  const deleteProduct = async (id: string) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/api/v1/dataproducts/${id}`,
+        {
+          method: "delete",
         }
-      })
-      .catch((e) => {
-        setError(`Nettverksfeil: ${e}`);
-        console.log(e);
-      });
+      );
+
+      if (res.status !== 204) {
+        setError(`Feil: ${await res.text()}`);
+      } else {
+        history.push("/");
+      }
+    } catch (e) {
+      setError(`Nettverksfeil: ${e}`);
+      console.log(e);
+    }
     console.log("delete this:", { id });
   };
-  /*
-.
-
-        <div style={{ padding: "2rem 2.5rem" }}>Innhold her</div>
-
- */
 
   return (
     <ModalWrapper
@@ -92,7 +88,6 @@ const SlettProdukt = ({
     </ModalWrapper>
   );
 };
-
 export const ProduktTilganger = ({
   produkt,
 }: ProduktInfotabellProps): JSX.Element => {
@@ -100,9 +95,9 @@ export const ProduktTilganger = ({
     <div className={"produkt-detaljer-tilganger"}>
       <Ingress>Tilganger</Ingress>
       <ul>
-        {produkt.data_product.access.map((a) => (
-          <li>{}</li>
-        ))}
+        {produkt.data_product.access
+          ? produkt.data_product.access.map((a) => <li>{}</li>)
+          : null}
       </ul>
     </div>
   );
@@ -145,17 +140,19 @@ export const ProduktDetalj = (): JSX.Element => {
     );
 
   return (
-    <div>
+    <div className="produktdetalj">
       <div className="produktdetalj-knapper">
         <Knapp>Gi tilgang</Knapp>
         <Knapp>Fjern tilgang</Knapp>
         <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
       </div>
-      {produkt ? <ProduktInfoFaktaboks produkt={produkt} /> : null}
-      {produkt ? <ProduktTilganger produkt={produkt} /> : null}
-      {produkt?.id ? (
-        <SlettProdukt isOpen={isOpen} produktID={produkt.id} />
-      ) : null}
+      <div className="produktdetalj-bokser">
+        {produkt ? <ProduktInfoFaktaboks produkt={produkt} /> : null}
+        {produkt ? <ProduktTilganger produkt={produkt} /> : null}
+        {produkt?.id ? (
+          <SlettProdukt isOpen={isOpen} produktID={produkt.id} />
+        ) : null}
+      </div>
     </div>
   );
 };

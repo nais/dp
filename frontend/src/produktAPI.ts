@@ -6,30 +6,21 @@ const DataProduktTilgangSchema = z.object({
   end: z.string(),
 });
 
-const DataProduktRessursSchema = z.object({
+const DataLagerSchema = z.object({
   project_id: z.string(),
   dataset_id: z.string(),
   type: z.string(),
 });
 
-/*
-export const NyttDataProduktSchema = z.object({
-  data_product: z.object({
+export const DataProduktSchema = z
+  .object({
     name: z.string(),
-    description: z.string(),
+    description: z.string().nullable(),
     owner: z.string(),
-    resource: DataProduktRessursSchema,
+    datastore: DataLagerSchema.partial(),
     access: DataProduktTilgangSchema.array(),
-  }),
-});*/
-
-export const DataProduktSchema = z.object({
-  name: z.string(),
-  description: z.string(),
-  owner: z.string(),
-  resource: DataProduktRessursSchema,
-  access: DataProduktTilgangSchema.array(),
-});
+  })
+  .partial();
 
 export const DataProduktResponseSchema = z.object({
   id: z.string(),
