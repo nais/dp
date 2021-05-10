@@ -59,27 +59,6 @@ func UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID stri
 	return nil
 }
 
-func UpdateBigqueryViewAccessControl(member, projectID, datasetID, viewID string) error {
-
-	ctx := context.Background()
-	bqclient, err := bigquery.NewClient(ctx, projectID)
-	if err != nil {
-		return fmt.Errorf("bigquery.NewClient: %v", err)
-	}
-	defer bqclient.Close()
-
-	policy, err := getPolicy(bqclient, datasetID, viewID)
-
-	// no support for V3 for BigQuery yet, and no support for conditions
-	role := "roles/bigquery.dataViewer"
-	policy.Add(member, iam.RoleName(role))
-
-	bqTable := bqclient.Dataset(datasetID).Table(viewID)
-	bqTable.IAM().SetPolicy(ctx, policy)
-
-	return nil
-}
-
 func getPolicy(bqclient *bigquery.Client, datasetID, tableID string) (*iam.Policy, error) {
 	ctx := context.Background()
 

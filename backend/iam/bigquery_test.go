@@ -41,7 +41,7 @@ func TestBigqueryViewIam(t *testing.T) {
 	viewID := "container_resource_usage_aura"
 	member := "user:johnny.horvi@nav.no"
 
-	err := iam.UpdateBigqueryViewAccessControl(member, projectID, datasetID, viewID)
+	err := iam.UpdateBigqueryTableAccessControl(member, projectID, datasetID, viewID)
 	if err != nil {
 		return
 	}
