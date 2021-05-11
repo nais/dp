@@ -59,16 +59,11 @@ const RessursVelger = ({ ressurs, setter }: RessursVelgerProps) => {
   }
 };
 export const ProduktNytt = (): JSX.Element => {
-  const [ressursType, setRessursType] = useState<string>("");
   const [navn, setNavn] = useState<string>("");
   const [beskrivelse, setBeskrivelse] = useState<string>("");
   const [eier, setEier] = useState<string>("");
   const [datastore, setDatastore] = useState<DataLager | null>(null);
   const history = useHistory();
-
-  useEffect(() => {
-    const lagerType = ressursType as DataLager["type"];
-  }, [ressursType]);
 
   const createProduct = async () => {
     const nyttProdukt = DataProduktSchema.parse({

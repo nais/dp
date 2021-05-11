@@ -2,28 +2,34 @@
   display: flex;
   align-items: flex-start;
 
-  .produktdetalj-bokser {
+  .bokser {
     flex-grow: 1;
+  }
+
+  .knapperad {
+    max-width: 20vw;
+    padding-right: 20px;
+
+    & button {
+      margin-bottom: 10px;
+      width: 100%;
+    }
+  }
+
+  .faktaboks {
+    background: rgba(241, 241, 241, 20);
+    padding: 1%;
+    margin: 1%;
+    margin-top: 0;
   }
 }
 
-.produkt-detaljer-faktaboks {
-  background: rgba(241, 241, 241, 20);
-  padding: 1%;
-  margin: 1%;
+.produktnavn {
+  margin-bottom: 20px;
 }
 
 .produkt-detaljer-tilganger {
   background: rgba(241, 241, 241, 20);
   padding: 1%;
   margin: 1%;
-}
-
-.produktdetalj-knapper {
-  margin-top: 2%;
-}
-
-.produktdetalj-knapper > button {
-  margin-bottom: 10px;
-  width: 80%;
 }

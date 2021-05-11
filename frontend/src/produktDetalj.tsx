@@ -2,12 +2,17 @@ import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import ModalWrapper from "nav-frontend-modal";
-import { Ingress, Normaltekst, Systemtittel } from "nav-frontend-typografi";
-import { DataProduktResponse } from "./produktAPI";
+import {
+  Ingress,
+  Normaltekst,
+  Sidetittel,
+  Systemtittel,
+} from "nav-frontend-typografi";
+import { DataLager, DataProduktResponse } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 
-interface ProduktDetaljProps {
+interface ProduktDetaljParams {
   produktID: string;
 }
 
@@ -15,24 +20,20 @@ interface ProduktInfotabellProps {
   produkt: DataProduktResponse;
 }
 
+interface ProduktDetaljProps {
+  setCrumb: React.Dispatch<React.SetStateAction<string | null>>;
+}
+
 const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
   return (
-    <div className={"produkt-detaljer"}>
-      <Systemtittel>{produkt.data_product?.name}</Systemtittel>
-
-      <div className={"produkt-detaljer-faktaboks"}>
-        <Ingress>
-          Produkteier: {produkt.data_product?.owner || "uvisst"}
-        </Ingress>
-        <Normaltekst>
-          {produkt.data_product?.description || "uvisst"}
-        </Normaltekst>
-        <ul>
-          <li>ID: {produkt.id}</li>
-          <li>Opprettet: {produkt.created}</li>
-          <li>Oppdatert: {produkt.updated}</li>
-        </ul>
-      </div>
+    <div className={"faktaboks"}>
+      <Ingress>Produkteier: {produkt.data_product?.owner || "uvisst"}</Ingress>
+      <Normaltekst>{produkt.data_product?.description || "uvisst"}</Normaltekst>
+      <ul>
+        <li>ID: {produkt.id}</li>
+        <li>Opprettet: {produkt.created}</li>
+        <li>Oppdatert: {produkt.updated}</li>
+      </ul>
     </div>
   );
 };
@@ -103,12 +104,12 @@ export const ProduktTilganger = ({
   );
 };
 
-export const ProduktDetalj = (): JSX.Element => {
-  let { produktID } = useParams<ProduktDetaljProps>();
+export const ProduktDetalj = ({
+  setCrumb,
+}: ProduktDetaljProps): JSX.Element => {
+  let { produktID } = useParams<ProduktDetaljParams>();
 
-  const [produkt, setProdukt] = useState<DataProduktResponse | undefined>(
-    undefined
-  );
+  const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
   const [isOpen, setToggleOpen] = useState<boolean>(false);
   const toggleOpen = (input: boolean) => {
@@ -130,6 +131,12 @@ export const ProduktDetalj = (): JSX.Element => {
     );
   }, [produktID]);
 
+  useEffect(() => {
+    if (produkt != null) {
+      setCrumb(produkt?.data_product.name || null);
+    }
+  }, [produkt]);
+
   if (error) return <div>{error}</div>;
 
   if (typeof produkt == "undefined")
@@ -139,19 +146,25 @@ export const ProduktDetalj = (): JSX.Element => {
       </div>
     );
 
+  if (produkt == null) return <></>;
+
   return (
-    <div className="produktdetalj">
-      <div className="produktdetalj-knapper">
-        <Knapp>Gi tilgang</Knapp>
-        <Knapp>Fjern tilgang</Knapp>
-        <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
-      </div>
-      <div className="produktdetalj-bokser">
-        {produkt ? <ProduktInfoFaktaboks produkt={produkt} /> : null}
-        {produkt ? <ProduktTilganger produkt={produkt} /> : null}
-        {produkt?.id ? (
+    <div>
+      <Sidetittel className={"produktnavn"}>
+        {produkt.data_product?.name}
+      </Sidetittel>
+
+      <div className="produktdetalj">
+        <div className="bokser">
+          <ProduktInfoFaktaboks produkt={produkt} />
+          <ProduktTilganger produkt={produkt} />
           <SlettProdukt isOpen={isOpen} produktID={produkt.id} />
-        ) : null}
+        </div>
+        <div className="knapperad">
+          <Knapp>Gi tilgang</Knapp>
+          <Knapp>Fjern tilgang</Knapp>
+          <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
+        </div>
       </div>
     </div>
   );
