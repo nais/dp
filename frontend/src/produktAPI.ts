@@ -7,12 +7,13 @@ const DataProduktTilgangSchema = z.object({
 });
 
 const BucketStoreSchema = z.object({
-  type: z.string(),
+  type: z.literal("bucket"),
   project_id: z.string(),
   bucket_id: z.string(),
 });
+
 const BigQuerySchema = z.object({
-  type: z.string(),
+  type: z.literal("bigquery"),
   project_id: z.string(),
   dataset_id: z.string(),
   resource_id: z.string(),

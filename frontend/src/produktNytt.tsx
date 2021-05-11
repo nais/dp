@@ -9,48 +9,53 @@ import { date } from "zod";
 import { useHistory } from "react-router-dom";
 
 interface RessursVelgerProps {
-  ressurs: DataLager;
-  setter: React.Dispatch<React.SetStateAction<DataLager>>;
+  ressurs: DataLager | null;
+  setter: React.Dispatch<React.SetStateAction<DataLager | null>>;
 }
+
 const RessursVelger = ({ ressurs, setter }: RessursVelgerProps) => {
+  if (ressurs === null) {
+    return null;
+  }
+
   switch (ressurs.type) {
     case "bucket":
       return (
         <div>
           <Input
             label="project_id"
-            value={ressurs.project_id}
+            value={ressurs.project_id || ""}
             onChange={(e) => setter({ ...ressurs, project_id: e.target.value })}
           />
           <Input
             label="bucket_id"
-            value={ressurs.bucket_id}
+            value={ressurs.bucket_id || ""}
             onChange={(e) => setter({ ...ressurs, bucket_id: e.target.value })}
           />
         </div>
       );
-    case "bigquery-table":
+    case "bigquery":
       return (
         <div>
           <Input
-            label="query"
-            value={bigqueryTable}
-            onChange={(e) => setBigqueryTable(e.target.value)}
+            label="Project ID"
+            value={ressurs.project_id || ""}
+            onChange={(e) => setter({ ...ressurs, project_id: e.target.value })}
           />
-        </div>
-      );
-    case "bucket":
-      return (
-        <div>
           <Input
-            label="bucket"
-            value={bucket}
-            onChange={(e) => setBucket(e.target.value)}
+            label="Resource ID"
+            value={ressurs.resource_id || ""}
+            onChange={(e) =>
+              setter({ ...ressurs, resource_id: e.target.value })
+            }
+          />
+          <Input
+            label="Dataset ID"
+            value={ressurs.dataset_id || ""}
+            onChange={(e) => setter({ ...ressurs, dataset_id: e.target.value })}
           />
         </div>
       );
-    case "":
-      return null;
   }
 };
 export const ProduktNytt = (): JSX.Element => {
@@ -58,26 +63,18 @@ export const ProduktNytt = (): JSX.Element => {
   const [navn, setNavn] = useState<string>("");
   const [beskrivelse, setBeskrivelse] = useState<string>("");
   const [eier, setEier] = useState<string>("");
-  const [bigqueryView, setBigqueryView] = useState<object>({});
-  const [bigqueryTable, setBigqueryTable] = useState<object>({});
-  const [bucket, setBucket] = useState<string>("");
+  const [datastore, setDatastore] = useState<DataLager | null>(null);
   const history = useHistory();
 
   useEffect(() => {
-    setBigqueryTable("");
-    setBigqueryView("");
-    setBucket("");
+    const lagerType = ressursType as DataLager["type"];
   }, [ressursType]);
 
   const createProduct = async () => {
     const nyttProdukt = DataProduktSchema.parse({
       name: navn,
       description: beskrivelse,
-      datastore: {
-        type: ressursType,
-        project_id: "placeholder",
-        dataset_id: "placeholder",
-      },
+      datastore: [datastore],
       owner: eier,
       access: [],
     });
@@ -91,14 +88,6 @@ export const ProduktNytt = (): JSX.Element => {
   };
 
   const validForm = () => {
-    if (
-      navn?.length > 2 &&
-      eier?.length > 2 &&
-      (bigqueryView?.length > 2 ||
-        bigqueryTable?.length > 2 ||
-        bucket?.length > 2)
-    )
-      return false;
     return true;
   };
 
@@ -112,19 +101,24 @@ export const ProduktNytt = (): JSX.Element => {
         />
         <Input label="Eier (team)" onChange={(e) => setEier(e.target.value)} />
         <p>Ressurs</p>
-        <Select label="Type?" onChange={(e) => setRessursType(e.target.value)}>
+        <Select
+          label="Type?"
+          onChange={(e) => {
+            if (e.target.value != "")
+              setDatastore({ type: e.target.value } as DataLager);
+            else setDatastore(null);
+          }}
+        >
           <option value="">Velg type</option>
-          <option value="bigquery-view">BigQuery view</option>
-          <option value="bigquery-table">BigQuery table</option>
+          <option value="bigquery">BigQuery</option>
           <option value="bucket">Bucket</option>
         </Select>
-        {ressursVelger(ressursType)}
+        <RessursVelger ressurs={datastore} setter={setDatastore} />
       </SkjemaGruppe>
       <Hovedknapp
-        disabled={validForm()}
+        disabled={!validForm()}
         onClick={() => {
           createProduct();
-          //console.log(navn, beskrivelse, bucket);
         }}
       >
         Submit
