@@ -3,10 +3,11 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/auth"
-	"google.golang.org/api/iterator"
 	"net/http"
 	"time"
+
+	"github.com/nais/dp/backend/auth"
+	"google.golang.org/api/iterator"
 
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
@@ -73,10 +74,12 @@ func New(client *firestore.Client, config config.Config) chi.Router {
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+			r.Get("/teams", api.getTeamsForUser)
 		})
 
 		r.Get("/dataproducts", api.dataproducts)
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
+
 	})
 
 	r.Get("/callback", api.callback)
@@ -333,6 +336,40 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, "dp.dev.intern.nav.no"))
 	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
 	w.WriteHeader(http.StatusOK)
+}
+
+func (a *api) getTeamsForUser(w http.ResponseWriter, r *http.Request) {
+	teamsMap, err := fetchAllTeams(a.config.TeamsURL)
+	if err != nil {
+		log.Errorf("fetching teams: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to fetch teams\n")
+		return
+	}
+	var teams []string
+	for _, uuid := range r.Context().Value("groups").([]string) {
+		if _, found := teamsMap[uuid]; found {
+			teams = append(teams, teamsMap[uuid])
+		}
+	}
+
+	if err := json.NewEncoder(w).Encode(teams); err != nil {
+		log.Errorf("encoding teams response: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to get teams for user\n")
+		return
+	}
+}
+
+func fetchAllTeams(url string) (map[string]string, error) {
+	var teams map[string]string
+	response, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := json.NewDecoder(response.Body).Decode(&teams); err != nil {
+		return nil, err
+	}
+	return teams, nil
 }
 
 func ValidateDatastore(store map[string]string) error {

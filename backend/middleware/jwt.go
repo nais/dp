@@ -37,7 +37,7 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var claims jwt.MapClaims
 
-			token := jwtauth.TokenFromHeader(r)
+			token := jwtauth.TokenFromCookie(r)
 
 			_, err := jwt.ParseWithClaims(token, &claims, jwtValidator)
 			if err != nil {

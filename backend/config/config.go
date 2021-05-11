@@ -9,6 +9,7 @@ type Config struct {
 	OAuth2ClientID           string
 	OAuth2ClientSecret       string
 	OAuth2TenantID           string
+	TeamsURL                 string
 }
 
 func DefaultConfig() Config {
