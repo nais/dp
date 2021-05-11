@@ -7,6 +7,7 @@ import {
   Normaltekst,
   Sidetittel,
   Systemtittel,
+  Undertittel,
 } from "nav-frontend-typografi";
 import { DataLager, DataProduktResponse } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
@@ -27,13 +28,32 @@ interface ProduktDetaljProps {
 const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
   return (
     <div className={"faktaboks"}>
-      <Ingress>Produkteier: {produkt.data_product?.owner || "uvisst"}</Ingress>
-      <Normaltekst>{produkt.data_product?.description || "uvisst"}</Normaltekst>
-      <ul>
-        <li>ID: {produkt.id}</li>
-        <li>Opprettet: {produkt.created}</li>
-        <li>Oppdatert: {produkt.updated}</li>
-      </ul>
+      <Systemtittel className={"produktnavn"}>
+        {produkt.data_product?.name}
+      </Systemtittel>
+      <Undertittel>Produkteier:</Undertittel>{" "}
+      <Normaltekst className="faktatekst">
+        {produkt.data_product?.owner || "uvisst"}
+      </Normaltekst>
+      <Undertittel>Beskrivelse:</Undertittel>{" "}
+      <Normaltekst className="faktatekst">
+        {produkt.data_product?.description || "uvisst"}
+      </Normaltekst>
+      <Undertittel>Detaljer:</Undertittel>
+      <table>
+        <tr>
+          <th>ID:</th>
+          <td>{produkt.id}</td>
+        </tr>
+        <tr>
+          <th>Opprettet:</th>
+          <td>{produkt.created}</td>
+        </tr>
+        <tr>
+          <th>Oppdatert:</th>
+          <td>{produkt.updated}</td>
+        </tr>
+      </table>
     </div>
   );
 };
@@ -150,10 +170,6 @@ export const ProduktDetalj = ({
 
   return (
     <div>
-      <Sidetittel className={"produktnavn"}>
-        {produkt.data_product?.name}
-      </Sidetittel>
-
       <div className="produktdetalj">
         <div className="bokser">
           <ProduktInfoFaktaboks produkt={produkt} />
