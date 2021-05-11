@@ -12,6 +12,7 @@ import { Next } from "@navikt/ds-icons";
 
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
+
   return (
     <div className={"dashboard-main"}>
       <div className="app">

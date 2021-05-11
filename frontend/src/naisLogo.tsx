@@ -1,4 +1,4 @@
-const NaisPrideLogo = (): JSX.Element => (
+const NaisPrideLogo = () => (
   <svg
     className="nais-logo"
     version="1.1"
