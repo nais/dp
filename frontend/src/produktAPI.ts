@@ -20,13 +20,15 @@ const BigQuerySchema = z.object({
 });
 
 export const DataLagerSchema = z.union([BucketStoreSchema, BigQuerySchema]);
-export const DataProduktSchema = z.object({
-  name: z.string(),
-  description: z.string().nullable(),
-  owner: z.string(),
-  datastore: DataLagerSchema.array(),
-  access: DataProduktTilgangSchema.array(),
-});
+export const DataProduktSchema = z
+  .object({
+    name: z.string(),
+    description: z.string().nullable(),
+    owner: z.string(),
+    datastore: DataLagerSchema.array().nullable(),
+    access: DataProduktTilgangSchema.array(),
+  })
+  .partial();
 
 export const DataProduktResponseSchema = z.object({
   id: z.string(),
