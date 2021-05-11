@@ -1,33 +1,31 @@
 @import "~nav-frontend-core";
 
 header {
-  align-items: flex-end;
+  align-items: baseline;
   height: 5.625rem;
   width: 100vw;
   display: flex;
-  padding-left: 20px;
+  padding-left: 1.5rem;
   border-bottom: 4px solid @navLysGra;
-  padding-bottom: 5px;
-
-  * {
-    display: inline-flex;
-  }
+  padding-bottom: 10px;
+  padding-top: 10px;
 
   .nais-logo {
     height: 100%;
     width: auto;
   }
 
+  .pil {
+    margin: 0 4px;
+  }
+
   & a {
-    height: 100%;
-    display: flex;
-    align-items: flex-end;
     text-decoration: none;
     color: black;
 
     > .typo-systemtittel {
-      margin-left: 1em;
-      margin-right: 10px;
+      margin-left: 1rem;
+      margin-right: 2px;
     }
 
     & :hover {

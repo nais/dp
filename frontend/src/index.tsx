@@ -10,24 +10,6 @@ import { Sidetittel, Systemtittel } from "nav-frontend-typografi";
 import NaisPrideLogo from "./naisLogo";
 import { Next } from "@navikt/ds-icons";
 
-const next = (
-  <svg
-    width="1em"
-    height="1em"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    {" "}
-    <path
-      fill-rule="evenodd"
-      clip-rule="evenodd"
-      d="M17 12L8.429 3 7 4.5l7.143 7.5L7 19.5 8.429 21 17 12z"
-      fill="currentColor"
-    ></path>{" "}
-  </svg>
-);
-
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
   return (
@@ -35,15 +17,12 @@ const App = (): JSX.Element => {
       <div className="app">
         <Router>
           <header>
+            <NaisPrideLogo />
             <Link to="/">
-              <NaisPrideLogo />
               <Systemtittel>Dataprodukter</Systemtittel>
             </Link>
-            {crumb != null ? (
-              <Systemtittel>
-                {next} {crumb}
-              </Systemtittel>
-            ) : null}
+            {crumb ? <Next className="pil" /> : null}
+            {crumb ? <Systemtittel>{crumb}</Systemtittel> : null}
           </header>
 
           <main>
