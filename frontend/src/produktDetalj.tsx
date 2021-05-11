@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
-import ModalWrapper from "nav-frontend-modal";
-import {
-  Ingress,
-  Normaltekst,
-  Systemtittel,
-  Undertittel,
-} from "nav-frontend-typografi";
-import { DataProduktResponse } from "./produktAPI";
+import Modal from "nav-frontend-modal";
+import { Normaltekst, Systemtittel } from "nav-frontend-typografi";
+import { DataProduktResponse, DataProduktTilgang } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
+import "moment/locale/nb";
+import moment from "moment";
 
 interface ProduktDetaljParams {
   produktID: string;
@@ -25,34 +22,31 @@ interface ProduktDetaljProps {
 }
 
 const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
+  moment.locale("nb");
+
   return (
     <div className={"faktaboks"}>
       <Systemtittel className={"produktnavn"}>
         {produkt.data_product?.name}
       </Systemtittel>
-      <Undertittel>Produkteier:</Undertittel>{" "}
-      <Normaltekst className="faktatekst">
-        {produkt.data_product?.owner || "uvisst"}
+
+      <Normaltekst className="beskrivelse">
+        {produkt.data_product?.description || "Ingen beskrivelse"}
       </Normaltekst>
-      <Undertittel>Beskrivelse:</Undertittel>{" "}
-      <Normaltekst className="faktatekst">
-        {produkt.data_product?.description || "uvisst"}
+      <Normaltekst>
+        Produkteier: {produkt.data_product?.owner || "uvisst"}
       </Normaltekst>
-      <Undertittel>Detaljer:</Undertittel>
-      <table>
-        <tr>
-          <th>ID:</th>
-          <td>{produkt.id}</td>
-        </tr>
-        <tr>
-          <th>Opprettet:</th>
-          <td>{produkt.created}</td>
-        </tr>
-        <tr>
-          <th>Oppdatert:</th>
-          <td>{produkt.updated}</td>
-        </tr>
-      </table>
+
+      <Normaltekst>
+        Opprettet {moment(produkt.created).format("LLL")}
+        {produkt.created !== produkt.updated
+          ? ` (Oppdatert: ${moment(produkt.updated).fromNow()})`
+          : ""}
+      </Normaltekst>
+
+      {produkt.data_product.access.map((a) => (
+        <ProduktTilgang tilgang={a} />
+      ))}
     </div>
   );
 };
@@ -60,13 +54,14 @@ const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
 interface SlettProduktProps {
   produktID: string;
   isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const SlettProdukt = ({
   produktID,
   isOpen,
+  setIsOpen,
 }: SlettProduktProps): JSX.Element => {
-  const toggleOpen = (f: boolean) => {};
   const [error, setError] = useState<string | null>(null);
   const history = useHistory();
 
@@ -92,33 +87,32 @@ const SlettProdukt = ({
   };
 
   return (
-    <ModalWrapper
+    <Modal
       isOpen={isOpen}
-      onRequestClose={() => toggleOpen(false)}
+      onRequestClose={() => setIsOpen(false)}
       closeButton={true}
       contentLabel="Min modalrute"
     >
-      <div>
+      <div className="slette-bekreftelse">
         <Systemtittel>Er du sikker?</Systemtittel>
         {error ? <p>{error}</p> : null}
         <Fareknapp onClick={() => deleteProduct(produktID)}>
           {error ? "Prøv igjen" : "Ja"}
         </Fareknapp>
       </div>
-    </ModalWrapper>
+    </Modal>
   );
 };
-export const ProduktTilganger = ({
-  produkt,
-}: ProduktInfotabellProps): JSX.Element => {
+
+const ProduktTilgang: React.FC<{ tilgang: DataProduktTilgang }> = ({
+  tilgang,
+}) => {
+  const accessStart = moment(tilgang.start).format("LLL");
+  const accessEnd = moment(tilgang.end).format("LLL");
+
   return (
-    <div className={"produkt-detaljer-tilganger"}>
-      <Ingress>Tilganger</Ingress>
-      <ul>
-        {produkt.data_product.access
-          ? produkt.data_product.access.map((a) => <li>{}</li>)
-          : null}
-      </ul>
+    <div className="innslag">
+      {tilgang.subject}: {accessStart}&mdash;{accessEnd}
     </div>
   );
 };
@@ -130,10 +124,7 @@ export const ProduktDetalj = ({
 
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
-  const [isOpen, setToggleOpen] = useState<boolean>(false);
-  const toggleOpen = (input: boolean) => {
-    setToggleOpen(input);
-  };
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/v1/dataproducts/${produktID}`).then(
@@ -169,16 +160,18 @@ export const ProduktDetalj = ({
 
   return (
     <div>
+      <SlettProdukt
+        isOpen={isOpen}
+        setIsOpen={setIsOpen}
+        produktID={produkt.id}
+      />
+
       <div className="produktdetalj">
-        <div className="bokser">
-          <ProduktInfoFaktaboks produkt={produkt} />
-          <ProduktTilganger produkt={produkt} />
-          <SlettProdukt isOpen={isOpen} produktID={produkt.id} />
-        </div>
+        <ProduktInfoFaktaboks produkt={produkt} />
         <div className="knapperad">
           <Knapp>Gi tilgang</Knapp>
           <Knapp>Fjern tilgang</Knapp>
-          <Fareknapp onClick={() => toggleOpen(true)}>Slett</Fareknapp>
+          <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
         </div>
       </div>
     </div>

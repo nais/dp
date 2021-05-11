@@ -19,6 +19,7 @@
     "craco": "^0.0.3",
     "craco-less": "^1.17.1",
     "lodash.throttle": "^4.1.1",
+    "moment": "^2.29.1",
     "nav-frontend-core": "^5.1.1",
     "nav-frontend-ikoner-assets": "^2.0.10",
     "nav-frontend-js-utils": "^1.0.17",
