@@ -6,18 +6,25 @@ const DataProduktTilgangSchema = z.object({
   end: z.string(),
 });
 
-const DataLagerSchema = z.object({
+const BucketStoreSchema = z.object({
+  type: z.string(),
+  project_id: z.string(),
+  bucket_id: z.string(),
+});
+const BigQuerySchema = z.object({
+  type: z.string(),
   project_id: z.string(),
   dataset_id: z.string(),
-  type: z.string(),
+  resource_id: z.string(),
 });
 
+export const DataLagerSchema = z.union([BucketStoreSchema, BigQuerySchema]);
 export const DataProduktSchema = z
   .object({
     name: z.string(),
     description: z.string().nullable(),
     owner: z.string(),
-    datastore: DataLagerSchema.partial(),
+    datastore: DataLagerSchema.array(),
     access: DataProduktTilgangSchema.array(),
   })
   .partial();
@@ -34,6 +41,7 @@ const DataProduktListSchema = DataProduktResponseSchema.array();
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
+export type DataLager = z.infer<typeof DataLagerSchema>;
 
 export const hentProdukter = async (): Promise<DataProduktListe> => {
   let apiURL = "http://localhost:8080/api/v1/dataproducts";

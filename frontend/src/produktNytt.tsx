@@ -2,19 +2,64 @@ import React, { useEffect, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
-import { DataProduktSchema } from "./produktAPI";
+import { DataProduktSchema, DataLager } from "./produktAPI";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { date } from "zod";
 import { useHistory } from "react-router-dom";
 
+interface RessursVelgerProps {
+  ressurs: DataLager;
+  setter: React.Dispatch<React.SetStateAction<DataLager>>;
+}
+const RessursVelger = ({ ressurs, setter }: RessursVelgerProps) => {
+  switch (ressurs.type) {
+    case "bucket":
+      return (
+        <div>
+          <Input
+            label="project_id"
+            value={ressurs.project_id}
+            onChange={(e) => setter({ ...ressurs, project_id: e.target.value })}
+          />
+          <Input
+            label="bucket_id"
+            value={ressurs.bucket_id}
+            onChange={(e) => setter({ ...ressurs, bucket_id: e.target.value })}
+          />
+        </div>
+      );
+    case "bigquery-table":
+      return (
+        <div>
+          <Input
+            label="query"
+            value={bigqueryTable}
+            onChange={(e) => setBigqueryTable(e.target.value)}
+          />
+        </div>
+      );
+    case "bucket":
+      return (
+        <div>
+          <Input
+            label="bucket"
+            value={bucket}
+            onChange={(e) => setBucket(e.target.value)}
+          />
+        </div>
+      );
+    case "":
+      return null;
+  }
+};
 export const ProduktNytt = (): JSX.Element => {
   const [ressursType, setRessursType] = useState<string>("");
   const [navn, setNavn] = useState<string>("");
   const [beskrivelse, setBeskrivelse] = useState<string>("");
   const [eier, setEier] = useState<string>("");
-  const [bigqueryView, setBigqueryView] = useState<string>("");
-  const [bigqueryTable, setBigqueryTable] = useState<string>("");
+  const [bigqueryView, setBigqueryView] = useState<object>({});
+  const [bigqueryTable, setBigqueryTable] = useState<object>({});
   const [bucket, setBucket] = useState<string>("");
   const history = useHistory();
 
@@ -57,42 +102,6 @@ export const ProduktNytt = (): JSX.Element => {
     return true;
   };
 
-  const ressursVelger = (ressursType: string) => {
-    switch (ressursType) {
-      case "bigquery-view":
-        return (
-          <div>
-            <Input
-              label="view"
-              value={bigqueryView}
-              onChange={(e) => setBigqueryView(e.target.value)}
-            />
-          </div>
-        );
-      case "bigquery-table":
-        return (
-          <div>
-            <Input
-              label="query"
-              value={bigqueryTable}
-              onChange={(e) => setBigqueryTable(e.target.value)}
-            />
-          </div>
-        );
-      case "bucket":
-        return (
-          <div>
-            <Input
-              label="bucket"
-              value={bucket}
-              onChange={(e) => setBucket(e.target.value)}
-            />
-          </div>
-        );
-      case "":
-        return null;
-    }
-  };
   return (
     <div>
       <SkjemaGruppe>
