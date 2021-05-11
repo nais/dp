@@ -5,11 +5,10 @@ import ModalWrapper from "nav-frontend-modal";
 import {
   Ingress,
   Normaltekst,
-  Sidetittel,
   Systemtittel,
   Undertittel,
 } from "nav-frontend-typografi";
-import { DataLager, DataProduktResponse } from "./produktAPI";
+import { DataProduktResponse } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 
@@ -155,7 +154,7 @@ export const ProduktDetalj = ({
     if (produkt != null) {
       setCrumb(produkt?.data_product.name || null);
     }
-  }, [produkt]);
+  }, [produkt, setCrumb]);
 
   if (error) return <div>{error}</div>;
 

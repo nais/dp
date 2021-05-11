@@ -1,11 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
 import { DataProduktSchema, DataLager } from "./produktAPI";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { date } from "zod";
 import { useHistory } from "react-router-dom";
 
 interface RessursVelgerProps {
@@ -99,7 +97,7 @@ export const ProduktNytt = (): JSX.Element => {
         <Select
           label="Type?"
           onChange={(e) => {
-            if (e.target.value != "")
+            if (e.target.value !== "")
               setDatastore({ type: e.target.value } as DataLager);
             else setDatastore(null);
           }}

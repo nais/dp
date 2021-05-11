@@ -6,7 +6,7 @@ import { Hovedside } from "./hovedside";
 import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
 import ProduktNytt from "./produktNytt";
-import { Sidetittel, Systemtittel } from "nav-frontend-typografi";
+import { Systemtittel } from "nav-frontend-typografi";
 import NaisPrideLogo from "./naisLogo";
 import { Next } from "@navikt/ds-icons";
 
