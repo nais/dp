@@ -112,7 +112,7 @@ export const Hovedside = (): JSX.Element => {
 
   return (
     <div>
-      <div className="topBar">
+      <div className="filter-and-button">
         <ProduktFilter state={state} dispatch={dispatch} />
         <ProduktNyKnapp />
       </div>

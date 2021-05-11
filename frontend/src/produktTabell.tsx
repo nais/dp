@@ -29,12 +29,11 @@ interface ProduktTabellProps {
 
 export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
   return (
-    <div>
-      <table className={"tabell"}>
+    <div className="produkt-liste">
+      <table className="tabell">
         <thead>
           <tr>
             <th>Produkteier</th>
-
             <th>Navn</th>
             <th>Beskrivelse</th>
           </tr>

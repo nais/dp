@@ -41,12 +41,22 @@ header {
 }
 
 body {
-  background-color: white;
+  width: 100%;
+}
+
+html {
+  width: 100%;
 }
 
 main {
   margin: 0 auto;
   width: 80vw;
   min-height: 100vh;
-  padding: 2%;
+}
+
+@media screen and (max-width: 768px) {
+  main {
+    margin: 0 auto;
+    width: 95vw;
+  }
 }

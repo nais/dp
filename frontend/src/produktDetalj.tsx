@@ -43,10 +43,7 @@ const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
           ? ` (Oppdatert: ${moment(produkt.updated).fromNow()})`
           : ""}
       </Normaltekst>
-
-      {produkt.data_product.access.map((a) => (
-        <ProduktTilgang tilgang={a} />
-      ))}
+      <ProduktTilganger tilganger={produkt.data_product.access} />
     </div>
   );
 };
@@ -104,17 +101,23 @@ const SlettProdukt = ({
   );
 };
 
-const ProduktTilgang: React.FC<{ tilgang: DataProduktTilgang }> = ({
-  tilgang,
-}) => {
-  const accessStart = moment(tilgang.start).format("LLL");
-  const accessEnd = moment(tilgang.end).format("LLL");
+const ProduktTilganger: React.FC<{
+  tilganger: DataProduktTilgang[] | null;
+}> = ({ tilganger }) => {
+  const produktTilgang = (tilgang: DataProduktTilgang) => {
+    const accessStart = moment(tilgang.start).format("LLL");
+    const accessEnd = moment(tilgang.end).format("LLL");
 
-  return (
-    <div className="innslag">
-      {tilgang.subject}: {accessStart}&mdash;{accessEnd}
-    </div>
-  );
+    return (
+      <div className="innslag">
+        {tilgang.subject}: {accessStart}&mdash;{accessEnd}
+      </div>
+    );
+  };
+
+  if (tilganger == null) return <></>;
+
+  return <div>{tilganger.map((a) => produktTilgang(a))}</div>;
 };
 
 export const ProduktDetalj = ({
