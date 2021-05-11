@@ -1,0 +1,19 @@
+{    
+   "name": "my_dp",
+   "description": "describing words",
+   "owner": "eier",
+   "datastore": [
+     {       
+       "project_id": "pid",
+       "bucket_id": "bid",
+       "type": "bucket"
+     }
+   ],
+   "access": [
+     {
+       "subject": "ana.lyst@nav.no",
+       "start": "2021-05-10T18:37:11Z",
+       "end": "2021-06-09T18:37:11Z"
+     }
+   ]
+}
