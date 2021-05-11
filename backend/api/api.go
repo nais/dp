@@ -26,9 +26,10 @@ const (
 )
 
 type api struct {
-	client   *firestore.Client
-	validate *validator.Validate
-	config   config.Config
+	client    *firestore.Client
+	validate  *validator.Validate
+	config    config.Config
+	teamUUIDs map[string]string
 }
 
 type AccessEntry struct {
@@ -52,8 +53,13 @@ type DataProductResponse struct {
 	Created     time.Time   `json:"created"`
 }
 
-func New(client *firestore.Client, config config.Config) chi.Router {
-	api := api{client, validator.New(), config}
+func New(client *firestore.Client, config config.Config, teamUUIDs map[string]string) chi.Router {
+	api := api{
+		client:    client,
+		validate:  validator.New(),
+		config:    config,
+		teamUUIDs: teamUUIDs,
+	}
 
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
@@ -79,7 +85,6 @@ func New(client *firestore.Client, config config.Config) chi.Router {
 
 		r.Get("/dataproducts", api.dataproducts)
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
-
 	})
 
 	r.Get("/callback", api.callback)
@@ -339,16 +344,10 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) getTeamsForUser(w http.ResponseWriter, r *http.Request) {
-	teamsMap, err := fetchAllTeams(a.config.TeamsURL)
-	if err != nil {
-		log.Errorf("fetching teams: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to fetch teams\n")
-		return
-	}
 	var teams []string
 	for _, uuid := range r.Context().Value("groups").([]string) {
-		if _, found := teamsMap[uuid]; found {
-			teams = append(teams, teamsMap[uuid])
+		if _, found := a.teamUUIDs[uuid]; found {
+			teams = append(teams, a.teamUUIDs[uuid])
 		}
 	}
 
@@ -357,19 +356,6 @@ func (a *api) getTeamsForUser(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusInternalServerError, "unable to get teams for user\n")
 		return
 	}
-}
-
-func fetchAllTeams(url string) (map[string]string, error) {
-	var teams map[string]string
-	response, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := json.NewDecoder(response.Body).Decode(&teams); err != nil {
-		return nil, err
-	}
-	return teams, nil
 }
 
 func ValidateDatastore(store map[string]string) error {
