@@ -3,18 +3,17 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nais/dp/backend/auth"
+	"google.golang.org/api/iterator"
 	"net/http"
 	"time"
 
+	"cloud.google.com/go/firestore"
+	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/nais/dp/backend/config"
 	"github.com/nais/dp/backend/middleware"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
-
-	"cloud.google.com/go/firestore"
-	"github.com/go-chi/chi"
-	"google.golang.org/api/iterator"
 	"gopkg.in/go-playground/validator.v9"
 
 	log "github.com/sirupsen/logrus"
@@ -70,7 +69,7 @@ func New(client *firestore.Client, config config.Config) chi.Router {
 	r.Route("/api/v1", func(r chi.Router) {
 		// requires valid access token
 		r.Group(func(r chi.Router) {
-			r.Use(jwtValidatorMiddleware(config))
+			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2TenantID), config.OAuth2ClientID, config.DevMode))
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
@@ -90,20 +89,18 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 
 	dataproducts := make([]DataProductResponse, 0)
 
-	documentIterator := dpc.Documents(r.Context())
+	iter := dpc.Documents(r.Context())
+	defer iter.Stop()
 	for {
-		document, err := documentIterator.Next()
-		if document == nil {
-			if err != nil {
-				log.Errorf("Iterating documents: %v", err)
-			}
-			break
-		}
+		document, err := iter.Next()
+
 		if err == iterator.Done {
 			break
 		}
+
 		if err != nil {
-			log.Errorf("Query error getting dataproducts: %v", err)
+			log.Errorf("Iterating documents: %v", err)
+			break
 		}
 
 		var dpr DataProductResponse
@@ -314,13 +311,7 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 }
 
 func (a *api) callback(w http.ResponseWriter, r *http.Request) {
-	cfg := oauth2.Config{
-		ClientID:     a.config.OAuth2.ClientID,
-		ClientSecret: a.config.OAuth2.ClientSecret,
-		Endpoint:     google.Endpoint,
-		RedirectURL:  "http://localhost:8080/callback",
-		Scopes:       []string{"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/groups"},
-	}
+	cfg := auth.CreateOAuth2Config(a.config)
 
 	state := "veryrandomstring"
 	consentUrl := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("redirect_uri", "http://localhost:8080/callback"))
@@ -332,30 +323,16 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := cfg.Exchange(r.Context(), code)
+	tokens, err := cfg.Exchange(r.Context(), code)
 	if err != nil {
 		log.Errorf("Exchanging authorization code for tokens: %v", err)
 		respondf(w, http.StatusForbidden, "uh oh")
 		return
 	}
 
-	rawIDToken, ok := token.Extra("id_token").(string)
-	if !ok {
-		log.Errorf("Exchanging authorization code for tokens: %v", err)
-		respondf(w, http.StatusForbidden, "uh oh")
-		return
-	}
-
-	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", token.AccessToken, "dp.dev.intern.nav.no"))
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", rawIDToken))
+	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, "dp.dev.intern.nav.no"))
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
 	w.WriteHeader(http.StatusOK)
-}
-
-func jwtValidatorMiddleware(c config.Config) func(http.Handler) http.Handler {
-	if c.DevMode {
-		return middleware.MockJWTValidatorMiddleware()
-	}
-	return middleware.JWTValidatorMiddleware(c.OAuth2)
 }
 
 func ValidateDatastore(store map[string]string) error {
@@ -376,7 +353,7 @@ func ValidateDatastore(store map[string]string) error {
 
 func hasKeys(m map[string]string, keys ...string) error {
 	for _, k := range keys {
-		if _, ok := m[k]; !ok {
+		if _, found := m[k]; !found {
 			return fmt.Errorf("missing key: %v", k)
 		}
 	}

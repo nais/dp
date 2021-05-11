@@ -9,18 +9,9 @@ import (
 	"github.com/go-chi/jwtauth"
 	"github.com/nais/dp/backend/auth"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/api/idtoken"
 )
 
-func JWTValidatorMiddleware(oAuth2Config auth.Google) func(http.Handler) http.Handler {
-	jwtValidator, err := idtoken.NewValidator(context.Background())
-	if err != nil {
-		log.Fatalf("Creating JWT validator: %v", err)
-	}
-	return TokenValidatorMiddleware(jwtValidator, oAuth2Config.ClientID)
-}
-
-func MockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
+func mockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			next.ServeHTTP(w, r)
@@ -28,28 +19,29 @@ func MockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
 	}
 }
 
-func CreateJWTValidator(google auth.Google) (jwt.Keyfunc, error) {
-	if len(google.ClientID) == 0 || len(google.DiscoveryURL) == 0 {
-		return nil, fmt.Errorf("missing required google configuration")
+func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool) func(http.Handler) http.Handler {
+	if mock {
+		return mockJWTValidatorMiddleware()
 	}
-
-	certificates, err := auth.FetchCertificates(google)
+	certificates, err := auth.FetchCertificates(discoveryURL)
 	if err != nil {
-		return nil, fmt.Errorf("retrieving google certificates for token validation: %v", err)
+		log.Fatalf("Fetching signing certificates from IDP: %v", err)
 	}
+	validator := JWTValidator(certificates, clientID)
 
-	return JWTValidator(certificates, google.ClientID), nil
+	return TokenValidatorMiddleware(validator)
 }
 
-func TokenValidatorMiddleware(validator *idtoken.Validator, clientId string) func(next http.Handler) http.Handler {
+func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			var claims jwt.MapClaims
 
-			token := jwtauth.TokenFromCookie(r)
+			token := jwtauth.TokenFromHeader(r)
 
-			payload, err := validator.Validate(context.Background(), token, clientId)
+			_, err := jwt.ParseWithClaims(token, &claims, jwtValidator)
 			if err != nil {
-				log.Errorf("validating token: %v", err)
+				log.Errorf("parsing token: %v", err)
 				w.WriteHeader(http.StatusForbidden)
 				_, err = fmt.Fprintf(w, "Unauthorized access: %s", err.Error())
 				if err != nil {
@@ -58,16 +50,16 @@ func TokenValidatorMiddleware(validator *idtoken.Validator, clientId string) fun
 				return
 			}
 
-			// var groups []string
-			// groupInterface := payload.Claims["groups"].(interface{})
-			// groups = make([]string, len(groupInterface))
-			// for i, v := range groupInterface {
-			// 	groups[i] = v.(string)
-			// }
-			// r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
+			var groups []string
+			groupInterface := claims["groups"].([]interface{})
+			groups = make([]string, len(groupInterface))
+			for i, v := range groupInterface {
+				groups[i] = v.(string)
+			}
+			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
 
-			username := payload.Claims["email"].(string)
-			r = r.WithContext(context.WithValue(r.Context(), "email", username))
+			username := claims["preferred_username"].(string)
+			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", username))
 
 			next.ServeHTTP(w, r)
 		})
