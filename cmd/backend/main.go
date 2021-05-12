@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/nais/dp/backend/auth"
 	"log"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/nais/dp/backend/auth"
 
 	"github.com/nais/dp/backend/config"
 
@@ -27,8 +28,8 @@ func init() {
 	flag.StringVar(&cfg.OAuth2TenantID, "oauth2-tenant-id", os.Getenv("AZURE_APP_TENANT_ID"), "Azure tenant id")
 	flag.StringVar(&cfg.FirestoreGoogleProjectId, "firestore-google-project-id", os.Getenv("FIRESTORE_GOOGLE_PROJECT_ID"), "Firestore Google project ID")
 	flag.StringVar(&cfg.FirestoreCollection, "firestore-collection", os.Getenv("FIRESTORE_COLLECTION"), "Firestore collection name")
-	flag.StringVar(&cfg.TeamsURL, "teams-url", os.Getenv("TEAMS_URL"), "URL for json containing teams and UUIDs")
-	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("TEAMS_TOKEN"), "Token for accessing teams json")
+	flag.StringVar(&cfg.TeamsURL, "teams-url", cfg.TeamsURL, "URL for json containing teams and UUIDs")
+	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("GITHUB_READ_TOKEN"), "Token for accessing teams json")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
 }

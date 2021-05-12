@@ -18,5 +18,6 @@ func DefaultConfig() Config {
 		BindAddress:              ":8080",
 		LogLevel:                 "info",
 		FirestoreGoogleProjectId: "aura-dev-d9f5",
+		TeamsURL:                 "https://raw.githubusercontent.com/navikt/teams/main/teams.json",
 	}
 }
