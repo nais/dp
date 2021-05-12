@@ -23,11 +23,18 @@ func KeyDiscoveryURL(tenantID string) string {
 }
 
 func CreateOAuth2Config(config config.Config) oauth2.Config {
+	var callbackURL string
+	if config.Hostname == "localhost" {
+		callbackURL = fmt.Sprintf("http://localhost:8080/callback")
+	} else {
+		callbackURL = fmt.Sprintf("https://%v/oauth2/callback", config.Hostname)
+	}
+
 	return oauth2.Config{
 		ClientID:     config.OAuth2ClientID,
 		ClientSecret: config.OAuth2ClientSecret,
 		Endpoint:     endpoints.AzureAD(config.OAuth2TenantID),
-		RedirectURL:  "http://localhost:8080/callback",
+		RedirectURL:  callbackURL,
 		Scopes:       []string{"openid", fmt.Sprintf("%s/.default", config.OAuth2ClientID)},
 	}
 }

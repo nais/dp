@@ -250,16 +250,6 @@ func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) login(w http.ResponseWriter, r *http.Request) {
 	cfg := auth.CreateOAuth2Config(a.config)
-	state := a.config.State
-
-	var callbackURL string
-	if a.config.Hostname == "localhost" {
-		callbackURL = fmt.Sprintf("http://localhost:8080/callback")
-	} else {
-		callbackURL = fmt.Sprintf("https://%v/oauth2/callback", a.config.Hostname)
-	}
-
-	consentUrl := cfg.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", callbackURL))
-
+	consentUrl := cfg.AuthCodeURL(a.config.State, oauth2.SetAuthURLParam("redirect_uri", cfg.RedirectURL))
 	http.Redirect(w, r, consentUrl, http.StatusFound)
 }
