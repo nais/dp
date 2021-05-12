@@ -6,8 +6,8 @@ ENV GO111MODULE=on
 COPY . /src
 WORKDIR /src
 RUN rm -f go.sum
-RUN go get
-RUN go test ./...
+RUN go get ./...
+RUN make test
 RUN make linux-build
 
 FROM alpine:3
