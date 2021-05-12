@@ -25,7 +25,7 @@ func KeyDiscoveryURL(tenantID string) string {
 func CreateOAuth2Config(config config.Config) oauth2.Config {
 	var callbackURL string
 	if config.Hostname == "localhost" {
-		callbackURL = fmt.Sprintf("http://localhost:8080/callback")
+		callbackURL = fmt.Sprintf("http://localhost:8080/oauth2/callback")
 	} else {
 		callbackURL = fmt.Sprintf("https://%v/oauth2/callback", config.Hostname)
 	}
