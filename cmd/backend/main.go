@@ -29,7 +29,7 @@ func init() {
 	flag.StringVar(&cfg.FirestoreGoogleProjectId, "firestore-google-project-id", os.Getenv("FIRESTORE_GOOGLE_PROJECT_ID"), "Firestore Google project ID")
 	flag.StringVar(&cfg.FirestoreCollection, "firestore-collection", os.Getenv("FIRESTORE_COLLECTION"), "Firestore collection name")
 	flag.StringVar(&cfg.Hostname, "hostname", os.Getenv("HOSTNAME"), "Hostname the application is served from")
-	flag.StringVar(&cfg.TeamsURL, "teams-url", os.Getenv("GITHUB_TEAMS_URL"), "URL for json containing teams and UUIDs")
+	flag.StringVar(&cfg.TeamsURL, "teams-url", cfg.TeamsURL, "URL for json containing teams and UUIDs")
 	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("GITHUB_READ_TOKEN"), "Token for accessing teams json")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
