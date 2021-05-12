@@ -1,4 +1,7 @@
 import * as z from "zod";
+const BACKEND_ENDPOINT =
+  process.env.BACKEND_ENDPOINT || "http://localhost:8080";
+export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
 const DataProduktTilgangSchema = z.object({
   subject: z.string(),
@@ -50,17 +53,18 @@ export type DataLager = z.infer<typeof DataLagerSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
 
 export const hentProdukter = async (): Promise<DataProduktListe> => {
-  let apiURL = "http://localhost:8080/api/v1/dataproducts";
-  const res = await fetch(apiURL);
+  const res = await fetch(`${API_ROOT}/dataproducts`);
   const json = await res.json();
 
   return DataProduktListSchema.parse(json);
 };
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
-  let apiURL = "http://localhost:8080/api/v1/userinfo";
-  const res = await fetch(apiURL, { credentials: "include" });
+  const res = await fetch(`${API_ROOT}/userinfo`, { credentials: "include" });
   const json = await res.json();
 
-  return BrukerInfoSchema.parse(json);
+  // dummy values, please replace later
+  let user = BrukerInfoSchema.parse(json);
+  user.teams = ["A-team", "VIF", "TeamSpeak"];
+  return user;
 };

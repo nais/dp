@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
 import { DataProduktSchema, DataLager } from "./produktAPI";
 import "react-datepicker/dist/react-datepicker.css";
 import { useHistory } from "react-router-dom";
+import { UserContext } from "./userContext";
 
 interface RessursVelgerProps {
   ressurs: DataLager | null;
@@ -62,6 +63,7 @@ export const ProduktNytt = (): JSX.Element => {
   const [eier, setEier] = useState<string>("");
   const [datastore, setDatastore] = useState<DataLager | null>(null);
   const history = useHistory();
+  const user = useContext(UserContext);
 
   const createProduct = async () => {
     const nyttProdukt = DataProduktSchema.parse({
@@ -85,17 +87,28 @@ export const ProduktNytt = (): JSX.Element => {
   };
 
   return (
-    <div>
+    <div style={{ margin: "1em 1em 0 1em" }}>
       <SkjemaGruppe>
         <Input label="Navn" onChange={(e) => setNavn(e.target.value)} />
         <Input
           label="Beskrivelse"
           onChange={(e) => setBeskrivelse(e.target.value)}
         />
-        <Input label="Eier (team)" onChange={(e) => setEier(e.target.value)} />
-        <p>Ressurs</p>
         <Select
-          label="Type?"
+          label="Eier (team)"
+          onChange={(e) => setEier(e.target.value)}
+          children={
+            user?.teams
+              ? user.teams.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))
+              : null
+          }
+        />
+        <Select
+          label="Ressurstype"
           onChange={(e) => {
             if (e.target.value !== "")
               setDatastore({ type: e.target.value } as DataLager);
@@ -109,6 +122,7 @@ export const ProduktNytt = (): JSX.Element => {
         <RessursVelger ressurs={datastore} setter={setDatastore} />
       </SkjemaGruppe>
       <Hovedknapp
+        style={{ display: "block", marginLeft: "auto" }}
         disabled={!validForm()}
         onClick={() => {
           createProduct();
