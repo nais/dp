@@ -39,7 +39,7 @@ func UpdateDatasetAccessControl(entity, projectID, datasetID string) error {
 	return nil
 }
 
-func UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID string) error {
+func UpdateBigqueryTableAccessControl(projectID, datasetID, tableID, member string) error {
 	ctx := context.Background()
 	bqClient, err := bigquery.NewClient(ctx, projectID)
 	if err != nil {
@@ -48,7 +48,6 @@ func UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID stri
 	defer bqClient.Close()
 
 	policy, err := getPolicy(bqClient, datasetID, tableID)
-
 	// no support for V3 for BigQuery yet, and no support for conditions
 	role := "roles/bigquery.dataViewer"
 	policy.Add(member, iam.RoleName(role))
