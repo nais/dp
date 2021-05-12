@@ -12,5 +12,15 @@ spec:
     application:
       enabled: true
       tenant: nav.no
+  envFrom:
+    - secret: github-read-token
+    - secret: dp-state
   ingresses:
     - "https://dp.dev.intern.nav.no/"
+  env:
+    - name: FIRESTORE_COLLECTION
+      value: dp
+    - name: FIRESTORE_GOOGLE_PROJECT_ID
+      value: aura-dev-d9f5
+    - name: HOSTNAME
+      value: "dp.dev.intern.nav.no"

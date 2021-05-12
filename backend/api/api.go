@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/iam"
 	"net/http"
 	"strings"
+
+	"github.com/nais/dp/backend/iam"
 
 	"github.com/nais/dp/backend/auth"
 	"google.golang.org/api/iterator"
@@ -192,13 +193,16 @@ func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
 func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	cfg := auth.CreateOAuth2Config(a.config)
 
-	state := "veryrandomstring"
-	consentUrl := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("redirect_uri", "http://localhost:8080/callback"))
-	fmt.Println(consentUrl)
-
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
 		respondf(w, http.StatusForbidden, "No code in query params")
+		return
+	}
+
+	state := r.URL.Query().Get("state")
+	if state != a.config.State {
+		log.Errorf("Incoming state does not match local state")
+		respondf(w, http.StatusForbidden, "uh oh")
 		return
 	}
 
@@ -209,9 +213,23 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, "dp.dev.intern.nav.no"))
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
-	w.WriteHeader(http.StatusOK)
+	var cookieDestination string
+	if a.config.Hostname == "localhost" {
+		cookieDestination = "http://localhost:8080/"
+	} else {
+		cookieDestination = fmt.Sprintf("https://%v", a.config.Hostname)
+	}
+
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, cookieDestination))
+
+	var loginPage string
+	if a.config.Hostname == "localhost" {
+		loginPage = "http://localhost:3000/"
+	} else {
+		loginPage = fmt.Sprintf("https://%v", a.config.Hostname) // should point to frontend url and not ourselves
+	}
+
+	http.Redirect(w, r, loginPage, http.StatusFound)
 }
 
 func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
@@ -235,4 +253,10 @@ func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusInternalServerError, "unable to serialize teams for user\n")
 		return
 	}
+}
+
+func (a *api) login(w http.ResponseWriter, r *http.Request) {
+	cfg := auth.CreateOAuth2Config(a.config)
+	consentUrl := cfg.AuthCodeURL(a.config.State, oauth2.SetAuthURLParam("redirect_uri", cfg.RedirectURL))
+	http.Redirect(w, r, consentUrl, http.StatusFound)
 }

@@ -29,8 +29,8 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 
 	r.Use(prometheusMiddleware.Handler())
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins: []string{"https://*", "http://*"},
-		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowCredentials: true,
 	}))
 
@@ -48,7 +48,8 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
 	})
 
-	r.Get("/callback", api.callback)
+	r.Get("/oauth2/callback", api.callback)
+	r.Get("/login", api.login)
 
 	return r
 }
