@@ -65,6 +65,6 @@ export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
 
   // dummy values, please replace later
   let user = BrukerInfoSchema.parse(json);
-  user.teams = ["A-team", "VIF", "TeamSpeak"];
+  user.teams = ["A-team", "VIF", "TeamSpeak", "tore"];
   return user;
 };

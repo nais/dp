@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import Modal from "nav-frontend-modal";
@@ -8,6 +8,7 @@ import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 import "moment/locale/nb";
 import moment from "moment";
+import { UserContext } from "./userContext";
 
 interface ProduktDetaljParams {
   produktID: string;
@@ -128,6 +129,7 @@ export const ProduktDetalj = ({
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const userContext = useContext(UserContext);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/v1/dataproducts/${produktID}`).then(
@@ -174,7 +176,9 @@ export const ProduktDetalj = ({
         <div className="knapperad">
           <Knapp>Gi tilgang</Knapp>
           <Knapp>Fjern tilgang</Knapp>
-          <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
+          {userContext?.teams.includes(produkt.data_product.owner) ? (
+            <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
+          ) : null}
         </div>
       </div>
     </div>
