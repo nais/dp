@@ -31,6 +31,7 @@ func init() {
 	flag.StringVar(&cfg.Hostname, "hostname", os.Getenv("HOSTNAME"), "Hostname the application is served from")
 	flag.StringVar(&cfg.TeamsURL, "teams-url", cfg.TeamsURL, "URL for json containing teams and UUIDs")
 	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("GITHUB_READ_TOKEN"), "Token for accessing teams json")
+	flag.StringVar(&cfg.State, "state", os.Getenv("DP_STATE"), "State to ensure consistency between OAuth2 requests")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
 }

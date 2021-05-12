@@ -20,7 +20,8 @@ local-with-auth:
 	--bind-address=127.0.0.1:8080 \
 	--firestore-google-project-id=aura-dev-d9f5 \
 	--firestore-collection=dp \
-	--hostname=localhost
+	--hostname=localhost \
+	--state=$(shell gcloud secrets versions access --secret dp-state latest --project aura-dev-d9f5 | cut -d= -f2)
 
 local:
 	go run cmd/backend/main.go \
@@ -30,7 +31,8 @@ local:
 	--bind-address=127.0.0.1:8080 \
 	--firestore-google-project-id=aura-dev-d9f5 \
 	--firestore-collection=dp \
-	--hostname=localhost
+	--hostname=localhost \
+	--state=$(shell gcloud secrets versions access --secret dp-state latest --project aura-dev-d9f5 | cut -d= -f2)
 
 linux-build:
 	go build -a -installsuffix cgo -o $(APP) -ldflags "-s $(LDFLAGS)" cmd/backend/main.go 

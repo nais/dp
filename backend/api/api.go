@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/iam"
 	"net/http"
 	"strings"
+
+	"github.com/nais/dp/backend/iam"
 
 	"github.com/nais/dp/backend/auth"
 	"google.golang.org/api/iterator"
@@ -192,13 +193,16 @@ func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
 func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	cfg := auth.CreateOAuth2Config(a.config)
 
-	state := "veryrandomstring"
-	consentUrl := cfg.AuthCodeURL(state, oauth2.AccessTypeOffline, oauth2.SetAuthURLParam("redirect_uri", "http://localhost:8080/callback"))
-	fmt.Println(consentUrl)
-
 	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
 		respondf(w, http.StatusForbidden, "No code in query params")
+		return
+	}
+
+	state := r.URL.Query().Get("state")
+	if state != a.config.State {
+		log.Errorf("Incoming state does not match local state")
+		respondf(w, http.StatusForbidden, "uh oh")
 		return
 	}
 
@@ -215,7 +219,7 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	if a.config.Hostname == "localhost" {
 		loginPage = "http://localhost:3000/"
 	} else {
-		loginPage = fmt.Sprintf("https://%v", a.config.Hostname)
+		loginPage = fmt.Sprintf("https://%v", a.config.Hostname) // should point to frontend url and not ourselves
 	}
 
 	http.Redirect(w, r, loginPage, http.StatusFound)
@@ -242,4 +246,20 @@ func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusInternalServerError, "unable to serialize teams for user\n")
 		return
 	}
+}
+
+func (a *api) login(w http.ResponseWriter, r *http.Request) {
+	cfg := auth.CreateOAuth2Config(a.config)
+	state := a.config.State
+
+	var callbackURL string
+	if a.config.Hostname == "localhost" {
+		callbackURL = fmt.Sprintf("http://localhost:8080/callback")
+	} else {
+		callbackURL = fmt.Sprintf("https://%v/oauth2/callback", a.config.Hostname)
+	}
+
+	consentUrl := cfg.AuthCodeURL(state, oauth2.SetAuthURLParam("redirect_uri", callbackURL))
+
+	http.Redirect(w, r, consentUrl, http.StatusFound)
 }

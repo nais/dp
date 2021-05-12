@@ -12,6 +12,7 @@ type Config struct {
 	TeamsURL                 string
 	TeamsToken               string
 	Hostname                 string
+	State                    string
 }
 
 func DefaultConfig() Config {

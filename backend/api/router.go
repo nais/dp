@@ -48,7 +48,8 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
 	})
 
-	r.Get("/callback", api.callback)
+	r.Get("/oauth2/callback", api.callback)
+	r.Get("/login", api.login)
 
 	return r
 }
