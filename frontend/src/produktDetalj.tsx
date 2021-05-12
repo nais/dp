@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams, useHistory } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
-import Modal from "nav-frontend-modal";
+import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
 import { Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import { DataProduktResponse, DataProduktTilgang } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
@@ -46,84 +46,6 @@ const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
       </Normaltekst>
       <ProduktTilganger tilganger={produkt.data_product.access} />
     </div>
-  );
-};
-
-interface SlettProduktProps {
-  produktID: string;
-  isOpen: boolean;
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-interface GiTilgangProps {
-  produkt: DataProduktResponse;
-  tilgangIsOpen: boolean;
-  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-const GiTilgang = ({
-  produkt,
-  tilgangIsOpen,
-  setTilgangIsOpen,
-}: GiTilgangProps): JSX.Element => {
-  return (
-    <Modal
-      isOpen={tilgangIsOpen}
-      onRequestClose={() => setTilgangIsOpen(false)}
-      closeButton={true}
-      contentLabel="Gi tilgang"
-    >
-      <div className="slette-bekreftelse">
-        <Systemtittel>Gi tilgang</Systemtittel>
-      </div>
-    </Modal>
-  );
-};
-
-const SlettProdukt = ({
-  produktID,
-  isOpen,
-  setIsOpen,
-}: SlettProduktProps): JSX.Element => {
-  const [error, setError] = useState<string | null>(null);
-  const history = useHistory();
-
-  const deleteProduct = async (id: string) => {
-    try {
-      const res = await fetch(
-        `http://localhost:8080/api/v1/dataproducts/${id}`,
-        {
-          method: "delete",
-        }
-      );
-
-      if (res.status !== 204) {
-        setError(`Feil: ${await res.text()}`);
-      } else {
-        history.push("/");
-      }
-    } catch (e) {
-      setError(`Nettverksfeil: ${e}`);
-      console.log(e);
-    }
-    console.log("delete this:", { id });
-  };
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onRequestClose={() => setIsOpen(false)}
-      closeButton={true}
-      contentLabel="Min modalrute"
-    >
-      <div className="slette-bekreftelse">
-        <Systemtittel>Er du sikker?</Systemtittel>
-        {error ? <p>{error}</p> : null}
-        <Fareknapp onClick={() => deleteProduct(produktID)}>
-          {error ? "Prøv igjen" : "Ja"}
-        </Fareknapp>
-      </div>
-    </Modal>
   );
 };
 

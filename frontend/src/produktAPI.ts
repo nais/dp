@@ -59,6 +59,23 @@ export const hentProdukter = async (): Promise<DataProduktListe> => {
   return DataProduktListSchema.parse(json);
 };
 
+export const slettProdukt = async (produktID: string): Promise<void> => {
+  try {
+    const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+      method: "delete",
+    });
+
+    if (res.status !== 204) {
+      throw new Error(`Feil: ${await res.text()}`);
+    } else {
+      return;
+    }
+  } catch (e) {
+    console.log(e);
+    throw new Error(`Nettverksfeil: ${e}`);
+  }
+};
+
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   const res = await fetch(`${API_ROOT}/userinfo`, { credentials: "include" });
   const json = await res.json();
