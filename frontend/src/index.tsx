@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "./index.less";
 import reportWebVitals from "./reportWebVitals";
@@ -26,7 +26,6 @@ export const Bruker: React.FC<{ user: BrukerInfo }> = ({ user }) => {
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
   const [user, setUser] = useState<BrukerInfo | null>(null);
-  const userContext = useContext(UserContext);
 
   useEffect(() => {
     hentBrukerInfo()

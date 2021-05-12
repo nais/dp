@@ -86,7 +86,7 @@ export const opprettProdukt = async (
     body: JSON.stringify(nyttProdukt),
   });
 
-  if (res.status != 201) {
+  if (res.status !== 201) {
     throw new Error(
       `Kunne ikke opprette nytt produkt: ${res.status}: ${await res.text()}`
     );
