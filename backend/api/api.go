@@ -213,14 +213,7 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var cookieDestination string
-	if a.config.Hostname == "localhost" {
-		cookieDestination = "http://localhost:8080/"
-	} else {
-		cookieDestination = fmt.Sprintf("https://%v", a.config.Hostname)
-	}
-
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, cookieDestination))
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
 
 	var loginPage string
 	if a.config.Hostname == "localhost" {
@@ -229,7 +222,7 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		loginPage = fmt.Sprintf("https://%v", a.config.Hostname) // should point to frontend url and not ourselves
 	}
 
-	http.Redirect(w, r, loginPage, http.StatusFound)
+	http.Redirect(w, r, loginPage, http.StatusFound) // redirect and set cookie doesn't work on chrome lol
 }
 
 func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
