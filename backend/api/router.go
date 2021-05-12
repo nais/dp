@@ -40,7 +40,7 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
-			r.Get("/teams", api.getTeamsForUser)
+			r.Get("/userinfo", api.userInfo)
 		})
 
 		r.Get("/dataproducts", api.dataproducts)

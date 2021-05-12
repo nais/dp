@@ -58,8 +58,8 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) 
 			}
 			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
 
-			username := claims["preferred_username"].(string)
-			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", username))
+			email := claims["preferred_username"].(string)
+			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", email))
 
 			next.ServeHTTP(w, r)
 		})

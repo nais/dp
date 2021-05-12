@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/nais/dp/backend/auth"
 	"google.golang.org/api/iterator"
@@ -193,17 +194,23 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (a *api) getTeamsForUser(w http.ResponseWriter, r *http.Request) {
-	var teams []string
+func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
+	var userInfo struct {
+		Email string   `json:"email"`
+		Teams []string `json:"teams"`
+	}
+
+	userInfo.Teams = make([]string, 0) // initialize teams slice to get [] instead of null
+
 	for _, uuid := range r.Context().Value("groups").([]string) {
 		if _, found := a.teamUUIDs[uuid]; found {
-			teams = append(teams, a.teamUUIDs[uuid])
+			userInfo.Teams = append(userInfo.Teams, a.teamUUIDs[uuid])
 		}
 	}
 
-	log.Infof("User groups: %v, group names: %v", r.Context().Value("groups"), teams)
+	userInfo.Email = strings.ToLower(r.Context().Value("preferred_username").(string))
 
-	if err := json.NewEncoder(w).Encode(teams); err != nil {
+	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {
 		log.Errorf("Serializing teams response: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to serialize teams for user\n")
 		return
