@@ -42,10 +42,12 @@ export const SlettProdukt = ({
   setIsOpen,
 }: SlettProduktProps): JSX.Element => {
   const [error, setError] = useState<string | null>(null);
+  const history = useHistory();
 
   const deleteProduct = async (id: string) => {
     try {
       await slettProdukt(id);
+      history.push("/");
     } catch (e) {
       setError(e.toString());
     }

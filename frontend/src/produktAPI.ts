@@ -63,6 +63,7 @@ export const slettProdukt = async (produktID: string): Promise<void> => {
   try {
     const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
       method: "delete",
+      credentials: "include",
     });
 
     if (res.status !== 204) {
@@ -74,6 +75,25 @@ export const slettProdukt = async (produktID: string): Promise<void> => {
     console.log(e);
     throw new Error(`Nettverksfeil: ${e}`);
   }
+};
+
+export const opprettProdukt = async (
+  nyttProdukt: DataProdukt
+): Promise<string> => {
+  const res = await fetch(`${API_ROOT}/dataproducts`, {
+    method: "POST",
+    credentials: "include",
+    body: JSON.stringify(nyttProdukt),
+  });
+
+  if (res.status != 201) {
+    throw new Error(
+      `Kunne ikke opprette nytt produkt: ${res.status}: ${await res.text()}`
+    );
+  }
+
+  const newID = await res.text();
+  return newID;
 };
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {

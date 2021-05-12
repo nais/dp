@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
-import { DataProduktSchema, DataLager } from "./produktAPI";
+import { DataProduktSchema, DataLager, opprettProdukt } from "./produktAPI";
 import "react-datepicker/dist/react-datepicker.css";
 import { useHistory } from "react-router-dom";
 import { UserContext } from "./userContext";
@@ -66,20 +66,19 @@ export const ProduktNytt = (): JSX.Element => {
   const user = useContext(UserContext);
 
   const createProduct = async () => {
-    const nyttProdukt = DataProduktSchema.parse({
-      name: navn,
-      description: beskrivelse,
-      datastore: [datastore],
-      owner: eier,
-      access: [],
-    });
-
-    const res = await fetch("http://localhost:8080/api/v1/dataproducts", {
-      method: "POST",
-      body: JSON.stringify(nyttProdukt),
-    });
-    const newID = await res.text();
-    history.push(`/produkt/${newID}`);
+    try {
+      const nyttProdukt = DataProduktSchema.parse({
+        name: navn,
+        description: beskrivelse,
+        datastore: [datastore],
+        owner: eier,
+        access: [],
+      });
+      const newID = await opprettProdukt(nyttProdukt);
+      history.push(`/produkt/${newID}`);
+    } catch (e) {
+      console.log(e.toString());
+    }
   };
 
   const validForm = () => {
