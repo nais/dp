@@ -213,7 +213,7 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Path=/", tokens.AccessToken))
 
 	var loginPage string
 	if a.config.Hostname == "localhost" {
