@@ -17,9 +17,10 @@ jobs:
         id: set-version
         run: echo ::set-output name=version::"$(date '+%Y-%m-%d')-$(git --no-pager log -1 --pretty=%h)"
 
-  build:
-    name: build
+  build-and-deploy:
+    name: build-and-deploy
     runs-on: ubuntu-20.04
+    needs: set-version
     steps:
     - uses: actions/checkout@master
     - name: docker build & test (in Dockerfile)
@@ -29,6 +30,7 @@ jobs:
         docker image build -t ${prefix}:latest -t ${prefix}:${version} .
         echo "image_version=$version" >> $GITHUB_ENV
         echo "image_prefix=$prefix" >> $GITHUB_ENV
+        echo "IMAGE=${{ env.image_prefix }}:${{ needs.set-version.outputs.version }}" >> $GITHUB_ENV
     - name: Login to GitHub Container Registry
       uses: docker/login-action@ab80d026d4753220c4243394c07c7d80f9638d06 # Use commit-sha1 instead of tag for security concerns
       with:
@@ -38,19 +40,10 @@ jobs:
     - name: docker push
       run: |
         docker image push ${{ env.image_prefix }}:latest
-        docker image push ${{ env.image_prefix }}:${{ env.image_version }}
-
-  deploy-to-dev:
-    name: Deploy to dev-gcp
-    runs-on: ubuntu-20.04
-    needs: build
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@master
-      - run: echo "IMAGE=${{ env.image_prefix }}:${{ needs.set-version.outputs.version }}" >> $GITHUB_ENV
-      - name: Deploy to dev-gcp
-        uses: nais/deploy/actions/deploy@master
-        env:
-          APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
-          CLUSTER: dev-gcp
-          RESOURCE: .nais/dev-gcp.yaml
+        docker image push ${{ env.IMAGE }}
+    - name: Deploy to dev-gcp
+      uses: nais/deploy/actions/deploy@master
+      env:
+        APIKEY: ${{ secrets.NAIS_DEPLOY_APIKEY }}
+        CLUSTER: dev-gcp
+        RESOURCE: .nais/dev-gcp.yaml
