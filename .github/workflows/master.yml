@@ -8,6 +8,7 @@ on:
       - '.github/workflows/master.yml'
 jobs:
   set-version:
+    name: Set version
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-version.outputs.version }}
@@ -18,16 +19,25 @@ jobs:
         run: echo ::set-output name=version::"$(date '+%Y-%m-%d')-$(git --no-pager log -1 --pretty=%h)"
 
   build-and-deploy:
-    name: build-and-deploy
+    name: Build and deploy
     runs-on: ubuntu-20.04
     needs: set-version
     steps:
     - uses: actions/checkout@master
-    - name: docker build & test (in Dockerfile)
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+    - name: Cache Docker layers
+      uses: actions/cache@v2
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+           name: Build and push
+    - name: Set up environment
       run: |
         version=${{ needs.set-version.outputs.version }}
         prefix=ghcr.io/${{ github.repository }}
-        docker image build -t ${prefix}:latest -t ${prefix}:${version} .
         echo "image_version=$version" >> $GITHUB_ENV
         echo "image_prefix=$prefix" >> $GITHUB_ENV
         echo "IMAGE=${{ env.image_prefix }}:${{ needs.set-version.outputs.version }}" >> $GITHUB_ENV
@@ -37,10 +47,23 @@ jobs:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    - name: docker push
+
+    - name: Build and push Dockerimage
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: ${{ env.image_prefix }}:latest, ${{ env.IMAGE }}
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new
+    -
+      # Temp fix
+      # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
+      name: Move cache
       run: |
-        docker image push ${{ env.image_prefix }}:latest
-        docker image push ${{ env.IMAGE }}
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
     - name: Deploy to dev-gcp
       uses: nais/deploy/actions/deploy@master
       env:
