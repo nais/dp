@@ -55,6 +55,31 @@ interface SlettProduktProps {
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+interface GiTilgangProps {
+  produkt: DataProduktResponse;
+  tilgangIsOpen: boolean;
+  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const GiTilgang = ({
+  produkt,
+  tilgangIsOpen,
+  setTilgangIsOpen,
+}: GiTilgangProps): JSX.Element => {
+  return (
+    <Modal
+      isOpen={tilgangIsOpen}
+      onRequestClose={() => setTilgangIsOpen(false)}
+      closeButton={true}
+      contentLabel="Gi tilgang"
+    >
+      <div className="slette-bekreftelse">
+        <Systemtittel>Gi tilgang</Systemtittel>
+      </div>
+    </Modal>
+  );
+};
+
 const SlettProdukt = ({
   produktID,
   isOpen,
@@ -129,6 +154,8 @@ export const ProduktDetalj = ({
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [tilgangIsOpen, setTilgangIsOpen] = useState<boolean>(false);
+  const [owner, setOwner] = useState<boolean>(false);
   const userContext = useContext(UserContext);
 
   useEffect(() => {
@@ -152,6 +179,13 @@ export const ProduktDetalj = ({
     }
   }, [produkt, setCrumb]);
 
+  useEffect(() => {
+    console.log(userContext);
+    if (produkt && userContext) {
+      setOwner(userContext.teams.includes(produkt.data_product.owner));
+    }
+  }, [produkt, userContext]);
+
   if (error) return <div>{error}</div>;
 
   if (typeof produkt == "undefined")
@@ -171,13 +205,19 @@ export const ProduktDetalj = ({
         produktID={produkt.id}
       />
 
+      <GiTilgang
+        tilgangIsOpen={tilgangIsOpen}
+        setTilgangIsOpen={setTilgangIsOpen}
+        produkt={produkt}
+      />
+
       <div className="produktdetalj">
         <ProduktInfoFaktaboks produkt={produkt} />
         <div className="knapperad">
-          <Knapp>Gi tilgang</Knapp>
-          <Knapp>Fjern tilgang</Knapp>
-          {userContext?.teams.includes(produkt.data_product.owner) ? (
+          {owner ? (
             <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
+          ) : userContext ? (
+            <Knapp onClick={() => setTilgangIsOpen(true)}>Få tilgang</Knapp>
           ) : null}
         </div>
       </div>

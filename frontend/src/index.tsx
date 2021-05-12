@@ -55,7 +55,7 @@ const App = (): JSX.Element => {
               ) : (
                 <a
                   className="innloggingsknapp"
-                  href="https://login.microsoftonline.com/62366534-1ec3-4962-8869-9b5535279d0b/oauth2/v2.0/authorize?access_type=offline&client_id=791e3efd-28d6-4150-9978-20a37c340e7f&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2Fcallback&response_type=code&scope=openid+791e3efd-28d6-4150-9978-20a37c340e7f%2F.default&state=veryrandomstring"
+                  href="http://localhost:8080/login"
                 >
                   <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
                 </a>
