@@ -1,0 +1,16 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: dp
+  namespace: aura
+  labels:
+    team: aura
+spec:
+  image: {{ image }}
+  port: 8080
+  azure:
+    application:
+      enabled: true
+      tenant: nav.no
+  ingresses:
+    - "https://dp.dev.intern.nav.no/"

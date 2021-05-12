@@ -1,11 +1,13 @@
 package iam_test
 
 import (
-	"github.com/nais/dp/backend/iam"
 	"testing"
+
+	"github.com/nais/dp/backend/iam"
 )
 
 func TestAddMemberToBucket(t *testing.T) {
+	t.Skip()
 
 	bucketName := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
@@ -17,6 +19,7 @@ func TestAddMemberToBucket(t *testing.T) {
 }
 
 func TestRemoveMemberFromBucket(t *testing.T) {
+	t.Skip()
 
 	bucketName := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
