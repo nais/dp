@@ -4,8 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"net/http"
 )
@@ -44,6 +45,6 @@ func fetchTeams(c context.Context, mapToUpdate map[string]string, teamsURL, team
 		return fmt.Errorf("unmarshalling response from teams json URL: %v: %w", teamsURL, err)
 	}
 
-	log.Infof("Updated teams UUID mapping from %v", teamsURL)
+	log.Infof("Updated UUID mapping: %d teams from %v", len(mapToUpdate), teamsURL)
 	return nil
 }

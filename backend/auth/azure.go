@@ -5,14 +5,15 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/config"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/endpoints"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
+
+	"github.com/nais/dp/backend/config"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/endpoints"
 )
 
 type CertificateList []*x509.Certificate

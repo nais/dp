@@ -5,6 +5,7 @@ VERSION ?= $(DATE)-$(LAST_COMMIT)
 LDFLAGS := -X github.com/nais/dp/pkg/version.Revision=$(shell git rev-parse --short HEAD) -X github.com/nais/dp/pkg/version.Version=$(VERSION)
 PKGID = io.nais.dp
 GOPATH ?= ~/go
+APP = dp
 
 test:
 	go test ./... -count=1
@@ -14,3 +15,6 @@ local-with-auth:
 
 local:
 	go run cmd/backend/main.go --teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json --teams-token=$(shell gcloud secrets versions access --secret github-read-token latest --project aura-dev-d9f5) --development-mode=true --bind-address=127.0.0.1:8080 --firestore-google-project-id=aura-dev-d9f5 --firestore-collection=dp
+
+linux-build:
+	go build -a -installsuffix cgo -o $(APP) -ldflags "-s $(LDFLAGS)" cmd/backend/main.go 
