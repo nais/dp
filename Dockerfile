@@ -3,10 +3,11 @@ RUN apk add --no-cache git make
 ENV GOOS=linux
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
-COPY . /src
 WORKDIR /src
-RUN rm -f go.sum
-RUN go get ./...
+COPY go.sum go.sum
+COPY go.mod go.mod
+RUN go mod download
+COPY . .
 RUN make test
 RUN make linux-build
 

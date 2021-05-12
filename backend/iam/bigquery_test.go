@@ -1,11 +1,13 @@
 package iam_test
 
 import (
-	"github.com/nais/dp/backend/iam"
 	"testing"
+
+	"github.com/nais/dp/backend/iam"
 )
 
 func TestBigqueryIam(t *testing.T) {
+	t.Skip()
 
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
@@ -18,6 +20,7 @@ func TestBigqueryIam(t *testing.T) {
 }
 
 func TestBigqueryTableIam(t *testing.T) {
+	t.Skip()
 
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
@@ -31,6 +34,7 @@ func TestBigqueryTableIam(t *testing.T) {
 }
 
 func TestBigqueryViewIam(t *testing.T) {
+	t.Skip()
 
 	projectID := "aura-dev-d9f5"
 	datasetID := "container_resource_usage"
