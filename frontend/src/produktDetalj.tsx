@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useParams, useHistory } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import Modal from "nav-frontend-modal";
@@ -8,6 +8,7 @@ import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 import "moment/locale/nb";
 import moment from "moment";
+import { UserContext } from "./userContext";
 
 interface ProduktDetaljParams {
   produktID: string;
@@ -53,6 +54,31 @@ interface SlettProduktProps {
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
+
+interface GiTilgangProps {
+  produkt: DataProduktResponse;
+  tilgangIsOpen: boolean;
+  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const GiTilgang = ({
+  produkt,
+  tilgangIsOpen,
+  setTilgangIsOpen,
+}: GiTilgangProps): JSX.Element => {
+  return (
+    <Modal
+      isOpen={tilgangIsOpen}
+      onRequestClose={() => setTilgangIsOpen(false)}
+      closeButton={true}
+      contentLabel="Gi tilgang"
+    >
+      <div className="slette-bekreftelse">
+        <Systemtittel>Gi tilgang</Systemtittel>
+      </div>
+    </Modal>
+  );
+};
 
 const SlettProdukt = ({
   produktID,
@@ -128,6 +154,9 @@ export const ProduktDetalj = ({
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [tilgangIsOpen, setTilgangIsOpen] = useState<boolean>(false);
+  const [owner, setOwner] = useState<boolean>(false);
+  const userContext = useContext(UserContext);
 
   useEffect(() => {
     fetch(`http://localhost:8080/api/v1/dataproducts/${produktID}`).then(
@@ -150,6 +179,13 @@ export const ProduktDetalj = ({
     }
   }, [produkt, setCrumb]);
 
+  useEffect(() => {
+    console.log(userContext);
+    if (produkt && userContext) {
+      setOwner(userContext.teams.includes(produkt.data_product.owner));
+    }
+  }, [produkt, userContext]);
+
   if (error) return <div>{error}</div>;
 
   if (typeof produkt == "undefined")
@@ -169,12 +205,20 @@ export const ProduktDetalj = ({
         produktID={produkt.id}
       />
 
+      <GiTilgang
+        tilgangIsOpen={tilgangIsOpen}
+        setTilgangIsOpen={setTilgangIsOpen}
+        produkt={produkt}
+      />
+
       <div className="produktdetalj">
         <ProduktInfoFaktaboks produkt={produkt} />
         <div className="knapperad">
-          <Knapp>Gi tilgang</Knapp>
-          <Knapp>Fjern tilgang</Knapp>
-          <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
+          {owner ? (
+            <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>
+          ) : userContext ? (
+            <Knapp onClick={() => setTilgangIsOpen(true)}>Få tilgang</Knapp>
+          ) : null}
         </div>
       </div>
     </div>

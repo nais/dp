@@ -53,7 +53,12 @@ const App = (): JSX.Element => {
               {user ? (
                 <Bruker user={user} />
               ) : (
-                <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
+                <a
+                  className="innloggingsknapp"
+                  href="http://localhost:8080/login"
+                >
+                  <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
+                </a>
               )}
             </header>
 
