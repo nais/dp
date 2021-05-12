@@ -189,9 +189,16 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//w.Header().Set("Set-Cookie", fmt.Sprintf("access_token=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, "dp.dev.intern.nav.no"))
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400", tokens.AccessToken))
-	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, a.config.Hostname))
+
+	var loginPage string
+	if a.config.Hostname == "localhost" {
+		loginPage = "http://localhost:3000/"
+	} else {
+		loginPage = fmt.Sprintf("https://%v", a.config.Hostname)
+	}
+
+	http.Redirect(w, r, loginPage, http.StatusFound)
 }
 
 func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {

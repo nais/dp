@@ -29,6 +29,7 @@ func init() {
 	flag.StringVar(&cfg.FirestoreCollection, "firestore-collection", os.Getenv("FIRESTORE_COLLECTION"), "Firestore collection name")
 	flag.StringVar(&cfg.TeamsURL, "teams-url", os.Getenv("TEAMS_URL"), "URL for json containing teams and UUIDs")
 	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("TEAMS_TOKEN"), "Token for accessing teams json")
+	flag.StringVar(&cfg.Hostname, "hostname", os.Getenv("HOSTNAME"), "Hostname the application is served from")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
 }

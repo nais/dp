@@ -11,6 +11,7 @@ type Config struct {
 	OAuth2TenantID           string
 	TeamsURL                 string
 	TeamsToken               string
+	Hostname                 string
 }
 
 func DefaultConfig() Config {

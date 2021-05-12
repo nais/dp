@@ -11,10 +11,10 @@ test:
 	go test ./... -count=1
 
 local-with-auth:
-	go run cmd/backend/main.go --teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json --oauth2-client-secret=$(shell gcloud secrets versions access --secret dp-oauth2-client-secret latest --project aura-dev-d9f5) --teams-token=$(shell gcloud secrets versions access --secret github-read-token latest --project aura-dev-d9f5) --oauth2-client-id=791e3efd-28d6-4150-9978-20a37c340e7f --oauth2-tenant-id=62366534-1ec3-4962-8869-9b5535279d0b --bind-address=127.0.0.1:8080 --firestore-google-project-id=aura-dev-d9f5 --firestore-collection=dp
+	go run cmd/backend/main.go --teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json --hostname=localhost --oauth2-client-secret=$(shell gcloud secrets versions access --secret dp-oauth2-client-secret latest --project aura-dev-d9f5) --teams-token=$(shell gcloud secrets versions access --secret github-read-token latest --project aura-dev-d9f5) --oauth2-client-id=791e3efd-28d6-4150-9978-20a37c340e7f --oauth2-tenant-id=62366534-1ec3-4962-8869-9b5535279d0b --bind-address=127.0.0.1:8080 --firestore-google-project-id=aura-dev-d9f5 --firestore-collection=dp
 
 local:
-	go run cmd/backend/main.go --teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json --teams-token=$(shell gcloud secrets versions access --secret github-read-token latest --project aura-dev-d9f5) --development-mode=true --bind-address=127.0.0.1:8080 --firestore-google-project-id=aura-dev-d9f5 --firestore-collection=dp
+	go run cmd/backend/main.go --teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json --hostname=localhost --teams-token=$(shell gcloud secrets versions access --secret github-read-token latest --project aura-dev-d9f5) --development-mode=true --bind-address=127.0.0.1:8080 --firestore-google-project-id=aura-dev-d9f5 --firestore-collection=dp
 
 linux-build:
 	go build -a -installsuffix cgo -o $(APP) -ldflags "-s $(LDFLAGS)" cmd/backend/main.go 
