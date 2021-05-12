@@ -213,7 +213,14 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, a.config.Hostname))
+	var cookieDestination string
+	if a.config.Hostname == "localhost" {
+		cookieDestination = "http://localhost:8080/"
+	} else {
+		cookieDestination = fmt.Sprintf("https://%v", a.config.Hostname)
+	}
+
+	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Domain=%v", tokens.AccessToken, cookieDestination))
 
 	var loginPage string
 	if a.config.Hostname == "localhost" {
