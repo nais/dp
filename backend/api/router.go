@@ -31,6 +31,7 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins: []string{"https://*", "http://*"},
 		AllowedMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
 	}))
 
 	r.Route("/api/v1", func(r chi.Router) {

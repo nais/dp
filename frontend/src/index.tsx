@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "./index.less";
 import reportWebVitals from "./reportWebVitals";
+import { hentBrukerInfo, BrukerInfo } from "./produktAPI";
 import { Hovedside } from "./hovedside";
 import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
@@ -9,9 +10,31 @@ import ProduktNytt from "./produktNytt";
 import { Systemtittel } from "nav-frontend-typografi";
 import NaisPrideLogo from "./naisLogo";
 import { Next } from "@navikt/ds-icons";
+import { Hovedknapp } from "nav-frontend-knapper";
+import { Child } from "@navikt/ds-icons";
 
+export const Bruker: React.FC<{ user: BrukerInfo }> = ({ user }) => {
+  return (
+    <div>
+      <Child />
+      {user.email}
+    </div>
+  );
+};
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
+  const [user, setUser] = useState<BrukerInfo | null>(null);
+
+  useEffect(() => {
+    hentBrukerInfo()
+      .then((bruker) => {
+        setUser(bruker);
+      })
+      .catch(() => {
+        setUser(null);
+      });
+  }, []);
+  console.log(user);
 
   return (
     <div className={"dashboard-main"}>
@@ -24,6 +47,11 @@ const App = (): JSX.Element => {
             </Link>
             {crumb ? <Next className="pil" /> : null}
             {crumb ? <Systemtittel>{crumb}</Systemtittel> : null}
+            {user ? (
+              <Bruker user={user} />
+            ) : (
+              <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
+            )}
           </header>
 
           <main>

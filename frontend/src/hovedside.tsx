@@ -1,6 +1,11 @@
 import React, { useEffect, useReducer, useState } from "react";
 import ProduktTabell from "./produktTabell";
-import { DataProduktListe, hentProdukter } from "./produktAPI";
+import {
+  DataProduktListe,
+  hentProdukter,
+  hentBrukerInfo,
+  BrukerInfo,
+} from "./produktAPI";
 import ProduktFilter from "./produktFilter";
 import { Add } from "@navikt/ds-icons";
 import { Link } from "react-router-dom";
