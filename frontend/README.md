@@ -1,12 +1,12 @@
-# Create-React-App eksempel prosjekt
+# dp frontend
 
-Er satt opp som et enkelt oppsett som støtter bruk av designsystemet sine komponenter. Er også satt opp for bruk av riktig typografi og basestiler med `nav-frontend-core` og `nav-frontend-typografi-style`
+Satt opp med [NAVs create-react-app](https://github.com/navikt/nav-frontend-moduler/tree/master/examples/cra), se detaljer der
 
-Bruker pakken `Craco` https://www.npmjs.com/package/@craco/craco for å kunne extende Webpack-features uten å ta i bruk `eject`.
+## Konfigurasjon
 
-Satt opp for å støtte lasting av `less` filer ved hjelp av `craco-less` https://github.com/DocSpring/craco-less#readme.
+Både auth callback URI og API-rot utledes fra miljøvariablen BACKEND_ENDPOINT, med forvalg 'http://localhost:8080'
 
-Prosjektet kjører `pretty-quick` on-`git commit` for automatisk kjøring av prettier, samt linting av js/ts og less on-`git push`.
+## Kjøring
 
 Development og linting:
 
@@ -20,12 +20,4 @@ Bygging for produksjon:
 ```
 yarn install
 yarn run build
-```
-
-For å kjøre build lokalt kan `serve` brukes:
-https://www.npmjs.com/package/serve
-
-```
-yarn install -g serve
-serve build
 ```

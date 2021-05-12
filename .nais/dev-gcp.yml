@@ -1,0 +1,23 @@
+apiVersion: "nais.io/v1alpha1"
+kind: "Application"
+metadata:
+  name: dp
+  namespace: aura
+  labels:
+    team: aura
+spec:
+  image: {{ image }}
+  port: 8080
+  azure:
+    application:
+      enabled: true
+      tenant: nav.no
+  envFrom:
+    - secret: github-read-token
+  ingresses:
+    - "https://dp.dev.intern.nav.no/"
+  env:
+    - name: FIRESTORE_COLLECTION
+      value: dp
+    - name: FIRESTORE_GOOGLE_PROJECT_ID
+      value: aura-dev-d9f5

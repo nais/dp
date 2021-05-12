@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/nais/dp/backend/iam"
 	"net/http"
 	"strings"
 
@@ -145,6 +146,9 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusBadRequest, "Validation failed: %v", err)
 		return
 	}
+
+	updateDatastoreAccess(dp.Datastore[0], dp.Access)
+
 	_, err = documentRef.Update(r.Context(), updates)
 	if err != nil {
 		log.Errorf("Updating firestore document: %v", err)
@@ -153,6 +157,22 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func updateDatastoreAccess(datastore map[string]string, access []*AccessEntry) error {
+
+	datastoreType := datastore["type"]
+	if len(datastoreType) == 0 {
+		return fmt.Errorf("no type defined")
+	}
+
+	switch datastoreType {
+	case BucketType:
+		iam.UpdateBucketAccessControl(datastore["bucket_id"], access[0].Subject)
+	case BigQueryType:
+		iam.UpdateBigqueryTableAccessControl(datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], access[0].Subject)
+	}
+	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {

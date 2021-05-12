@@ -5,14 +5,28 @@ header {
   height: 5.625rem;
   width: 100vw;
   display: flex;
-  padding-left: 1.7rem;
+  padding: 10px 1.7rem;
   border-bottom: 4px solid @navLysGra;
-  padding-bottom: 10px;
-  padding-top: 10px;
+
+  .brukerboks {
+    border: 1px solid black;
+    padding: 4px 5px 3px;
+    margin-left: auto;
+
+    svg {
+      padding: 2px 4px 0 2px;
+      height: 100%;
+      width: auto;
+    }
+  }
 
   .nais-logo {
     height: 100%;
     width: auto;
+  }
+
+  .innloggingsknapp {
+    align-self: flex-end;
   }
 
   .extra-padding * {
