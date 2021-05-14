@@ -48,9 +48,11 @@ func UpdateBigqueryTableAccessControl(projectID, datasetID, tableID, member stri
 	defer bqClient.Close()
 
 	policy, err := getPolicy(bqClient, datasetID, tableID)
+
 	// no support for V3 for BigQuery yet, and no support for conditions
 	role := "roles/bigquery.dataViewer"
-	policy.Add(member, iam.RoleName(role))
+	userMember := "user:" + member
+	policy.Add(userMember, iam.RoleName(role))
 
 	bqTable := bqClient.Dataset(datasetID).Table(tableID)
 	bqTable.IAM().SetPolicy(ctx, policy)
