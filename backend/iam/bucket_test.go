@@ -2,6 +2,7 @@ package iam_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/nais/dp/backend/iam"
 )
@@ -11,8 +12,10 @@ func TestAddMemberToBucket(t *testing.T) {
 
 	bucketName := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
+	start := time.Now()
+	end := time.Now().AddDate(1, 0, 0)
 
-	err := iam.UpdateBucketAccessControl(bucketName, member)
+	err := iam.ChangeBucketAccessControl(bucketName, member, start, end)
 	if err != nil {
 		return
 	}

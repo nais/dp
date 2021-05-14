@@ -160,7 +160,7 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func updateDatastoreAccess(datastore map[string]string, access []*AccessEntry) error {
+func updateDatastoreAccess(datastore map[string]string, accessList []*AccessEntry) error {
 
 	datastoreType := datastore["type"]
 	if len(datastoreType) == 0 {
@@ -169,9 +169,13 @@ func updateDatastoreAccess(datastore map[string]string, access []*AccessEntry) e
 
 	switch datastoreType {
 	case BucketType:
-		iam.UpdateBucketAccessControl(datastore["bucket_id"], access[0].Subject)
+		for _, access := range accessList {
+			iam.ChangeBucketAccessControl(datastore["bucket_id"], access.Subject, access.Start, access.End)
+		}
 	case BigQueryType:
-		iam.UpdateBigqueryTableAccessControl(datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], access[0].Subject)
+		for _, access := range accessList {
+			iam.UpdateBigqueryTableAccessControl(datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], access.Subject)
+		}
 	}
 	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }

@@ -12,7 +12,7 @@ import (
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
-func UpdateBucketAccessControl(bucketName, member string) error {
+func ChangeBucketAccessControl(bucketName, member string, start, end time.Time) error {
 
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)
@@ -24,46 +24,68 @@ func UpdateBucketAccessControl(bucketName, member string) error {
 		log.Fatal(err)
 	}
 
-	if err := addUser(client, bucketName, member); err != nil {
+	expression := getCondition(start, end)
+
+	if err := addUser(client, bucketName, member, expression); err != nil {
 		log.Fatal(err)
 	}
+
 	return nil
 }
 
-func getBucketPolicy(c *storage.Client, bucketName string) (*iam.Policy3, error) {
+func getCondition(start, end time.Time) string {
+
+	startString := start.String()
+	endString := end.String()
+	var expression string
+	if len(startString) > 0 {
+		expression = "request.time > timestamp('" + startString + "')"
+	}
+	if len(endString) > 0 {
+		if len(startString) > 0 {
+			expression = expression + " && request.time < timestamp('" + endString + "')"
+		} else {
+			expression = "request.time < timestamp('" + endString + "')"
+		}
+
+	}
+	return expression
+}
+
+func getBucketPolicy(client *storage.Client, bucketName string) (*iam.Policy3, error) {
 	ctx := context.Background()
 
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	policy, err := c.Bucket(bucketName).IAM().V3().Policy(ctx)
+	policy, err := client.Bucket(bucketName).IAM().V3().Policy(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	for _, binding := range policy.Bindings {
 		log.Printf("%q: %q (condition: %v)", binding.Role, binding.Members, binding.Condition)
 	}
 	return policy, nil
 }
 
-func addUser(c *storage.Client, bucketName, member string) error {
+func addUser(client *storage.Client, bucketName, member, expression string) error {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
-	bucket := c.Bucket(bucketName)
+	bucket := client.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
 		return err
 	}
-
+	userMember := "user:" + member
 	policy.Bindings = append(policy.Bindings, &iampb.Binding{
 		Role:    "roles/storage.objectViewer",
-		Members: []string{member},
+		Members: []string{userMember},
 		Condition: &expr.Expr{
-			Title:       "Expires_2022",
-			Description: "Expires at noon on 2022-12-31",
-			Expression:  "request.time < timestamp('2022-12-31T12:00:00Z')",
+			Title:      "Conditional access",
+			Expression: expression,
 		},
 	})
 	if err := bucket.IAM().V3().SetPolicy(ctx, policy); err != nil {

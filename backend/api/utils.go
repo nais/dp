@@ -10,7 +10,6 @@ import (
 
 func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore.Update, error) {
 	var updates []firestore.Update
-	newAccess := existingDp.Access
 
 	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{
@@ -39,13 +38,18 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 			Value: dp.Owner,
 		})
 	}
+
+	newAccess := existingDp.Access
 	if len(dp.Access) > 0 {
 		for _, access := range dp.Access {
 			if errs := a.validate.Struct(access); errs != nil {
 				return nil, errs
 			}
+			if !accessEntryExists(existingDp, access) {
+				newAccess = append(newAccess, access)
+			}
 		}
-		newAccess = append(newAccess, dp.Access...)
+
 		updates = append(updates, firestore.Update{
 			Path:  "access",
 			Value: newAccess,
@@ -53,6 +57,16 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 	}
 
 	return updates, nil
+}
+
+func accessEntryExists(existingDp DataProduct, access *AccessEntry) bool {
+	for i := range existingDp.Access {
+		if existingDp.Access[i].Subject == access.Subject && existingDp.Access[i].Start == access.Start && existingDp.Access[i].End == access.End {
+			// Found!
+			return true
+		}
+	}
+	return false
 }
 
 func ValidateDatastore(store map[string]string) error {
