@@ -15,7 +15,7 @@ func TestAddMemberToBucket(t *testing.T) {
 	start := time.Now()
 	end := time.Now().AddDate(1, 0, 0)
 
-	err := iam.ChangeBucketAccessControl(bucketName, member, start, end)
+	err := iam.UpdateBucketAccessControl(bucketName, member, start, end)
 	if err != nil {
 		return
 	}
