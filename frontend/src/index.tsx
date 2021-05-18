@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import ReactDOM from "react-dom";
 import "./index.less";
 import reportWebVitals from "./reportWebVitals";
-import { hentBrukerInfo, BrukerInfo } from "./produktAPI";
+import { BACKEND_ENDPOINT, hentBrukerInfo, BrukerInfo } from "./produktAPI";
 import { Hovedside } from "./hovedside";
 import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
@@ -14,13 +14,23 @@ import { Hovedknapp } from "nav-frontend-knapper";
 import { Child } from "@navikt/ds-icons";
 import { UserContext } from "./userContext";
 
-export const Bruker: React.FC<{ user: BrukerInfo }> = ({ user }) => {
-  return (
-    <div className={"brukerboks"}>
-      <Child />
-      {user.email}
-    </div>
-  );
+export const BrukerBoks: React.FC = () => {
+  const user = useContext(UserContext);
+
+  if (!user) {
+    return (
+      <a className="innloggingsknapp" href={`${BACKEND_ENDPOINT}/login`}>
+        <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
+      </a>
+    );
+  } else {
+    return (
+      <div className={"brukerboks"}>
+        <Child />
+        {user.email}
+      </div>
+    );
+  }
 };
 
 const App = (): JSX.Element => {
@@ -49,16 +59,7 @@ const App = (): JSX.Element => {
               </Link>
               {crumb ? <Next className="pil" /> : null}
               {crumb ? <Systemtittel>{crumb}</Systemtittel> : null}
-              {user ? (
-                <Bruker user={user} />
-              ) : (
-                <a
-                  className="innloggingsknapp"
-                  href="http://localhost:8080/login"
-                >
-                  <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
-                </a>
-              )}
+              <BrukerBoks />
             </header>
 
             <main>

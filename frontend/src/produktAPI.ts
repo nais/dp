@@ -1,5 +1,5 @@
 import * as z from "zod";
-const BACKEND_ENDPOINT =
+export const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:8080";
 export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
