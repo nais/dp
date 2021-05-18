@@ -73,8 +73,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "pretty-quick --staged --pattern 'frontend/**'",
-      "pre-push": "yarn lint"
+      "pre-commit": "pretty-quick --staged --pattern 'frontend/**'"
     }
   },
   "stylelint": {
