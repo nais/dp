@@ -6,7 +6,7 @@ metadata:
   labels:
     team: aura
 spec:
-  image: { { image } }
+  image: ghcr.io/nais/dp:2021-05-18-27ffbc2
   port: 8080
   azure:
     application:

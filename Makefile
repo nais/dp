@@ -35,4 +35,12 @@ local:
 	--state=$(shell gcloud secrets versions access --secret dp-state latest --project aura-dev-d9f5 | cut -d= -f2)
 
 linux-build:
-	go build -a -installsuffix cgo -o $(APP) -ldflags "-s $(LDFLAGS)" cmd/backend/main.go 
+	go build -a -installsuffix cgo -o $(APP) -ldflags "-s $(LDFLAGS)" cmd/backend/main.go
+
+docker-build:
+	docker image build -t ghcr.io/nais/$(APP):$(VERSION) -t ghcr.io/nais/$(APP):latest .
+
+docker-push:
+	docker image push ghcr.io/nais/$(APP):$(VERSION)
+	docker image push ghcr.io/nais/$(APP):latest
+
