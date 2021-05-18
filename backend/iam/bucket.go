@@ -11,7 +11,7 @@ import (
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
-func UpdateBucketAccessControl(bucketName, member string, start, end time.Time) error {
+func UpdateBucketAccessControl(bucketName, member string, end time.Time) error {
 
 	ctx := context.Background()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
@@ -28,7 +28,7 @@ func UpdateBucketAccessControl(bucketName, member string, start, end time.Time) 
 		return err
 	}
 	userMember := "user:" + member
-	expression := getCondition(start, end)
+	expression := getCondition(time.Now(), end)
 
 	policy.Bindings = append(policy.Bindings, &iampb.Binding{
 		Role:    "roles/storage.objectViewer",

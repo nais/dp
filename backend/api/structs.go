@@ -17,8 +17,7 @@ type api struct {
 
 type AccessEntry struct {
 	Subject string    `firestore:"subject" json:"subject,omitempty" validate:"required"`
-	Start   time.Time `firestore:"start" json:"start,omitempty" validate:"required"`
-	End     time.Time `firestore:"end" json:"end,omitempty" validate:"required"`
+	Expires time.Time `firestore:"expires" json:"expires,omitempty"`
 }
 
 type DataProduct struct {
