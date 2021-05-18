@@ -146,7 +146,13 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updateDatastoreAccess(dp.Datastore[0], dp.Access)
+	// In case of partial update, where an access update is made
+	// without passing any datastore objects.
+	if(len(dp.Datastore) > 0) {
+		updateDatastoreAccess(dp.Datastore[0], dp.Access)
+	} else {
+		updateDatastoreAccess(firebaseDp.Datastore[0], dp.Access)
+	}
 
 	_, err = documentRef.Update(r.Context(), updates)
 	if err != nil {
