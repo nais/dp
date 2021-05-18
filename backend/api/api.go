@@ -168,7 +168,7 @@ func updateDatastoreAccess(datastore map[string]string, accessList []*AccessEntr
 	switch datastoreType {
 	case BucketType:
 		for _, access := range accessList {
-			iam.UpdateBucketAccessControl(datastore["bucket_id"], access.Subject, access.Start, access.End)
+			iam.UpdateBucketAccessControl(datastore["bucket_id"], access.Subject, access.Expires)
 		}
 	case BigQueryType:
 		for _, access := range accessList {

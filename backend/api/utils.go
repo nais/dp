@@ -61,7 +61,7 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 
 func accessEntryExists(existingDp DataProduct, access *AccessEntry) bool {
 	for i := range existingDp.Access {
-		if existingDp.Access[i].Subject == access.Subject && existingDp.Access[i].Start == access.Start && existingDp.Access[i].End == access.End {
+		if existingDp.Access[i].Subject == access.Subject && existingDp.Access[i].Expires == access.Expires {
 			// Found!
 			return true
 		}
