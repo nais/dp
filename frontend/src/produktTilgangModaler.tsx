@@ -1,10 +1,19 @@
 import { Systemtittel } from "nav-frontend-typografi";
-import React, { useState } from "react";
-import { DataProduktResponse, slettProdukt } from "./produktAPI";
+import React, { useState, useContext } from "react";
+import {
+  giTilgang,
+  DataProduktResponse,
+  slettProdukt,
+  DataProdukt,
+} from "./produktAPI";
+import { UserContext } from "./userContext";
 import Modal from "nav-frontend-modal";
+import { ToggleKnapp } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";
-import { Fareknapp } from "nav-frontend-knapper";
+import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
 import { Select, SkjemaGruppe } from "nav-frontend-skjema";
+import DatePicker from "react-datepicker";
+import "./produktTilgangModaler.less";
 
 interface SlettProduktProps {
   produktID: string;
@@ -18,11 +27,27 @@ interface GiTilgangProps {
   setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const GiTilgang = ({
-  produkt,
-  tilgangIsOpen,
-  setTilgangIsOpen,
-}: GiTilgangProps): JSX.Element => {
+export const GiTilgang: React.FC<{
+  produkt: DataProduktResponse;
+  tilgangIsOpen: boolean;
+  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ produkt, tilgangIsOpen, setTilgangIsOpen }) => {
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [evig, setEvig] = useState<boolean>(false);
+
+  const userContext = useContext(UserContext);
+  if (!userContext) return null;
+
+  const handleDateUpdate = (newValue: Date | [Date, Date] | null) => {
+    console.log("new value:", typeof newValue, newValue);
+    if (newValue instanceof Date) setEndDate(newValue);
+  };
+
+  const handleSubmit = () => {
+    //giTilgang(produkt, userContext.email, endDate, endDate)
+  };
+
   return (
     <Modal
       appElement={document.getElementById("app") || undefined}
@@ -31,15 +56,21 @@ export const GiTilgang = ({
       closeButton={true}
       contentLabel="Gi tilgang"
     >
-      <div className="gi-tilgang">
-        <Systemtittel>Gi tilgang</Systemtittel>
-
-        <SkjemaGruppe>
-          <Select>
-            <option value="til meg">til meg</option>
-            <option value="til team">til team</option>
-          </Select>
-        </SkjemaGruppe>
+      <div className="gitilgang">
+        <Systemtittel>Gi tilgang til {userContext.email}?</Systemtittel>
+        <ToggleKnapp onClick={() => setEvig(!evig)}>Evig tilgang</ToggleKnapp>
+        {!evig ? (
+          <DatePicker
+            selected={endDate}
+            onChange={(e) => handleDateUpdate(e)}
+            selectsEnd
+            endDate={endDate}
+            startDate={startDate}
+            minDate={startDate}
+          />
+        ) : null}
+        <Hovedknapp onClick={() => {}}>Ja</Hovedknapp>
+        <Fareknapp onClick={() => setTilgangIsOpen(false)}>Nei</Fareknapp>
       </div>
     </Modal>
   );

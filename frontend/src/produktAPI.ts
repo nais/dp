@@ -31,6 +31,8 @@ export const DataProduktSchema = z.object({
   access: DataProduktTilgangSchema.array(),
 });
 
+const DataProduktPartialSchema = DataProduktSchema.deepPartial();
+
 export const DataProduktResponseSchema = z.object({
   id: z.string(),
   updated: z.string(),
@@ -46,6 +48,7 @@ export const BrukerInfoSchema = z.object({
 const DataProduktListSchema = DataProduktResponseSchema.array();
 
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
+export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
 export type DataProduktTilgang = z.infer<typeof DataProduktTilgangSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
@@ -94,6 +97,48 @@ export const opprettProdukt = async (
 
   const newID = await res.text();
   return newID;
+};
+
+export const oppdaterProdukt = async (
+  produktID: string,
+  oppdatertProdukt: DataProduktPartial
+): Promise<string> => {
+  const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+    method: "PUT",
+    credentials: "include",
+    body: JSON.stringify(oppdatertProdukt),
+  });
+
+  if (res.status !== 204) {
+    throw new Error(
+      `Kunne ikke oppdatere produkt: ${res.status}: ${await res.text()}`
+    );
+  }
+
+  const newID = await res.text();
+  return newID;
+};
+
+export const giTilgang = (
+  produkt: DataProduktResponse,
+  subject: string,
+  startDate: Date,
+  endDate: Date
+) => {
+  const startDateStamp = startDate.toISOString();
+  const endDateStamp = endDate.toISOString();
+
+  const produktOppdateringer: DataProduktPartial = {
+    access: [
+      {
+        subject: subject,
+        start: startDateStamp,
+        end: endDateStamp,
+      },
+    ],
+  };
+
+  oppdaterProdukt(produkt.id, produktOppdateringer);
 };
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
