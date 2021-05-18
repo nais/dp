@@ -65,7 +65,7 @@ export const ProduktNytt = (): JSX.Element => {
   const history = useHistory();
   const user = useContext(UserContext);
 
-  const createProduct = async () => {
+  const createProduct = async (): Promise<void> => {
     try {
       const nyttProdukt = DataProduktSchema.parse({
         name: navn,
@@ -123,8 +123,8 @@ export const ProduktNytt = (): JSX.Element => {
       <Hovedknapp
         style={{ display: "block", marginLeft: "auto" }}
         disabled={!validForm()}
-        onClick={() => {
-          createProduct();
+        onClick={async () => {
+          await createProduct();
         }}
       >
         Submit

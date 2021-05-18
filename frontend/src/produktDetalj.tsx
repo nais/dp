@@ -3,7 +3,11 @@ import { useParams } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
 import { Normaltekst, Systemtittel } from "nav-frontend-typografi";
-import { DataProduktResponse, DataProduktTilgang } from "./produktAPI";
+import {
+  DataProdukt,
+  DataProduktResponse,
+  DataProduktTilgang,
+} from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 import "moment/locale/nb";
@@ -16,13 +20,14 @@ interface ProduktDetaljParams {
 
 interface ProduktInfotabellProps {
   produkt: DataProduktResponse;
+  isOwner: boolean;
 }
 
 interface ProduktDetaljProps {
   setCrumb: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
+const ProduktInfoFaktaboks = ({ produkt, isOwner }: ProduktInfotabellProps) => {
   moment.locale("nb");
 
   return (
@@ -44,14 +49,16 @@ const ProduktInfoFaktaboks = ({ produkt }: ProduktInfotabellProps) => {
           ? ` (Oppdatert: ${moment(produkt.updated).fromNow()})`
           : ""}
       </Normaltekst>
-      <ProduktTilganger tilganger={produkt.data_product.access} />
+      <ProduktTilganger produkt={produkt.data_product} isOwner={isOwner} />
     </div>
   );
 };
 
 const ProduktTilganger: React.FC<{
-  tilganger: DataProduktTilgang[] | null;
-}> = ({ tilganger }) => {
+  produkt: DataProdukt | null;
+  isOwner: boolean;
+}> = ({ produkt, isOwner }) => {
+  const userContext = useContext(UserContext);
   const produktTilgang = (tilgang: DataProduktTilgang) => {
     const accessStart = moment(tilgang.start).format("LLL");
     const accessEnd = moment(tilgang.end).format("LLL");
@@ -63,24 +70,42 @@ const ProduktTilganger: React.FC<{
     );
   };
 
-  if (tilganger == null) return <></>;
+  const entryShouldBeDisplayed = (
+    entry: DataProduktTilgang,
+    isOwner: boolean
+  ): boolean => {
+    // Hvis produkteier, vis all tilgang;
+    if (isOwner) return true;
 
-  return <div>{tilganger.map((a) => produktTilgang(a))}</div>;
+    // Ellers, vis kun dine egne tilganger.
+    return entry.subject === userContext?.email;
+  };
+
+  if (!produkt?.access) return <></>;
+
+  return (
+    <div>
+      {produkt.access
+        .filter((e) => entryShouldBeDisplayed(e, isOwner))
+        .map((a) => produktTilgang(a))}
+    </div>
+  );
 };
 
 export const ProduktDetalj = ({
   setCrumb,
 }: ProduktDetaljProps): JSX.Element => {
   let { produktID } = useParams<ProduktDetaljParams>();
+  const userContext = useContext(UserContext);
 
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [tilgangIsOpen, setTilgangIsOpen] = useState<boolean>(false);
   const [owner, setOwner] = useState<boolean>(false);
-  const userContext = useContext(UserContext);
 
   useEffect(() => {
+    // TODO: Refaktorer inn i ProduktAPI
     fetch(`http://localhost:8080/api/v1/dataproducts/${produktID}`).then(
       (res) => {
         if (!res.ok) {
@@ -102,7 +127,6 @@ export const ProduktDetalj = ({
   }, [produkt, setCrumb]);
 
   useEffect(() => {
-    console.log(userContext);
     if (produkt && userContext) {
       setOwner(userContext.teams.includes(produkt.data_product.owner));
     }
@@ -134,7 +158,7 @@ export const ProduktDetalj = ({
       />
 
       <div className="produktdetalj">
-        <ProduktInfoFaktaboks produkt={produkt} />
+        <ProduktInfoFaktaboks produkt={produkt} isOwner={owner} />
         <div className="knapperad">
           {owner ? (
             <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>

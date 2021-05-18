@@ -4,6 +4,7 @@ import { DataProduktResponse, slettProdukt } from "./produktAPI";
 import Modal from "nav-frontend-modal";
 import { useHistory } from "react-router-dom";
 import { Fareknapp } from "nav-frontend-knapper";
+import { Select, SkjemaGruppe } from "nav-frontend-skjema";
 
 interface SlettProduktProps {
   produktID: string;
@@ -24,13 +25,21 @@ export const GiTilgang = ({
 }: GiTilgangProps): JSX.Element => {
   return (
     <Modal
+      appElement={document.getElementById("app") || undefined}
       isOpen={tilgangIsOpen}
       onRequestClose={() => setTilgangIsOpen(false)}
       closeButton={true}
       contentLabel="Gi tilgang"
     >
-      <div className="slette-bekreftelse">
+      <div className="gi-tilgang">
         <Systemtittel>Gi tilgang</Systemtittel>
+
+        <SkjemaGruppe>
+          <Select>
+            <option value="til meg">til meg</option>
+            <option value="til team">til team</option>
+          </Select>
+        </SkjemaGruppe>
       </div>
     </Modal>
   );
@@ -55,6 +64,7 @@ export const SlettProdukt = ({
 
   return (
     <Modal
+      appElement={document.getElementById("app") || undefined}
       isOpen={isOpen}
       onRequestClose={() => setIsOpen(false)}
       closeButton={true}
