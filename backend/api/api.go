@@ -3,10 +3,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/nais/dp/backend/iam"
+	"net/http"
 
 	"github.com/nais/dp/backend/auth"
 	"google.golang.org/api/iterator"
@@ -249,7 +247,7 @@ func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	userInfo.Email = strings.ToLower(r.Context().Value("preferred_username").(string))
+	userInfo.Email = r.Context().Value("preferred_username").(string)
 
 	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {
 		log.Errorf("Serializing teams response: %v", err)

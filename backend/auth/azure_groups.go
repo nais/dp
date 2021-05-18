@@ -14,7 +14,10 @@ import (
 	"github.com/nais/dp/backend/config"
 )
 
-const AzureGraphMemberOfEndpoint = "https://graph.microsoft.com/v1.0/me/memberOf"
+const (
+	AzureGraphMemberOfEndpoint = "https://graph.microsoft.com/v1.0/me/memberOf"
+	CacheDuration              = 1 * time.Hour
+)
 
 type CacheEntry struct {
 	groups  []string
@@ -40,10 +43,14 @@ type MemberOfGroup struct {
 }
 
 func (a *AzureGroups) GetGroupsForUser(ctx context.Context, token, email string) ([]string, error) {
+	log.Tracef("Current cache: %v", a.Cache)
+
 	entry, found := a.Cache[email]
-	if found && entry.updated.Add(1*time.Hour).Before(time.Now()) {
+	if found && entry.updated.Add(CacheDuration).After(time.Now()) {
+		log.Debugf("Returning cached groups for user: %v", email)
 		return entry.groups, nil
 	}
+
 	bearerToken, err := a.getBearerTokenOnBehalfOfUser(ctx, token)
 	if err != nil {
 		return nil, err

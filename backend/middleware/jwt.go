@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/jwtauth"
@@ -50,7 +51,7 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGr
 				return
 			}
 
-			email := claims["preferred_username"].(string)
+			email := strings.ToLower(claims["preferred_username"].(string))
 			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", email))
 
 			groups, err := azureGroups.GetGroupsForUser(r.Context(), token, email)
