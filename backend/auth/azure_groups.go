@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"golang.org/x/oauth2/endpoints"
 	"net/http"
 	"time"
 
@@ -73,7 +74,7 @@ func (a *AzureGroups) GetGroupsForUser(ctx context.Context, token, email string)
 }
 
 func (a *AzureGroups) getBearerTokenOnBehalfOfUser(ctx context.Context, token string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, a.Config.OAuth2TokenURL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.AzureAD(a.Config.OAuth2TenantID).TokenURL, nil)
 	if err != nil {
 		return "", err
 	}
