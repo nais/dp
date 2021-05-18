@@ -7,6 +7,7 @@ import {
   DataProdukt,
   DataProduktResponse,
   DataProduktTilgang,
+  hentProdukt,
 } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
@@ -60,12 +61,11 @@ const ProduktTilganger: React.FC<{
 }> = ({ produkt, isOwner }) => {
   const userContext = useContext(UserContext);
   const produktTilgang = (tilgang: DataProduktTilgang) => {
-    const accessStart = moment(tilgang.start).format("LLL");
-    const accessEnd = moment(tilgang.end).format("LLL");
+    const accessEnd = moment(tilgang.expires).format("LLL");
 
     return (
       <div className="innslag">
-        {tilgang.subject}: {accessStart}&mdash;{accessEnd}
+        {tilgang.subject}: til {accessEnd}
       </div>
     );
   };
@@ -104,20 +104,30 @@ export const ProduktDetalj = ({
   const [tilgangIsOpen, setTilgangIsOpen] = useState<boolean>(false);
   const [owner, setOwner] = useState<boolean>(false);
 
+  const tilgangModalCallback = (hasChanged: boolean) => {
+    setTilgangIsOpen(false);
+    if (hasChanged) {
+      // TODO: Use hooks more elegantly
+      hentProdukt(produktID)
+        .then((p) => {
+          setProdukt(p);
+          setError(null);
+        })
+        .catch((e) => {
+          setError(e.toString());
+        });
+    }
+  };
+
   useEffect(() => {
-    // TODO: Refaktorer inn i ProduktAPI
-    fetch(`http://localhost:8080/api/v1/dataproducts/${produktID}`).then(
-      (res) => {
-        if (!res.ok) {
-          res.text().then((text) => setError(`HTTP ${res.status}: ${text}`));
-        } else {
-          res.json().then((json) => {
-            setError(null);
-            setProdukt(json);
-          });
-        }
-      }
-    );
+    hentProdukt(produktID)
+      .then((p) => {
+        setProdukt(p);
+        setError(null);
+      })
+      .catch((e) => {
+        setError(e.toString());
+      });
   }, [produktID]);
 
   useEffect(() => {
@@ -153,7 +163,7 @@ export const ProduktDetalj = ({
 
       <GiTilgang
         tilgangIsOpen={tilgangIsOpen}
-        setTilgangIsOpen={setTilgangIsOpen}
+        callback={tilgangModalCallback}
         produkt={produkt}
       />
 

@@ -5,8 +5,7 @@ export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
 const DataProduktTilgangSchema = z.object({
   subject: z.string(),
-  start: z.string(),
-  end: z.string(),
+  expires: z.string().nullable(),
 });
 
 const BucketStoreSchema = z.object({
@@ -60,6 +59,25 @@ export const hentProdukter = async (): Promise<DataProduktListe> => {
   const json = await res.json();
 
   return DataProduktListSchema.parse(json);
+};
+
+export const hentProdukt = async (
+  produktID: string
+): Promise<DataProduktResponse> => {
+  try {
+    const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+      credentials: "include",
+    });
+
+    if (res.status !== 200) {
+      throw new Error(`Feil: ${await res.text()}`);
+    } else {
+      return DataProduktResponseSchema.parse(await res.json());
+    }
+  } catch (e) {
+    console.log(e);
+    throw new Error(`Nettverksfeil: ${e}`);
+  }
 };
 
 export const slettProdukt = async (produktID: string): Promise<void> => {
@@ -119,26 +137,23 @@ export const oppdaterProdukt = async (
   return newID;
 };
 
-export const giTilgang = (
+export const giTilgang = async (
   produkt: DataProduktResponse,
   subject: string,
-  startDate: Date,
-  endDate: Date
+  expiry: Date | null
 ) => {
-  const startDateStamp = startDate.toISOString();
-  const endDateStamp = endDate.toISOString();
+  const expiryString = expiry instanceof Date ? expiry.toISOString() : null;
 
   const produktOppdateringer: DataProduktPartial = {
     access: [
       {
         subject: subject,
-        start: startDateStamp,
-        end: endDateStamp,
+        expires: expiryString,
       },
     ],
   };
 
-  oppdaterProdukt(produkt.id, produktOppdateringer);
+  await oppdaterProdukt(produkt.id, produktOppdateringer);
 };
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
@@ -147,6 +162,5 @@ export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
 
   // dummy values, please replace later
   let user = BrukerInfoSchema.parse(json);
-  user.teams = ["A-team", "VIF", "TeamSpeak", "tore"];
   return user;
 };

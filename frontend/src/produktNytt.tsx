@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
@@ -58,12 +58,15 @@ const RessursVelger = ({ ressurs, setter }: RessursVelgerProps) => {
   }
 };
 export const ProduktNytt = (): JSX.Element => {
+  const user = useContext(UserContext);
+
   const [navn, setNavn] = useState<string>("");
   const [beskrivelse, setBeskrivelse] = useState<string>("");
   const [eier, setEier] = useState<string>("");
   const [datastore, setDatastore] = useState<DataLager | null>(null);
   const history = useHistory();
-  const user = useContext(UserContext);
+
+  useEffect(() => setEier(user?.teams?.[0] || eier), [user]);
 
   const createProduct = async (): Promise<void> => {
     try {
@@ -132,16 +135,5 @@ export const ProduktNytt = (): JSX.Element => {
     </div>
   );
 };
-/*
 
-	Subject string    `firestore:"subject" json:"subject,omitempty" validate:"required"`
-	Start   time.Time `firestore:"start" json:"start,omitempty" validate:"required"`
-	End     time.Time `firestore:"end" json:"end,omitempty" validate:"required"`
-
-	Name        string         `firestore:"name" json:"name,omitempty" validate:"required"`
-	Description string         `firestore:"description" json:"description,omitempty" validate:"required"`
-	Resource    Resource       `firestore:"resource" json:"resource,omitempty" validate:"required"`
-	Owner       string         `firestore:"owner" json:"owner,omitempty" validate:"required"`
-	Access      []*AccessEntry `firestore:"access" json:"access,omitempty" validate:"required,dive"`
- */
 export default ProduktNytt;

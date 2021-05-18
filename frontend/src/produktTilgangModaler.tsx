@@ -1,4 +1,4 @@
-import { Systemtittel } from "nav-frontend-typografi";
+import { Feilmelding, Systemtittel } from "nav-frontend-typografi";
 import React, { useState, useContext } from "react";
 import {
   giTilgang,
@@ -8,10 +8,11 @@ import {
 } from "./produktAPI";
 import { UserContext } from "./userContext";
 import Modal from "nav-frontend-modal";
-import { ToggleKnapp } from "nav-frontend-toggle";
+import { ToggleGruppe, ToggleKnapp } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";
 import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
-import { Select, SkjemaGruppe } from "nav-frontend-skjema";
+import { RadioGruppe, Radio } from "nav-frontend-skjema";
+
 import DatePicker from "react-datepicker";
 import "./produktTilgangModaler.less";
 
@@ -30,47 +31,65 @@ interface GiTilgangProps {
 export const GiTilgang: React.FC<{
   produkt: DataProduktResponse;
   tilgangIsOpen: boolean;
-  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ produkt, tilgangIsOpen, setTilgangIsOpen }) => {
-  const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  callback: (hasChanged: boolean) => void;
+}> = ({ produkt, tilgangIsOpen, callback }) => {
+  const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [evig, setEvig] = useState<boolean>(false);
-
+  const [feilmelding, setFeilmelding] = useState<string | null>(null);
   const userContext = useContext(UserContext);
   if (!userContext) return null;
 
-  const handleDateUpdate = (newValue: Date | [Date, Date] | null) => {
-    console.log("new value:", typeof newValue, newValue);
-    if (newValue instanceof Date) setEndDate(newValue);
-  };
-
-  const handleSubmit = () => {
-    //giTilgang(produkt, userContext.email, endDate, endDate)
+  const handleSubmit = async () => {
+    try {
+      await giTilgang(produkt, userContext.email, endDate);
+      setFeilmelding(null);
+      callback(true);
+    } catch (e) {
+      setFeilmelding(e.toString());
+    }
   };
 
   return (
     <Modal
       appElement={document.getElementById("app") || undefined}
       isOpen={tilgangIsOpen}
-      onRequestClose={() => setTilgangIsOpen(false)}
-      closeButton={true}
+      onRequestClose={() => callback(false)}
+      closeButton={false}
       contentLabel="Gi tilgang"
+      className={"gitilgang"}
     >
-      <div className="gitilgang">
-        <Systemtittel>Gi tilgang til {userContext.email}?</Systemtittel>
-        <ToggleKnapp onClick={() => setEvig(!evig)}>Evig tilgang</ToggleKnapp>
-        {!evig ? (
+      <Systemtittel>Gi tilgang til {userContext.email}?</Systemtittel>
+      {feilmelding ? <Feilmelding>{feilmelding}</Feilmelding> : null}
+      <ToggleGruppe
+        minstEn={true}
+        defaultToggles={[
+          {
+            children: "velg sluttdato...",
+            pressed: true,
+            onClick: (e) => setEvig(false),
+          },
+          { children: "evig", onClick: (e) => setEvig(true) },
+        ]}
+      />
+
+      {!evig ? (
+        <div className={"datovalg"}>
           <DatePicker
             selected={endDate}
-            onChange={(e) => handleDateUpdate(e)}
+            onChange={(e) => setEndDate(e as Date)}
             selectsEnd
             endDate={endDate}
-            startDate={startDate}
-            minDate={startDate}
+            startDate={new Date()}
+            minDate={new Date()}
+            inline
           />
-        ) : null}
-        <Hovedknapp onClick={() => {}}>Ja</Hovedknapp>
-        <Fareknapp onClick={() => setTilgangIsOpen(false)}>Nei</Fareknapp>
+        </div>
+      ) : null}
+      <div className={"knapperad"}>
+        <Fareknapp onClick={() => callback(false)}>Avbryt</Fareknapp>
+        <Hovedknapp className={"bekreft"} onClick={() => handleSubmit()}>
+          Bekreft
+        </Hovedknapp>
       </div>
     </Modal>
   );
