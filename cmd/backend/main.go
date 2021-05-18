@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"github.com/nais/dp/backend/logger"
 	"net/http"
 	"os"
 	"time"
@@ -14,6 +14,7 @@ import (
 
 	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/backend/api"
+	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 )
 
@@ -32,8 +33,11 @@ func init() {
 	flag.StringVar(&cfg.TeamsURL, "teams-url", cfg.TeamsURL, "URL for json containing teams and UUIDs")
 	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("GITHUB_READ_TOKEN"), "Token for accessing teams json")
 	flag.StringVar(&cfg.State, "state", os.Getenv("DP_STATE"), "State to ensure consistency between OAuth2 requests")
+	flag.StringVar(&cfg.LogLevel, "log-level", "info", "which log level to output")
 	flag.BoolVar(&cfg.DevMode, "development-mode", cfg.DevMode, "Run in development mode")
 	flag.Parse()
+
+	logger.Setup(cfg.LogLevel)
 }
 
 func main() {

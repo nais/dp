@@ -4,14 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2/endpoints"
 	"net/http"
+	"net/url"
+	"strings"
 	"time"
 
 	"github.com/nais/dp/backend/config"
 )
 
-const AzureGraphMemberOfEndpoint = "https://graph.microsoft.com/me/memberOf"
+const AzureGraphMemberOfEndpoint = "https://graph.microsoft.com/v1.0/me/memberOf"
 
 type CacheEntry struct {
 	groups  []string
@@ -55,6 +58,7 @@ func (a *AzureGroups) GetGroupsForUser(ctx context.Context, token, email string)
 	if err != nil {
 		return nil, err
 	}
+
 	var memberOfResponse MemberOfResponse
 	if err := json.NewDecoder(response.Body).Decode(&memberOfResponse); err != nil {
 		return nil, err
@@ -70,20 +74,25 @@ func (a *AzureGroups) GetGroupsForUser(ctx context.Context, token, email string)
 		updated: time.Now(),
 	}
 
+	log.Tracef("Retrieved and cached groups: %v", groups)
+
 	return groups, nil
 }
 
 func (a *AzureGroups) getBearerTokenOnBehalfOfUser(ctx context.Context, token string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.AzureAD(a.Config.OAuth2TenantID).TokenURL, nil)
+
+	form := url.Values{}
+	form.Add("client_id", a.Config.OAuth2ClientID)
+	form.Add("client_secret", a.Config.OAuth2ClientSecret)
+	form.Add("scope", "https://graph.microsoft.com/.default")
+	form.Add("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
+	form.Add("requested_token_use", "on_behalf_of")
+	form.Add("assertion", token)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.AzureAD(a.Config.OAuth2TenantID).TokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", err
 	}
-	req.Form.Add("client_id", a.Config.OAuth2ClientID)
-	req.Form.Add("client_secret", a.Config.OAuth2ClientSecret)
-	req.Form.Add("scope", "https://graph.microsoft.com/.default")
-	req.Form.Add("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
-	req.Form.Add("requested_token_use", "on_behalf_of")
-	req.Form.Add("assertion", token)
 
 	response, err := a.Client.Do(req)
 	if err != nil {
@@ -94,5 +103,7 @@ func (a *AzureGroups) getBearerTokenOnBehalfOfUser(ctx context.Context, token st
 	if err := json.NewDecoder(response.Body).Decode(&tokenResponse); err != nil {
 		return "", err
 	}
+
+	log.Debugf("Successfully retrieved on-behalf-of token: %v...", tokenResponse.AccessToken[:5])
 	return tokenResponse.AccessToken, nil
 }
