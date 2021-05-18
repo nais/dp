@@ -19,7 +19,7 @@ func mockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
 	}
 }
 
-func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool) func(http.Handler) http.Handler {
+func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool, azureGroups auth.AzureGroups) func(http.Handler) http.Handler {
 	if mock {
 		return mockJWTValidatorMiddleware()
 	}
@@ -29,10 +29,10 @@ func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool) func(http.
 	}
 	validator := JWTValidator(certificates, clientID)
 
-	return TokenValidatorMiddleware(validator)
+	return TokenValidatorMiddleware(validator, azureGroups)
 }
 
-func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) http.Handler {
+func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGroups) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var claims jwt.MapClaims
@@ -50,16 +50,20 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc) func(next http.Handler) 
 				return
 			}
 
-			var groups []string
-			groupInterface := claims["groups"].([]interface{})
-			groups = make([]string, len(groupInterface))
-			for i, v := range groupInterface {
-				groups[i] = v.(string)
-			}
-			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
-
 			email := claims["preferred_username"].(string)
 			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", email))
+
+			groups, err := azureGroups.GetGroupsForUser(r.Context(), token, email)
+			if err != nil {
+				log.Errorf("getting groups for user: %v", err)
+				w.WriteHeader(http.StatusInternalServerError)
+				_, err = fmt.Fprintf(w, "Unauthorized access: %s", err.Error())
+				if err != nil {
+					log.Errorf("Writing http response: %v", err)
+				}
+				return
+			}
+			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
 
 			next.ServeHTTP(w, r)
 		})

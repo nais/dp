@@ -21,6 +21,12 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 		teamUUIDs: teamUUIDs,
 	}
 
+	azureGroups := auth.AzureGroups{
+		Cache:  make(map[string]auth.CacheEntry),
+		Client: http.DefaultClient,
+		Config: config,
+	}
+
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
 	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
@@ -37,7 +43,7 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 	r.Route("/api/v1", func(r chi.Router) {
 		// requires valid access token
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2TenantID), config.OAuth2ClientID, config.DevMode))
+			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2TenantID), config.OAuth2ClientID, config.DevMode, azureGroups))
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)

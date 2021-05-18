@@ -211,6 +211,7 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens, err := cfg.Exchange(r.Context(), code)
+
 	if err != nil {
 		log.Errorf("Exchanging authorization code for tokens: %v", err)
 		respondf(w, http.StatusForbidden, "uh oh")

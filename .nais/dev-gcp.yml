@@ -6,12 +6,15 @@ metadata:
   labels:
     team: aura
 spec:
-  image: {{ image }}
+  image: { { image } }
   port: 8080
   azure:
     application:
       enabled: true
       tenant: nav.no
+      replyURLs:
+        - "http://localhost:8080/oauth2/callback"
+        - "https://dp.dev.intern.nav.no/oauth2/callback"
   envFrom:
     - secret: github-read-token
     - secret: dp-state
