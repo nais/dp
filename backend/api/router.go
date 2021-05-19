@@ -65,9 +65,9 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 				r.Use(authenticatorMiddleware)
 				r.Delete("/{productID}", api.removeAccessForProduct)
 				r.Post("/{productID}", api.grantAccessForProduct)
-				r.Get("/{productID}/history", api.getAccessUpdatesForProduct)
 			})
-			r.Get("/{productID}", api.getAccessForProduct)
+
+			r.Get("/{productID}", api.getAccessUpdatesForProduct)
 		})
 	})
 
