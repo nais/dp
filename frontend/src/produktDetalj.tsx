@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
-import { Normaltekst, Systemtittel } from "nav-frontend-typografi";
+import { Feilmelding, Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import {
   DataProdukt,
   DataProduktResponse,
@@ -139,7 +139,12 @@ export const ProduktDetalj = ({
     }
   }, [produkt, userContext]);
 
-  if (error) return <div>{error}</div>;
+  if (error)
+    return (
+      <Feilmelding>
+        <code>{error}</code>
+      </Feilmelding>
+    );
 
   if (typeof produkt == "undefined")
     return (

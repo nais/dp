@@ -84,11 +84,11 @@ export const hentProdukt = async (
     });
   } catch (e) {
     console.log(e);
-    throw new Error(`Feil: ${e}`);
+    throw new Error(`${e}`);
   }
 
   if (!res.ok) {
-    throw res;
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   }
 
   return DataProduktResponseSchema.parse(await res.json());
