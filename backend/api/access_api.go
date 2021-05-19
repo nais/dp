@@ -3,6 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 	"time"
 
@@ -83,7 +85,11 @@ func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	document, err := documentRef.Get(r.Context())
 	if err != nil {
 		log.Errorf("Getting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to get document\n")
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "no such document\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get document\n")
+		}
 		return
 	}
 
@@ -114,7 +120,11 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	document, err := documentRef.Get(r.Context())
 	if err != nil {
 		log.Errorf("Getting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to get document\n")
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "no such document\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get document\n")
+		}
 		return
 	}
 
@@ -165,7 +175,11 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	document, err := documentRef.Get(r.Context())
 	if err != nil {
 		log.Errorf("Getting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to get document\n")
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "no such document\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get document\n")
+		}
 		return
 	}
 

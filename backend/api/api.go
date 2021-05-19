@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"net/http"
 
 	"github.com/nais/dp/backend/auth"
@@ -27,7 +29,11 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 	document, err := documentRef.Get(r.Context())
 	if err != nil {
 		log.Errorf("Getting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to get document\n")
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "no such document\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get document\n")
+		}
 		return
 	}
 
@@ -120,7 +126,11 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	document, err := documentRef.Get(r.Context())
 	if err != nil {
 		log.Errorf("Getting firestore document: %v", err)
-		respondf(w, http.StatusNotFound, "unable to get firestore document\n")
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "no such document\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get firestore document\n")
+		}
 		return
 	}
 
