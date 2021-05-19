@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/iam"
 	"net/http"
 
 	"github.com/nais/dp/backend/auth"
@@ -21,7 +20,7 @@ const (
 )
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.FirestoreCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 
@@ -47,7 +46,7 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.FirestoreCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
 	dataproducts := make([]DataProductResponse, 0)
 
 	iter := dpc.Documents(r.Context())
@@ -81,7 +80,7 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.FirestoreCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
 	var dp DataProduct
 
 	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
@@ -115,7 +114,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.FirestoreCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -148,10 +147,10 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 
 	// In case of partial update, where an access update is made
 	// without passing any datastore objects.
-	if(len(dp.Datastore) > 0) {
-		updateDatastoreAccess(dp.Datastore[0], dp.Access)
+	if len(dp.Datastore) > 0 {
+		updateDatastoreAccess(r.Context(), dp.Datastore[0], dp.Access)
 	} else {
-		updateDatastoreAccess(firebaseDp.Datastore[0], dp.Access)
+		updateDatastoreAccess(r.Context(), firebaseDp.Datastore[0], dp.Access)
 	}
 
 	_, err = documentRef.Update(r.Context(), updates)
@@ -164,28 +163,8 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func updateDatastoreAccess(datastore map[string]string, accessList []*AccessEntry) error {
-
-	datastoreType := datastore["type"]
-	if len(datastoreType) == 0 {
-		return fmt.Errorf("no type defined")
-	}
-
-	switch datastoreType {
-	case BucketType:
-		for _, access := range accessList {
-			iam.UpdateBucketAccessControl(datastore["bucket_id"], access.Subject, access.Expires)
-		}
-	case BigQueryType:
-		for _, access := range accessList {
-			iam.UpdateBigqueryTableAccessControl(datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], access.Subject)
-		}
-	}
-	return fmt.Errorf("unknown datastore type: %v", datastoreType)
-}
-
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.FirestoreCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 

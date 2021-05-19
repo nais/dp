@@ -43,15 +43,21 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 	r.Route("/api/v1", func(r chi.Router) {
 		// requires valid access token
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2TenantID), config.OAuth2ClientID, config.DevMode, azureGroups))
+			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups))
 			r.Post("/dataproducts", api.createDataproduct)
 			r.Put("/dataproducts/{productID}", api.updateDataproduct)
 			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
 			r.Get("/userinfo", api.userInfo)
+
+			r.Delete("/access/{productID}", api.removeAccessForProduct)
+			r.Post("/access/{productID}", api.grantAccessForProduct)
+			r.Get("/access/{productID}/history", api.getAccessUpdatesForProduct)
 		})
 
 		r.Get("/dataproducts", api.dataproducts)
 		r.Get("/dataproducts/{productID}", api.getDataproduct)
+
+		r.Get("/access/{productID}", api.getAccessForProduct)
 	})
 
 	r.Get("/oauth2/callback", api.callback)

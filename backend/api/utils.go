@@ -1,10 +1,13 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"cloud.google.com/go/firestore"
+	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -39,34 +42,47 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 		})
 	}
 
-	newAccess := existingDp.Access
-	if len(dp.Access) > 0 {
-		for _, access := range dp.Access {
-			if errs := a.validate.Struct(access); errs != nil {
-				return nil, errs
-			}
-			if !accessEntryExists(existingDp, access) {
-				newAccess = append(newAccess, access)
-			}
-		}
-
-		updates = append(updates, firestore.Update{
-			Path:  "access",
-			Value: newAccess,
-		})
-	}
-
 	return updates, nil
 }
 
-func accessEntryExists(existingDp DataProduct, access *AccessEntry) bool {
-	for i := range existingDp.Access {
-		if existingDp.Access[i].Subject == access.Subject && existingDp.Access[i].Expires == access.Expires {
-			// Found!
-			return true
+func updateDatastoreAccess(ctx context.Context, datastore map[string]string, accessMap map[string]time.Time) error {
+	datastoreType := datastore["type"]
+	if len(datastoreType) == 0 {
+		return fmt.Errorf("no type defined")
+	}
+
+	switch datastoreType {
+	case BucketType:
+		for subject, expiry := range accessMap {
+			if err := iam.UpdateBucketAccessControl(ctx, datastore["bucket_id"], subject, expiry); err != nil {
+				return err
+			}
+			return nil
+		}
+	case BigQueryType:
+		for subject := range accessMap {
+			if err := iam.UpdateBigqueryTableAccessControl(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject); err != nil {
+				return err
+			}
+			return nil
 		}
 	}
-	return false
+	return fmt.Errorf("unknown datastore type: %v", datastoreType)
+}
+
+func removeDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) error {
+	datastoreType := datastore["type"]
+	if len(datastoreType) == 0 {
+		return fmt.Errorf("no type defined")
+	}
+
+	switch datastoreType {
+	case BucketType:
+		return iam.RemoveMemberFromBucket(ctx, datastore["bucket_id"], subject)
+	case BigQueryType:
+		return iam.RemoveMemberFromBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
+	}
+	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
 func ValidateDatastore(store map[string]string) error {
@@ -111,7 +127,7 @@ func documentToProduct(d *firestore.DocumentSnapshot) (DataProductResponse, erro
 	}
 
 	if dp.Access == nil {
-		dp.Access = make([]*AccessEntry, 0)
+		dp.Access = make(map[string]time.Time)
 	}
 	dpr.ID = d.Ref.ID
 	dpr.Updated = d.UpdateTime

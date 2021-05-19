@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2/endpoints"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2/endpoints"
 
 	"github.com/nais/dp/backend/config"
 )
@@ -89,14 +90,14 @@ func (a *AzureGroups) GetGroupsForUser(ctx context.Context, token, email string)
 func (a *AzureGroups) getBearerTokenOnBehalfOfUser(ctx context.Context, token string) (string, error) {
 
 	form := url.Values{}
-	form.Add("client_id", a.Config.OAuth2ClientID)
-	form.Add("client_secret", a.Config.OAuth2ClientSecret)
+	form.Add("client_id", a.Config.OAuth2.ClientID)
+	form.Add("client_secret", a.Config.OAuth2.ClientSecret)
 	form.Add("scope", "https://graph.microsoft.com/.default")
 	form.Add("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
 	form.Add("requested_token_use", "on_behalf_of")
 	form.Add("assertion", token)
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.AzureAD(a.Config.OAuth2TenantID).TokenURL, strings.NewReader(form.Encode()))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoints.AzureAD(a.Config.OAuth2.TenantID).TokenURL, strings.NewReader(form.Encode()))
 	if err != nil {
 		return "", err
 	}

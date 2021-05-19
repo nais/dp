@@ -15,17 +15,12 @@ type api struct {
 	teamUUIDs map[string]string
 }
 
-type AccessEntry struct {
-	Subject string    `firestore:"subject" json:"subject,omitempty" validate:"required"`
-	Expires time.Time `firestore:"expires" json:"expires,omitempty"`
-}
-
 type DataProduct struct {
-	Name        string              `firestore:"name" json:"name,omitempty" validate:"required"`
-	Description string              `firestore:"description" json:"description,omitempty"`
-	Datastore   []map[string]string `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
-	Owner       string              `firestore:"owner" json:"owner,omitempty" validate:"required"`
-	Access      []*AccessEntry      `firestore:"access" json:"access" validate:"dive"`
+	Name        string               `firestore:"name" json:"name,omitempty" validate:"required"`
+	Description string               `firestore:"description" json:"description,omitempty"`
+	Datastore   []map[string]string  `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
+	Owner       string               `firestore:"owner" json:"owner,omitempty" validate:"required"`
+	Access      map[string]time.Time `firestore:"access" json:"access"`
 }
 
 type DataProductResponse struct {
