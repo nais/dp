@@ -1,17 +1,11 @@
 import { Feilmelding, Systemtittel } from "nav-frontend-typografi";
 import React, { useState, useContext } from "react";
-import {
-  giTilgang,
-  DataProduktResponse,
-  slettProdukt,
-  DataProdukt,
-} from "./produktAPI";
+import { giTilgang, DataProduktResponse, slettProdukt } from "./produktAPI";
 import { UserContext } from "./userContext";
 import Modal from "nav-frontend-modal";
-import { ToggleGruppe, ToggleKnapp } from "nav-frontend-toggle";
+import { ToggleGruppe } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";
 import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
-import { RadioGruppe, Radio } from "nav-frontend-skjema";
 
 import DatePicker from "react-datepicker";
 import "./produktTilgangModaler.less";
@@ -20,12 +14,6 @@ interface SlettProduktProps {
   produktID: string;
   isOpen: boolean;
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-}
-
-interface GiTilgangProps {
-  produkt: DataProduktResponse;
-  tilgangIsOpen: boolean;
-  setTilgangIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const GiTilgang: React.FC<{

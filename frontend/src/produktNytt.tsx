@@ -2,73 +2,130 @@ import React, { useContext, useEffect, useState } from "react";
 import { SkjemaGruppe, Input } from "nav-frontend-skjema";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Select } from "nav-frontend-skjema";
-import { DataProduktSchema, DataLager, opprettProdukt } from "./produktAPI";
+import {
+  DataProduktSchema,
+  DataLager,
+  opprettProdukt,
+  DataLagerBigquery,
+  DataLagerBucket,
+  DataLagerBigquerySchema,
+  DataLagerBucketSchema,
+} from "./produktAPI";
 import "react-datepicker/dist/react-datepicker.css";
 import { useHistory } from "react-router-dom";
 import { UserContext } from "./userContext";
+import { Feilmelding } from "nav-frontend-typografi";
+import { ZodError } from "zod";
 
-interface RessursVelgerProps {
-  ressurs: DataLager | null;
-  setter: React.Dispatch<React.SetStateAction<DataLager | null>>;
-}
+const RessursVelger: React.FC<{
+  datastore: DataLager | null;
+  setDatastore: React.Dispatch<React.SetStateAction<DataLager | null>>;
+  parseErrors: ZodError["formErrors"] | undefined;
+}> = ({ datastore, setDatastore, parseErrors }) => {
+  const bucketFields = (datastore: DataLagerBucket) => (
+    <>
+      <Input
+        label="project_id"
+        feil={parseErrors?.fieldErrors?.project_id}
+        value={datastore.project_id || ""}
+        onChange={(e) =>
+          setDatastore({ ...datastore, project_id: e.target.value })
+        }
+      />
+      <Input
+        label="bucket_id"
+        feil={parseErrors?.fieldErrors?.bucket_id}
+        value={datastore.bucket_id || ""}
+        onChange={(e) =>
+          setDatastore({ ...datastore, bucket_id: e.target.value })
+        }
+      />
+    </>
+  );
 
-const RessursVelger = ({ ressurs, setter }: RessursVelgerProps) => {
-  if (ressurs === null) {
-    return null;
-  }
+  const bigqueryFields = (datastore: DataLagerBigquery) => (
+    <>
+      <Input
+        label="Project ID"
+        feil={parseErrors?.fieldErrors?.project_id}
+        value={datastore.project_id || ""}
+        onChange={(e) =>
+          setDatastore({ ...datastore, project_id: e.target.value })
+        }
+      />
+      <Input
+        label="Resource ID"
+        feil={parseErrors?.fieldErrors?.resource_id}
+        value={datastore.resource_id || ""}
+        onChange={(e) =>
+          setDatastore({ ...datastore, resource_id: e.target.value })
+        }
+      />
+      <Input
+        label="Dataset ID"
+        feil={parseErrors?.fieldErrors?.dataset_id}
+        value={datastore.dataset_id || ""}
+        onChange={(e) =>
+          setDatastore({ ...datastore, dataset_id: e.target.value })
+        }
+      />
+    </>
+  );
 
-  switch (ressurs.type) {
-    case "bucket":
-      return (
-        <div>
-          <Input
-            label="project_id"
-            value={ressurs.project_id || ""}
-            onChange={(e) => setter({ ...ressurs, project_id: e.target.value })}
-          />
-          <Input
-            label="bucket_id"
-            value={ressurs.bucket_id || ""}
-            onChange={(e) => setter({ ...ressurs, bucket_id: e.target.value })}
-          />
-        </div>
-      );
-    case "bigquery":
-      return (
-        <div>
-          <Input
-            label="Project ID"
-            value={ressurs.project_id || ""}
-            onChange={(e) => setter({ ...ressurs, project_id: e.target.value })}
-          />
-          <Input
-            label="Resource ID"
-            value={ressurs.resource_id || ""}
-            onChange={(e) =>
-              setter({ ...ressurs, resource_id: e.target.value })
-            }
-          />
-          <Input
-            label="Dataset ID"
-            value={ressurs.dataset_id || ""}
-            onChange={(e) => setter({ ...ressurs, dataset_id: e.target.value })}
-          />
-        </div>
-      );
-  }
+  return (
+    <>
+      <Select
+        feil={parseErrors?.fieldErrors?.type}
+        label="Ressurstype"
+        onChange={(e) => {
+          if (e.target.value !== "")
+            setDatastore({ type: e.target.value } as DataLager);
+          else setDatastore(null);
+        }}
+      >
+        <option value="">Velg type</option>
+        <option value="bigquery">BigQuery</option>
+        <option value="bucket">Bucket</option>
+      </Select>
+      {datastore?.type === "bigquery" && bigqueryFields(datastore)}
+      {datastore?.type === "bucket" && bucketFields(datastore)}
+    </>
+  );
 };
 export const ProduktNytt = (): JSX.Element => {
   const user = useContext(UserContext);
+  const history = useHistory();
 
   const [navn, setNavn] = useState<string>("");
   const [beskrivelse, setBeskrivelse] = useState<string>("");
   const [eier, setEier] = useState<string>("");
+  // Correctly initialize form to default value on page render
+  useEffect(() => setEier((e) => user?.teams?.[0] || e), [user]);
+
   const [datastore, setDatastore] = useState<DataLager | null>(null);
-  const history = useHistory();
 
-  useEffect(() => setEier(user?.teams?.[0] || eier), [user]);
+  const [formErrors, setFormErrors] = useState<ZodError["formErrors"]>();
+  const [dsFormErrors, setDsFormErrors] = useState<ZodError["formErrors"]>();
 
-  const createProduct = async (): Promise<void> => {
+  const parseDatastore = () => {
+    if (datastore?.type === "bigquery") {
+      DataLagerBigquerySchema.parse(datastore);
+    } else if (datastore?.type === "bucket") {
+      DataLagerBucketSchema.parse(datastore);
+    } else {
+      setDsFormErrors({
+        formErrors: [],
+        fieldErrors: { type: ["Required"] },
+      });
+    }
+  };
+  const handleSubmit = async (): Promise<void> => {
+    // First make sure we have a valid datastore
+    try {
+      parseDatastore();
+    } catch (e) {
+      setDsFormErrors(e.flatten());
+    }
     try {
       const nyttProdukt = DataProduktSchema.parse({
         name: navn,
@@ -81,23 +138,31 @@ export const ProduktNytt = (): JSX.Element => {
       history.push(`/produkt/${newID}`);
     } catch (e) {
       console.log(e.toString());
-    }
-  };
 
-  const validForm = () => {
-    return true;
+      if (e instanceof ZodError) {
+        setFormErrors(e.flatten());
+      } else {
+        setFormErrors({ formErrors: e.toString(), fieldErrors: {} });
+      }
+    }
   };
 
   return (
     <div style={{ margin: "1em 1em 0 1em" }}>
       <SkjemaGruppe>
-        <Input label="Navn" onChange={(e) => setNavn(e.target.value)} />
+        <Input
+          label="Navn"
+          feil={formErrors?.fieldErrors?.name}
+          onChange={(e) => setNavn(e.target.value)}
+        />
         <Input
           label="Beskrivelse"
+          feil={formErrors?.fieldErrors?.description}
           onChange={(e) => setBeskrivelse(e.target.value)}
         />
         <Select
           label="Eier (team)"
+          feil={formErrors?.fieldErrors?.owner}
           onChange={(e) => setEier(e.target.value)}
           children={
             user?.teams
@@ -109,25 +174,23 @@ export const ProduktNytt = (): JSX.Element => {
               : null
           }
         />
-        <Select
-          label="Ressurstype"
-          onChange={(e) => {
-            if (e.target.value !== "")
-              setDatastore({ type: e.target.value } as DataLager);
-            else setDatastore(null);
-          }}
-        >
-          <option value="">Velg type</option>
-          <option value="bigquery">BigQuery</option>
-          <option value="bucket">Bucket</option>
-        </Select>
-        <RessursVelger ressurs={datastore} setter={setDatastore} />
+
+        <RessursVelger
+          datastore={datastore}
+          setDatastore={setDatastore}
+          parseErrors={dsFormErrors}
+        />
       </SkjemaGruppe>
+      {!!formErrors?.formErrors?.length && (
+        <Feilmelding>
+          Feil: <br />
+          <code>{formErrors.formErrors}</code>
+        </Feilmelding>
+      )}
       <Hovedknapp
         style={{ display: "block", marginLeft: "auto" }}
-        disabled={!validForm()}
         onClick={async () => {
-          await createProduct();
+          await handleSubmit();
         }}
       >
         Submit

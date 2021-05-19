@@ -101,11 +101,15 @@ export const Hovedside = (): JSX.Element => {
     console.log(error);
     // log:           {error}
     return (
-      <div>
-        <h1>Kunne ikke hente produkter</h1>
-        <h2>
-          <NavFrontendSpinner /> Prøver på nytt...
-        </h2>
+      <div className={"feilBoks"}>
+        <div>
+          <h1>Kunne ikke hente produkter</h1>
+        </div>
+        <div>
+          <h2>
+            <NavFrontendSpinner /> Prøver på nytt...
+          </h2>
+        </div>
       </div>
     );
   }

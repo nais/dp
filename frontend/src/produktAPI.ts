@@ -12,22 +12,29 @@ const DataProduktTilgangOppdateringSchema = z.object({
   expires: z.date().nullable(),
 });
 
-const BucketStoreSchema = z.object({
+export const DataLagerBucketSchema = z.object({
   type: z.literal("bucket"),
   project_id: z.string(),
   bucket_id: z.string(),
 });
 
-const BigQuerySchema = z.object({
+export const DataLagerBigquerySchema = z.object({
   type: z.literal("bigquery"),
   project_id: z.string(),
   dataset_id: z.string(),
   resource_id: z.string(),
 });
 
-export const DataLagerSchema = z.union([BucketStoreSchema, BigQuerySchema]);
+export const DataLagerSchema = z.union([
+  DataLagerBucketSchema,
+  DataLagerBigquerySchema,
+]);
+export type DataLagerBucket = z.infer<typeof DataLagerBucketSchema>;
+export type DataLagerBigquery = z.infer<typeof DataLagerBigquerySchema>;
+export type DataLager = z.infer<typeof DataLagerSchema>;
+
 export const DataProduktSchema = z.object({
-  name: z.string(),
+  name: z.string().nonempty(),
   description: z.string().nullable(),
   owner: z.string(),
   datastore: DataLagerSchema.array().nullable(),
@@ -55,7 +62,6 @@ export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
 export type DataProduktTilgang = z.infer<typeof DataProduktTilgangSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
-export type DataLager = z.infer<typeof DataLagerSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
 export type DataProduktTilgangOppdatering = z.infer<
   typeof DataProduktTilgangOppdateringSchema
@@ -71,38 +77,38 @@ export const hentProdukter = async (): Promise<DataProduktListe> => {
 export const hentProdukt = async (
   produktID: string
 ): Promise<DataProduktResponse> => {
+  let res: Response;
+
   try {
-    const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+    res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
       credentials: "include",
     });
-
-    if (res.status !== 200) {
-      throw new Error(`Feil: ${await res.text()}`);
-    } else {
-      return DataProduktResponseSchema.parse(await res.json());
-    }
   } catch (e) {
     console.log(e);
-    throw new Error(`Nettverksfeil: ${e}`);
+    throw new Error(`Feil: ${e}`);
   }
+
+  if (!res.ok) {
+    throw res;
+  }
+
+  return DataProduktResponseSchema.parse(await res.json());
 };
 
 export const slettProdukt = async (produktID: string): Promise<void> => {
+  let res: Response;
+
   try {
-    const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+    res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
       method: "delete",
       credentials: "include",
     });
-
-    if (res.status !== 204) {
-      throw new Error(`Feil: ${await res.text()}`);
-    } else {
-      return;
-    }
   } catch (e) {
     console.log(e);
     throw new Error(`Nettverksfeil: ${e}`);
   }
+
+  if (!res.ok) throw new Error(`Feil: ${await res.text()}`);
 };
 
 export const opprettProdukt = async (
@@ -120,8 +126,7 @@ export const opprettProdukt = async (
     );
   }
 
-  const newID = await res.text();
-  return newID;
+  return await res.text();
 };
 
 export const oppdaterTilgang = async (
@@ -140,8 +145,7 @@ export const oppdaterTilgang = async (
     );
   }
 
-  const newID = await res.text();
-  return newID;
+  return await res.text();
 };
 
 export const giTilgang = async (
@@ -160,8 +164,5 @@ export const giTilgang = async (
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   const res = await fetch(`${API_ROOT}/userinfo`, { credentials: "include" });
   const json = await res.json();
-
-  // dummy values, please replace later
-  let user = BrukerInfoSchema.parse(json);
-  return user;
+  return BrukerInfoSchema.parse(json);
 };
