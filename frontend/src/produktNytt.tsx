@@ -132,7 +132,7 @@ export const ProduktNytt = (): JSX.Element => {
         description: beskrivelse,
         datastore: [datastore],
         owner: eier,
-        access: [],
+        access: {},
       });
       const newID = await opprettProdukt(nyttProdukt);
       history.push(`/produkt/${newID}`);

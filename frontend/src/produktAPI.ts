@@ -1,5 +1,4 @@
 import * as z from "zod";
-import { date } from "zod";
 
 export const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:8080";
@@ -35,7 +34,7 @@ export type DataLager = z.infer<typeof DataLagerSchema>;
 
 export const DataProduktSchema = z.object({
   name: z.string().nonempty(),
-  description: z.string().nullable(),
+  description: z.string().optional(),
   owner: z.string(),
   datastore: DataLagerSchema.array().nullable(),
   access: DataProduktTilgangSchema,
@@ -108,7 +107,7 @@ export const slettProdukt = async (produktID: string): Promise<void> => {
     throw new Error(`Nettverksfeil: ${e}`);
   }
 
-  if (!res.ok) throw new Error(`Feil: ${await res.text()}`);
+  if (!res.ok) throw res;
 };
 
 export const opprettProdukt = async (
@@ -121,9 +120,7 @@ export const opprettProdukt = async (
   });
 
   if (res.status !== 201) {
-    throw new Error(
-      `Kunne ikke opprette nytt produkt: ${res.status}: ${await res.text()}`
-    );
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   }
 
   return await res.text();
