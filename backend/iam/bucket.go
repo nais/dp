@@ -3,17 +3,16 @@ package iam
 import (
 	"context"
 	"errors"
-	"google.golang.org/genproto/googleapis/type/expr"
 	"log"
 	"time"
+
+	"google.golang.org/genproto/googleapis/type/expr"
 
 	"cloud.google.com/go/storage"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
-func UpdateBucketAccessControl(bucketName, member string, end time.Time) error {
-
-	ctx := context.Background()
+func UpdateBucketAccessControl(ctx context.Context, bucketName, member string, end time.Time) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
 
@@ -66,8 +65,7 @@ func getCondition(start, end time.Time) string {
 	return expression
 }
 
-func RemoveMemberFromBucket(bucketName, bucketMember string) error {
-	ctx := context.Background()
+func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string) error {
 	client, err := storage.NewClient(ctx)
 	if err != nil {
 		log.Fatal(err)

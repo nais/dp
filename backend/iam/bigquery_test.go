@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/nais/dp/backend/iam"
@@ -27,7 +28,7 @@ func TestBigqueryTableIam(t *testing.T) {
 	tableID := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
 
-	err := iam.UpdateBigqueryTableAccessControl(member, projectID, datasetID, tableID)
+	err := iam.UpdateBigqueryTableAccessControl(context.Background(), member, projectID, datasetID, tableID)
 	if err != nil {
 		return
 	}
@@ -41,7 +42,7 @@ func TestBigqueryViewIam(t *testing.T) {
 	viewID := "container_resource_usage_aura"
 	member := "user:johnny.horvi@nav.no"
 
-	err := iam.UpdateBigqueryTableAccessControl(member, projectID, datasetID, viewID)
+	err := iam.UpdateBigqueryTableAccessControl(context.Background(), member, projectID, datasetID, viewID)
 	if err != nil {
 		return
 	}

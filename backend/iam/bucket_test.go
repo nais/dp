@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,10 +13,9 @@ func TestAddMemberToBucket(t *testing.T) {
 
 	bucketName := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
-	start := time.Now()
 	end := time.Now().AddDate(1, 0, 0)
 
-	err := iam.UpdateBucketAccessControl(bucketName, member, start, end)
+	err := iam.UpdateBucketAccessControl(context.Background(), bucketName, member, end)
 	if err != nil {
 		return
 	}
@@ -27,7 +27,7 @@ func TestRemoveMemberFromBucket(t *testing.T) {
 	bucketName := "container_resource_usage"
 	member := "user:christine.teig@nav.no"
 
-	err := iam.RemoveMemberFromBucket(bucketName, member)
+	err := iam.RemoveMemberFromBucket(context.Background(), bucketName, member)
 	if err != nil {
 		return
 	}
