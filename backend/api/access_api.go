@@ -31,9 +31,11 @@ type AccessSubject struct {
 
 type AccessUpdate struct {
 	ProductID  string    `firestore:"dataproduct_id" json:"dataproduct_id"`
+	Author     string    `firestore:"author" json:"author"`
 	Subject    string    `firestore:"subject" json:"subject"`
 	Action     string    `firestore:"action" json:"action"`
 	UpdateTime time.Time `firestore:"time" json:"time"`
+	Expires    time.Time `firestore:"expires" json:"expires"`
 }
 
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {
@@ -146,7 +148,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 			Value: dpr.DataProduct.Access,
 		}})
 		removeDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
-		a.updateHistory(r.Context(), accessSubject, Delete, dpr.ID)
+		a.updateHistory(r.Context(), AccessSubject{Subject: accessSubject.Subject}, requester, Delete, dpr.ID)
 		return
 	}
 
@@ -200,15 +202,17 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		Value: dpr.DataProduct.Access,
 	}})
 	updateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
-	a.updateHistory(r.Context(), accessSubject, Grant, dpr.ID)
+	a.updateHistory(r.Context(), accessSubject, requester, Grant, dpr.ID)
 }
 
-func (a *api) updateHistory(ctx context.Context, subject AccessSubject, action, productID string) {
+func (a *api) updateHistory(ctx context.Context, subject AccessSubject, author, action, productID string) {
 	updates := a.client.Collection(a.config.Firestore.AccessUpdateCollection)
 	updates.Add(ctx, AccessUpdate{
 		Subject:    subject.Subject,
 		Action:     action,
 		ProductID:  productID,
+		Expires:    subject.Expires,
 		UpdateTime: time.Now(),
+		Author:     author,
 	})
 }
