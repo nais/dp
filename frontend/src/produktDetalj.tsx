@@ -71,7 +71,10 @@ const ProduktTilganger: React.FC<{
   };
 
   const entryShouldBeDisplayed = (
-    entry: DataProduktTilgang,
+    entry: {
+      subject: string;
+      expires: Date | null;
+    },
     isOwner: boolean
   ): boolean => {
     // Hvis produkteier, vis all tilgang;
@@ -83,13 +86,7 @@ const ProduktTilganger: React.FC<{
 
   if (!produkt?.access) return <></>;
 
-  return (
-    <div>
-      {produkt.access
-        .filter((e) => entryShouldBeDisplayed(e, isOwner))
-        .map((a) => produktTilgang(a))}
-    </div>
-  );
+  return <div></div>;
 };
 
 export const ProduktDetalj = ({

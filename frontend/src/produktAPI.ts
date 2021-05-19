@@ -1,11 +1,15 @@
 import * as z from "zod";
+import { date } from "zod";
+
 export const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:8080";
 export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
-const DataProduktTilgangSchema = z.object({
+const DataProduktTilgangSchema = z.record(z.any().nullable());
+
+const DataProduktTilgangOppdateringSchema = z.object({
   subject: z.string(),
-  expires: z.string().nullable(),
+  expires: z.date().nullable(),
 });
 
 const BucketStoreSchema = z.object({
@@ -27,10 +31,10 @@ export const DataProduktSchema = z.object({
   description: z.string().nullable(),
   owner: z.string(),
   datastore: DataLagerSchema.array().nullable(),
-  access: DataProduktTilgangSchema.array(),
+  access: DataProduktTilgangSchema,
 });
 
-const DataProduktPartialSchema = DataProduktSchema.deepPartial();
+const DataProduktPartialSchema = DataProduktSchema.partial();
 
 export const DataProduktResponseSchema = z.object({
   id: z.string(),
@@ -53,6 +57,9 @@ export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
 export type DataLager = z.infer<typeof DataLagerSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
+export type DataProduktTilgangOppdatering = z.infer<
+  typeof DataProduktTilgangOppdateringSchema
+>;
 
 export const hentProdukter = async (): Promise<DataProduktListe> => {
   const res = await fetch(`${API_ROOT}/dataproducts`);
@@ -117,12 +124,12 @@ export const opprettProdukt = async (
   return newID;
 };
 
-export const oppdaterProdukt = async (
+export const oppdaterTilgang = async (
   produktID: string,
-  oppdatertProdukt: DataProduktPartial
+  oppdatertProdukt: DataProduktTilgangOppdatering
 ): Promise<string> => {
-  const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
-    method: "PUT",
+  const res = await fetch(`${API_ROOT}/access/${produktID}`, {
+    method: "POST",
     credentials: "include",
     body: JSON.stringify(oppdatertProdukt),
   });
@@ -142,18 +149,12 @@ export const giTilgang = async (
   subject: string,
   expiry: Date | null
 ) => {
-  const expiryString = expiry instanceof Date ? expiry.toISOString() : null;
-
-  const produktOppdateringer: DataProduktPartial = {
-    access: [
-      {
-        subject: subject,
-        expires: expiryString,
-      },
-    ],
+  const produktOppdateringer: DataProduktTilgangOppdatering = {
+    subject: subject,
+    expires: expiry,
   };
 
-  await oppdaterProdukt(produkt.id, produktOppdateringer);
+  await oppdaterTilgang(produkt.id, produktOppdateringer);
 };
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {

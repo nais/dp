@@ -149,6 +149,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		}})
 		removeDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
 		a.updateHistory(r.Context(), AccessSubject{Subject: accessSubject.Subject}, requester, Delete, dpr.ID)
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -203,6 +204,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	}})
 	updateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
 	a.updateHistory(r.Context(), accessSubject, requester, Grant, dpr.ID)
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *api) updateHistory(ctx context.Context, subject AccessSubject, author, action, productID string) {
