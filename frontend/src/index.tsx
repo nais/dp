@@ -1,37 +1,16 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "./index.less";
 import reportWebVitals from "./reportWebVitals";
-import { BACKEND_ENDPOINT, hentBrukerInfo, BrukerInfo } from "./produktAPI";
+import { hentBrukerInfo, BrukerInfo } from "./produktAPI";
 import { Hovedside } from "./hovedside";
-import { BrowserRouter as Router, Switch, Link, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import ProduktDetalj from "./produktDetalj";
 import ProduktNytt from "./produktNytt";
 import { Systemtittel } from "nav-frontend-typografi";
-import NaisPrideLogo from "./naisLogo";
-import { Next } from "@navikt/ds-icons";
-import { Hovedknapp } from "nav-frontend-knapper";
-import { Child } from "@navikt/ds-icons";
+
 import { UserContext } from "./userContext";
-
-export const BrukerBoks: React.FC = () => {
-  const user = useContext(UserContext);
-
-  if (!user) {
-    return (
-      <a className="innloggingsknapp" href={`${BACKEND_ENDPOINT}/login`}>
-        <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
-      </a>
-    );
-  } else {
-    return (
-      <div className={"brukerboks"}>
-        <Child />
-        {user.email}
-      </div>
-    );
-  }
-};
+import PageHeader from "./pageHeader";
 
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
@@ -52,24 +31,28 @@ const App = (): JSX.Element => {
       <div className="app">
         <UserContext.Provider value={user}>
           <Router>
-            <header>
-              <NaisPrideLogo />
-              <Link to="/">
-                <Systemtittel>Dataprodukter</Systemtittel>
-              </Link>
-              {crumb ? <Next className="pil" /> : null}
-              {crumb ? <Systemtittel>{crumb}</Systemtittel> : null}
-              <BrukerBoks />
-            </header>
-
+            <PageHeader crumbs={crumb} />
             <main>
               <Switch>
-                <Route path="/produkt/nytt" children={<ProduktNytt />} />
+                <Route
+                  path="/produkt/nytt"
+                  children={() => {
+                    setCrumb("Nytt produkt");
+                    return <ProduktNytt />;
+                  }}
+                />
                 <Route
                   path="/produkt/:produktID"
                   children={<ProduktDetalj setCrumb={setCrumb} />}
                 />
-                <Route exact path="/" children={<Hovedside />} />
+                <Route
+                  exact
+                  path="/"
+                  children={() => {
+                    setCrumb(null);
+                    return <Hovedside />;
+                  }}
+                />
                 <Route path="*">
                   <Systemtittel>404 - ikke funnet</Systemtittel>
                 </Route>
