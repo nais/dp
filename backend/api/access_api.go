@@ -42,7 +42,7 @@ func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request)
 
 	updateResponse := make([]AccessUpdate, 0)
 
-	query := updates.Where("dataproduct_id", "==", productID)
+	query := updates.Where("dataproduct_id", "==", productID).OrderBy("time", firestore.Desc)
 	iter := query.Documents(r.Context())
 	defer iter.Stop()
 

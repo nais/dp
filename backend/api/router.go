@@ -30,6 +30,7 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
 	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
+	authenticatorMiddleware := middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups)
 
 	r := chi.NewRouter()
 
@@ -40,28 +41,35 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 		AllowCredentials: true,
 	}))
 
+	r.Get("/oauth2/callback", api.callback)
+	r.Get("/login", api.login)
+
 	r.Route("/api/v1", func(r chi.Router) {
 		// requires valid access token
 		r.Group(func(r chi.Router) {
-			r.Use(middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups))
-			r.Post("/dataproducts", api.createDataproduct)
-			r.Put("/dataproducts/{productID}", api.updateDataproduct)
-			r.Delete("/dataproducts/{productID}", api.deleteDataproduct)
+			r.Use(authenticatorMiddleware)
 			r.Get("/userinfo", api.userInfo)
-
-			r.Delete("/access/{productID}", api.removeAccessForProduct)
-			r.Post("/access/{productID}", api.grantAccessForProduct)
-			r.Get("/access/{productID}/history", api.getAccessUpdatesForProduct)
 		})
-
-		r.Get("/dataproducts", api.dataproducts)
-		r.Get("/dataproducts/{productID}", api.getDataproduct)
-
-		r.Get("/access/{productID}", api.getAccessForProduct)
+		r.Route("/dataproducts", func(r chi.Router) {
+			r.Group(func(r chi.Router) {
+				r.Use(authenticatorMiddleware)
+				r.Post("/", api.createDataproduct)
+				r.Put("/{productID}", api.updateDataproduct)
+				r.Delete("/{productID}", api.deleteDataproduct)
+			})
+			r.Get("/", api.dataproducts)
+			r.Get("/{productID}", api.getDataproduct)
+		})
+		r.Route("/access", func(r chi.Router) {
+			r.Group(func(r chi.Router) {
+				r.Use(authenticatorMiddleware)
+				r.Delete("/{productID}", api.removeAccessForProduct)
+				r.Post("/{productID}", api.grantAccessForProduct)
+				r.Get("/{productID}/history", api.getAccessUpdatesForProduct)
+			})
+			r.Get("/{productID}", api.getAccessForProduct)
+		})
 	})
-
-	r.Get("/oauth2/callback", api.callback)
-	r.Get("/login", api.login)
 
 	return r
 }
