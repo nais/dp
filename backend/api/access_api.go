@@ -43,7 +43,7 @@ type AccessUpdate struct {
 }
 
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {
-	updates := a.client.Collection(a.config.Firestore.AccessUpdateCollection)
+	updates := a.client.Collection(a.config.Firestore.AccessUpdatesCollection)
 	productID := chi.URLParam(r, "productID")
 
 	updateResponse := make([]AccessUpdate, 0)
@@ -81,7 +81,7 @@ func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request)
 }
 
 func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -116,7 +116,7 @@ func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -160,7 +160,16 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 			Value: dpr.DataProduct.Access,
 		}})
 		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
-		a.updateHistory(r.Context(), AccessSubject{Subject: accessSubject.Subject}, requester, Delete, dpr.ID)
+
+		update := AccessUpdate{
+			Subject:    accessSubject.Subject,
+			Action:     Delete,
+			ProductID:  dpr.ID,
+			UpdateTime: time.Now(),
+			Author:     requester,
+		}
+
+		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -171,7 +180,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductCollection)
+	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
 	document, err := documentRef.Get(r.Context())
@@ -219,18 +228,20 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		Value: dpr.DataProduct.Access,
 	}})
 	iam.UpdateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
-	a.updateHistory(r.Context(), accessSubject, requester, Grant, dpr.ID)
+
+	update := AccessUpdate{
+		Subject:    accessSubject.Subject,
+		Action:     Grant,
+		ProductID:  dpr.ID,
+		Expires:    accessSubject.Expires,
+		UpdateTime: time.Now(),
+		Author:     requester,
+	}
+	UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (a *api) updateHistory(ctx context.Context, subject AccessSubject, author, action, productID string) {
-	updates := a.client.Collection(a.config.Firestore.AccessUpdateCollection)
-	updates.Add(ctx, AccessUpdate{
-		Subject:    subject.Subject,
-		Action:     action,
-		ProductID:  productID,
-		Expires:    subject.Expires,
-		UpdateTime: time.Now(),
-		Author:     author,
-	})
+func UpdateHistory(ctx context.Context, client *firestore.Client, collectionName string, update AccessUpdate) {
+	updates := client.Collection(collectionName)
+	updates.Add(ctx, update)
 }

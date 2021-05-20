@@ -21,8 +21,10 @@ spec:
   ingresses:
     - "https://dp.dev.intern.nav.no/"
   env:
-    - name: FIRESTORE_COLLECTION
+    - name: DATAPRODUCTS_COLLECTION
       value: dp
+    - name: ACCESS_UPDATES_COLLECTION
+      value: dp-updates
     - name: FIRESTORE_GOOGLE_PROJECT_ID
       value: aura-dev-d9f5
     - name: HOSTNAME

@@ -32,7 +32,7 @@ func EnsureAccess(ctx context.Context, cfg config.Config, client *firestore.Clie
 }
 
 func ensureAccesses(ctx context.Context, cfg config.Config, client *firestore.Client) error {
-	dpc := client.Collection(cfg.Firestore.DataproductCollection)
+	dpc := client.Collection(cfg.Firestore.DataproductsCollection)
 
 	iter := dpc.Documents(ctx)
 	defer iter.Stop()
@@ -45,14 +45,14 @@ func ensureAccesses(ctx context.Context, cfg config.Config, client *firestore.Cl
 			return fmt.Errorf("Iterating documents: %v", err)
 		}
 
-		if err := checkAccess(ctx, cfg, document); err != nil {
+		if err := checkAccess(ctx, cfg, client, document); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func checkAccess(ctx context.Context, cfg config.Config, snapshot *firestore.DocumentSnapshot) error {
+func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Client, snapshot *firestore.DocumentSnapshot) error {
 	dataproduct, err := api.DocumentToProductResponse(snapshot)
 	if err != nil {
 		return err
@@ -70,6 +70,15 @@ func checkAccess(ctx context.Context, cfg config.Config, snapshot *firestore.Doc
 			if err := iam.RemoveDatastoreAccess(ctx, datastore, subject); err != nil {
 				return err
 			}
+
+			update := api.AccessUpdate{
+				Subject:    subject,
+				Action:     api.Delete,
+				ProductID:  dataproduct.ID,
+				UpdateTime: time.Now(),
+				Author:     "AccessEnsurance2000",
+			}
+			api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 			toDelete = append(toDelete, subject)
 		} else {
 			access, err := iam.CheckDatastoreAccess(ctx, datastore, subject)
@@ -82,6 +91,16 @@ func checkAccess(ctx context.Context, cfg config.Config, snapshot *firestore.Doc
 				if err := iam.UpdateDatastoreAccess(ctx, datastore, accessMap); err != nil {
 					return err
 				}
+
+				update := api.AccessUpdate{
+					Subject:    subject,
+					Action:     api.Grant,
+					ProductID:  dataproduct.ID,
+					Expires:    expiry,
+					UpdateTime: time.Now(),
+					Author:     "AccessEnsurance2000",
+				}
+				api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 			}
 		}
 	}

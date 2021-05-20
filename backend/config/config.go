@@ -13,9 +13,9 @@ type Config struct {
 }
 
 type FirestoreConfig struct {
-	GoogleProjectID        string
-	DataproductCollection  string
-	AccessUpdateCollection string
+	GoogleProjectID         string
+	DataproductsCollection  string
+	AccessUpdatesCollection string
 }
 
 type OAuth2Config struct {
