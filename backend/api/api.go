@@ -3,22 +3,19 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"net/http"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/nais/dp/backend/auth"
+	"github.com/nais/dp/backend/iam"
 	"google.golang.org/api/iterator"
 
 	"github.com/go-chi/chi"
 	"golang.org/x/oauth2"
 
 	log "github.com/sirupsen/logrus"
-)
-
-const (
-	BucketType   = "bucket"
-	BigQueryType = "bigquery"
 )
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +34,7 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := documentToProduct(document)
+	dpr, err := DocumentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -67,7 +64,7 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
-		dpr, err := documentToProduct(document)
+		dpr, err := DocumentToProductResponse(document)
 		if err != nil {
 			log.Errorf("Deserializing firestore document: %v", err)
 			respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -158,9 +155,9 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	// In case of partial update, where an access update is made
 	// without passing any datastore objects.
 	if len(dp.Datastore) > 0 {
-		updateDatastoreAccess(r.Context(), dp.Datastore[0], dp.Access)
+		iam.UpdateDatastoreAccess(r.Context(), dp.Datastore[0], dp.Access)
 	} else {
-		updateDatastoreAccess(r.Context(), firebaseDp.Datastore[0], dp.Access)
+		iam.UpdateDatastoreAccess(r.Context(), firebaseDp.Datastore[0], dp.Access)
 	}
 
 	_, err = documentRef.Update(r.Context(), updates)

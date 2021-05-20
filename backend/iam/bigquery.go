@@ -98,3 +98,21 @@ func getPolicy(ctx context.Context, bqclient *bigquery.Client, datasetID, tableI
 
 	return policy, nil
 }
+
+func CheckAccessInBigQueryTable(ctx context.Context, projectID, datasetID, tableID, member string) (bool, error) {
+	bqClient, err := bigquery.NewClient(ctx, projectID)
+	if err != nil {
+		return false, fmt.Errorf("bigquery.NewClient: %v", err)
+	}
+	defer bqClient.Close()
+
+	policy, err := getPolicy(ctx, bqClient, datasetID, tableID)
+	if err != nil {
+		return false, fmt.Errorf("getPolicy: %v", err)
+	}
+
+	// no support for V3 for BigQuery yet, and no support for conditions
+	role := "roles/bigquery.dataViewer"
+	userMember := "user:" + member
+	return policy.HasRole(userMember, iam.RoleName(role)), nil
+}

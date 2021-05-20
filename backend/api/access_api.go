@@ -3,13 +3,15 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"net/http"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
+	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
 )
@@ -93,7 +95,7 @@ func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := documentToProduct(document)
+	dpr, err := DocumentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -128,7 +130,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := documentToProduct(document)
+	dpr, err := DocumentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -157,7 +159,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 			Path:  "access",
 			Value: dpr.DataProduct.Access,
 		}})
-		removeDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
+		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
 		a.updateHistory(r.Context(), AccessSubject{Subject: accessSubject.Subject}, requester, Delete, dpr.ID)
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -183,7 +185,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := documentToProduct(document)
+	dpr, err := DocumentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -216,7 +218,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		Path:  "access",
 		Value: dpr.DataProduct.Access,
 	}})
-	updateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
+	iam.UpdateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
 	a.updateHistory(r.Context(), accessSubject, requester, Grant, dpr.ID)
 	w.WriteHeader(http.StatusNoContent)
 }

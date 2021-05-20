@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -45,46 +44,6 @@ func (a *api) createUpdates(dp DataProduct, existingDp DataProduct) ([]firestore
 	return updates, nil
 }
 
-func updateDatastoreAccess(ctx context.Context, datastore map[string]string, accessMap map[string]time.Time) error {
-	datastoreType := datastore["type"]
-	if len(datastoreType) == 0 {
-		return fmt.Errorf("no type defined")
-	}
-
-	switch datastoreType {
-	case BucketType:
-		for subject, expiry := range accessMap {
-			if err := iam.UpdateBucketAccessControl(ctx, datastore["bucket_id"], subject, expiry); err != nil {
-				return err
-			}
-			return nil
-		}
-	case BigQueryType:
-		for subject := range accessMap {
-			if err := iam.UpdateBigqueryTableAccessControl(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject); err != nil {
-				return err
-			}
-			return nil
-		}
-	}
-	return fmt.Errorf("unknown datastore type: %v", datastoreType)
-}
-
-func removeDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) error {
-	datastoreType := datastore["type"]
-	if len(datastoreType) == 0 {
-		return fmt.Errorf("no type defined")
-	}
-
-	switch datastoreType {
-	case BucketType:
-		return iam.RemoveMemberFromBucket(ctx, datastore["bucket_id"], subject)
-	case BigQueryType:
-		return iam.RemoveMemberFromBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
-	}
-	return fmt.Errorf("unknown datastore type: %v", datastoreType)
-}
-
 func ValidateDatastore(store map[string]string) error {
 	datastoreType := store["type"]
 	if len(datastoreType) == 0 {
@@ -92,9 +51,9 @@ func ValidateDatastore(store map[string]string) error {
 	}
 
 	switch datastoreType {
-	case BucketType:
+	case iam.BucketType:
 		return hasKeys(store, "project_id", "bucket_id")
-	case BigQueryType:
+	case iam.BigQueryType:
 		return hasKeys(store, "dataset_id", "project_id", "resource_id")
 	}
 
@@ -118,7 +77,7 @@ func respondf(w http.ResponseWriter, statusCode int, format string, args ...inte
 	}
 }
 
-func documentToProduct(d *firestore.DocumentSnapshot) (DataProductResponse, error) {
+func DocumentToProductResponse(d *firestore.DocumentSnapshot) (DataProductResponse, error) {
 	var dpr DataProductResponse
 	var dp DataProduct
 

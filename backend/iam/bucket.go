@@ -2,10 +2,10 @@ package iam
 
 import (
 	"context"
-	"errors"
-	"log"
+	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/type/expr"
 
 	"cloud.google.com/go/storage"
@@ -78,24 +78,22 @@ func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string
 	if err != nil {
 		return err
 	}
+
+	newBindings := make([]*iampb.Binding, 0)
 	for _, binding := range policy.Bindings {
-		// Only remove matching role
 		if binding.Role == "roles/storage.objectViewer" {
-			// Filter out member.
-			i := -1
-			for j, member := range binding.Members {
-				if member == bucketMember {
-					i = j
+			for _, member := range binding.Members {
+				if !strings.HasSuffix(strings.ToLower(member), strings.ToLower(bucketMember)) {
+					newBindings = append(newBindings, binding)
 				}
 			}
-
-			if i == -1 {
-				return errors.New("no matching binding group found")
-			} else {
-				binding.Members = append(binding.Members[:i], binding.Members[i+1:]...)
-			}
+		} else {
+			newBindings = append(newBindings, binding)
 		}
 	}
+
+	policy.Bindings = newBindings
+
 	if err := bucket.IAM().V3().SetPolicy(ctx, policy); err != nil {
 		return err
 	}
@@ -103,4 +101,29 @@ func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string
 	// being modified concurrently. SetPolicy will return an error if the policy
 	// was modified since it was retrieved.
 	return nil
+}
+
+func CheckAccessInBucket(ctx context.Context, bucketName, bucketMember string) (bool, error) {
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	defer cancel()
+	bucket := client.Bucket(bucketName)
+	policy, err := bucket.IAM().V3().Policy(ctx)
+	if err != nil {
+		return false, err
+	}
+	for _, binding := range policy.Bindings {
+		if binding.Role == "roles/storage.objectViewer" {
+			for _, member := range binding.Members {
+				if strings.HasSuffix(strings.ToLower(member), strings.ToLower(bucketMember)) {
+					return true, nil
+				}
+			}
+		}
+	}
+	return false, nil
 }

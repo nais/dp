@@ -9,9 +9,8 @@ import (
 
 	"github.com/nais/dp/backend/logger"
 
-	"github.com/nais/dp/backend/auth"
-
 	"github.com/nais/dp/backend/config"
+	"github.com/nais/dp/backend/routines"
 
 	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/backend/api"
@@ -21,7 +20,10 @@ import (
 
 var cfg = config.DefaultConfig()
 
-const TeamsUpdateFrequency = 5 * time.Minute
+const (
+	TeamsUpdateFrequency        = 5 * time.Minute
+	EnsureAccessUpdateFrequency = 5 * time.Minute
+)
 
 func init() {
 	flag.StringVar(&cfg.BindAddress, "bind-address", cfg.BindAddress, "Bind address")
@@ -51,7 +53,8 @@ func main() {
 	}
 
 	teamUUIDs := make(map[string]string)
-	go auth.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
+	go routines.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
+	go routines.EnsureAccess(ctx, cfg, client, EnsureAccessUpdateFrequency)
 
 	api := api.New(client, cfg, teamUUIDs)
 	fmt.Println("running @", cfg.BindAddress)
