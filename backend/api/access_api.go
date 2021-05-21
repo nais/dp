@@ -19,6 +19,7 @@ import (
 const (
 	Delete = "delete"
 	Grant  = "grant"
+	Verify = "verify"
 )
 
 type AccessResponse struct {
@@ -40,6 +41,30 @@ type AccessUpdate struct {
 	Action     string    `firestore:"action" json:"action"`
 	UpdateTime time.Time `firestore:"time" json:"time"`
 	Expires    time.Time `firestore:"expires" json:"expires"`
+}
+
+func (au *AccessUpdate) Delete(author, productID, subject string) {
+	au.Action = Delete
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+}
+
+func (au *AccessUpdate) Grant(author, productID, subject string, expiry time.Time) {
+	au.Action = Grant
+	au.UpdateTime = time.Now()
+	au.Expires = expiry
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+}
+
+func (au *AccessUpdate) Verify(author, productID string) {
+	au.Action = Verify
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Author = author
 }
 
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {
@@ -161,14 +186,8 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		}})
 		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
 
-		update := AccessUpdate{
-			Subject:    accessSubject.Subject,
-			Action:     Delete,
-			ProductID:  dpr.ID,
-			UpdateTime: time.Now(),
-			Author:     requester,
-		}
-
+		update := AccessUpdate{}
+		update.Delete(requester, dpr.ID, accessSubject.Subject)
 		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -229,14 +248,8 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	}})
 	iam.UpdateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
 
-	update := AccessUpdate{
-		Subject:    accessSubject.Subject,
-		Action:     Grant,
-		ProductID:  dpr.ID,
-		Expires:    accessSubject.Expires,
-		UpdateTime: time.Now(),
-		Author:     requester,
-	}
+	update := AccessUpdate{}
+	update.Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
 	UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 	w.WriteHeader(http.StatusNoContent)
 }

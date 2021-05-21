@@ -13,6 +13,8 @@ import (
 	"google.golang.org/api/iterator"
 )
 
+const AccessEnsurance2000 = "AccessEnsurance2000"
+
 func EnsureAccess(ctx context.Context, cfg config.Config, client *firestore.Client, updateFrequency time.Duration) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -71,13 +73,8 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 				return err
 			}
 
-			update := api.AccessUpdate{
-				Subject:    subject,
-				Action:     api.Delete,
-				ProductID:  dataproduct.ID,
-				UpdateTime: time.Now(),
-				Author:     "AccessEnsurance2000",
-			}
+			update := api.AccessUpdate{}
+			update.Delete(AccessEnsurance2000, dataproduct.ID, subject)
 			api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 			toDelete = append(toDelete, subject)
 		} else {
@@ -92,14 +89,8 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 					return err
 				}
 
-				update := api.AccessUpdate{
-					Subject:    subject,
-					Action:     api.Grant,
-					ProductID:  dataproduct.ID,
-					Expires:    expiry,
-					UpdateTime: time.Now(),
-					Author:     "AccessEnsurance2000",
-				}
+				update := api.AccessUpdate{}
+				update.Grant(AccessEnsurance2000, dataproduct.ID, subject, expiry)
 				api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 			}
 		}
@@ -114,5 +105,9 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 			Value: dataproduct.DataProduct.Access,
 		}})
 	}
+
+	update := api.AccessUpdate{}
+	update.Verify(AccessEnsurance2000, dataproduct.ID)
+	api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 	return nil
 }
