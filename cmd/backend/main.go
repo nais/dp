@@ -3,17 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/nais/dp/backend/auth"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/nais/dp/backend/logger"
 
-	"github.com/nais/dp/backend/config"
-	"github.com/nais/dp/backend/routines"
-
 	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/backend/api"
+	"github.com/nais/dp/backend/config"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 )
@@ -53,8 +52,8 @@ func main() {
 	}
 
 	teamUUIDs := make(map[string]string)
-	go routines.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
-	go routines.EnsureAccess(ctx, cfg, client, EnsureAccessUpdateFrequency)
+	go auth.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
+	go api.EnsureAccess(ctx, cfg, client, EnsureAccessUpdateFrequency)
 
 	api := api.New(client, cfg, teamUUIDs)
 	fmt.Println("running @", cfg.BindAddress)

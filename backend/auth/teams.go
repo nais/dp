@@ -1,4 +1,4 @@
-package routines
+package auth
 
 import (
 	"context"

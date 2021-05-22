@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	Delete = "delete"
-	Grant  = "grant"
-	Verify = "verify"
+	DeleteType = "delete"
+	GrantType  = "grant"
+	VerifyType = "verify"
 )
 
 type AccessResponse struct {
@@ -41,30 +41,6 @@ type AccessUpdate struct {
 	Action     string    `firestore:"action" json:"action"`
 	UpdateTime time.Time `firestore:"time" json:"time"`
 	Expires    time.Time `firestore:"expires" json:"expires"`
-}
-
-func (au *AccessUpdate) Delete(author, productID, subject string) {
-	au.Action = Delete
-	au.UpdateTime = time.Now()
-	au.ProductID = productID
-	au.Subject = subject
-	au.Author = author
-}
-
-func (au *AccessUpdate) Grant(author, productID, subject string, expiry time.Time) {
-	au.Action = Grant
-	au.UpdateTime = time.Now()
-	au.Expires = expiry
-	au.ProductID = productID
-	au.Subject = subject
-	au.Author = author
-}
-
-func (au *AccessUpdate) Verify(author, productID string) {
-	au.Action = Verify
-	au.UpdateTime = time.Now()
-	au.ProductID = productID
-	au.Author = author
 }
 
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +96,7 @@ func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := DocumentToProductResponse(document)
+	dpr, err := documentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -155,7 +131,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := DocumentToProductResponse(document)
+	dpr, err := documentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -186,8 +162,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		}})
 		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
 
-		update := AccessUpdate{}
-		update.Delete(requester, dpr.ID, accessSubject.Subject)
+		update := Delete(requester, dpr.ID, accessSubject.Subject)
 		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 		w.WriteHeader(http.StatusNoContent)
 		return
@@ -213,7 +188,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dpr, err := DocumentToProductResponse(document)
+	dpr, err := documentToProductResponse(document)
 	if err != nil {
 		log.Errorf("Deserializing firestore document: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
@@ -248,8 +223,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	}})
 	iam.UpdateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
 
-	update := AccessUpdate{}
-	update.Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
+	update := Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
 	UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -257,4 +231,31 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 func UpdateHistory(ctx context.Context, client *firestore.Client, collectionName string, update AccessUpdate) {
 	updates := client.Collection(collectionName)
 	updates.Add(ctx, update)
+}
+
+func Delete(author, productID, subject string) (au AccessUpdate) {
+	au.Action = DeleteType
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+	return
+}
+
+func Grant(author, productID, subject string, expiry time.Time) (au AccessUpdate) {
+	au.Action = GrantType
+	au.UpdateTime = time.Now()
+	au.Expires = expiry
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+	return
+}
+
+func Verify(author, productID string) (au AccessUpdate) {
+	au.Action = VerifyType
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Author = author
+	return
 }

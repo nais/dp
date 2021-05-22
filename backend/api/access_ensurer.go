@@ -1,4 +1,4 @@
-package routines
+package api
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"github.com/nais/dp/backend/api"
 	"github.com/nais/dp/backend/config"
 	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
@@ -44,7 +43,7 @@ func ensureAccesses(ctx context.Context, cfg config.Config, client *firestore.Cl
 			break
 		}
 		if err != nil {
-			return fmt.Errorf("Iterating documents: %v", err)
+			return fmt.Errorf("iterating documents: %v", err)
 		}
 
 		if err := checkAccess(ctx, cfg, client, document); err != nil {
@@ -55,7 +54,7 @@ func ensureAccesses(ctx context.Context, cfg config.Config, client *firestore.Cl
 }
 
 func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Client, snapshot *firestore.DocumentSnapshot) error {
-	dataproduct, err := api.DocumentToProductResponse(snapshot)
+	dataproduct, err := documentToProductResponse(snapshot)
 	if err != nil {
 		return err
 	}
@@ -73,9 +72,8 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 				return err
 			}
 
-			update := api.AccessUpdate{}
-			update.Delete(AccessEnsurance2000, dataproduct.ID, subject)
-			api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
+			deletion := Delete(AccessEnsurance2000, dataproduct.ID, subject)
+			UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, deletion)
 			toDelete = append(toDelete, subject)
 		} else {
 			access, err := iam.CheckDatastoreAccess(ctx, datastore, subject)
@@ -89,9 +87,8 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 					return err
 				}
 
-				update := api.AccessUpdate{}
-				update.Grant(AccessEnsurance2000, dataproduct.ID, subject, expiry)
-				api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
+				update := Grant(AccessEnsurance2000, dataproduct.ID, subject, expiry)
+				UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 			}
 		}
 	}
@@ -106,8 +103,7 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 		}})
 	}
 
-	update := api.AccessUpdate{}
-	update.Verify(AccessEnsurance2000, dataproduct.ID)
-	api.UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
+	update := Verify(AccessEnsurance2000, dataproduct.ID)
+	UpdateHistory(ctx, client, cfg.Firestore.AccessUpdatesCollection, update)
 	return nil
 }

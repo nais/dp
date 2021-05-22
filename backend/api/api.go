@@ -3,185 +3,115 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"net/http"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
-	"github.com/nais/dp/backend/auth"
-	"github.com/nais/dp/backend/iam"
-	"google.golang.org/api/iterator"
-
+	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
-	"golang.org/x/oauth2"
+	"github.com/go-chi/cors"
+	"github.com/nais/dp/backend/auth"
+	"github.com/nais/dp/backend/config"
+	"github.com/nais/dp/backend/middleware"
 
-	log "github.com/sirupsen/logrus"
+	"gopkg.in/go-playground/validator.v9"
 )
 
-func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-
-	document, err := documentRef.Get(r.Context())
-	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
-		if status.Code(err) == codes.NotFound {
-			respondf(w, http.StatusNotFound, "no such document\n")
-		} else {
-			respondf(w, http.StatusBadRequest, "unable to get document\n")
-		}
-		return
-	}
-
-	dpr, err := DocumentToProductResponse(document)
-	if err != nil {
-		log.Errorf("Deserializing firestore document: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(dpr); err != nil {
-		log.Errorf("Serializing dataproduct response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
-		return
-	}
+type api struct {
+	client    *firestore.Client
+	validate  *validator.Validate
+	config    config.Config
+	teamUUIDs map[string]string
 }
 
-func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	dataproducts := make([]DataProductResponse, 0)
-
-	iter := dpc.Documents(r.Context())
-	defer iter.Stop()
-	for {
-		document, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Errorf("Iterating documents: %v", err)
-			break
-		}
-
-		dpr, err := DocumentToProductResponse(document)
-		if err != nil {
-			log.Errorf("Deserializing firestore document: %v", err)
-			respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
-			return
-		}
-
-		dataproducts = append(dataproducts, dpr)
+func New(client *firestore.Client, config config.Config, teamUUIDs map[string]string) chi.Router {
+	api := api{
+		client:    client,
+		validate:  validator.New(),
+		config:    config,
+		teamUUIDs: teamUUIDs,
 	}
 
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(dataproducts); err != nil {
-		log.Errorf("Serializing dataproducts response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
-		return
+	azureGroups := auth.AzureGroups{
+		Cache:  make(map[string]auth.CacheEntry),
+		Client: http.DefaultClient,
+		Config: config,
 	}
+
+	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
+	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
+	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
+	authenticatorMiddleware := middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups)
+
+	r := chi.NewRouter()
+
+	r.Use(prometheusMiddleware.Handler())
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowCredentials: true,
+	}))
+
+	r.Get("/oauth2/callback", api.callback)
+	r.Get("/login", api.login)
+
+	r.Route("/api/v1", func(r chi.Router) {
+		// requires valid access token
+		r.Group(func(r chi.Router) {
+			r.Use(authenticatorMiddleware)
+			r.Get("/userinfo", api.userInfo)
+		})
+		r.Route("/dataproducts", func(r chi.Router) {
+			r.Group(func(r chi.Router) {
+				r.Use(authenticatorMiddleware)
+				r.Post("/", api.createDataproduct)
+				r.Put("/{productID}", api.updateDataproduct)
+				r.Delete("/{productID}", api.deleteDataproduct)
+			})
+			r.Get("/", api.dataproducts)
+			r.Get("/{productID}", api.getDataproduct)
+		})
+		r.Route("/access", func(r chi.Router) {
+			r.Group(func(r chi.Router) {
+				r.Use(authenticatorMiddleware)
+				r.Delete("/{productID}", api.removeAccessForProduct)
+				r.Post("/{productID}", api.grantAccessForProduct)
+			})
+
+			r.Get("/{productID}", api.getAccessUpdatesForProduct)
+		})
+	})
+
+	return r
 }
 
-func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	var dp DataProduct
+func (a *api) login(w http.ResponseWriter, r *http.Request) {
+	cfg := auth.CreateOAuth2Config(a.config)
+	consentUrl := cfg.AuthCodeURL(a.config.State, oauth2.SetAuthURLParam("redirect_uri", cfg.RedirectURL))
+	http.Redirect(w, r, consentUrl, http.StatusFound)
+}
 
-	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
-		log.Errorf("Deserializing request document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
-		return
+func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
+	var userInfo struct {
+		Email string   `json:"email"`
+		Teams []string `json:"teams"`
 	}
 
-	if errs := a.validate.Struct(dp); errs != nil {
-		log.Errorf("Validation fails: %v", errs)
-		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-		return
-	}
+	userInfo.Teams = make([]string, 0) // initialize teams slice to get [] instead of null
 
-	if len(dp.Datastore) > 0 {
-		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
-			log.Errorf("Validation fails: %v", errs)
-			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-			return
+	for _, uuid := range r.Context().Value("groups").([]string) {
+		if _, found := a.teamUUIDs[uuid]; found {
+			userInfo.Teams = append(userInfo.Teams, a.teamUUIDs[uuid])
 		}
 	}
 
-	documentRef, _, err := dpc.Add(r.Context(), dp)
-	if err != nil {
-		log.Errorf("Adding dataproduct to collection: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to add dataproduct to collection\n")
+	userInfo.Email = r.Context().Value("preferred_username").(string)
+
+	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {
+		log.Errorf("Serializing teams response: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to serialize teams for user\n")
 		return
 	}
-
-	respondf(w, http.StatusCreated, documentRef.ID)
-}
-
-func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-	document, err := documentRef.Get(r.Context())
-	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
-		if status.Code(err) == codes.NotFound {
-			respondf(w, http.StatusNotFound, "no such document\n")
-		} else {
-			respondf(w, http.StatusBadRequest, "unable to get firestore document\n")
-		}
-		return
-	}
-
-	var firebaseDp DataProduct
-	if err := document.DataTo(&firebaseDp); err != nil {
-		log.Errorf("Deserializing firestore document: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to deserialize firestore document\n")
-		return
-	}
-
-	var dp DataProduct
-	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
-		log.Errorf("Deserializing request document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
-		return
-	}
-
-	updates, err := a.createUpdates(dp, firebaseDp)
-	if err != nil {
-		log.Errorf("Validation fails: %v", err)
-		respondf(w, http.StatusBadRequest, "Validation failed: %v", err)
-		return
-	}
-
-	// In case of partial update, where an access update is made
-	// without passing any datastore objects.
-	if len(dp.Datastore) > 0 {
-		iam.UpdateDatastoreAccess(r.Context(), dp.Datastore[0], dp.Access)
-	} else {
-		iam.UpdateDatastoreAccess(r.Context(), firebaseDp.Datastore[0], dp.Access)
-	}
-
-	_, err = documentRef.Update(r.Context(), updates)
-	if err != nil {
-		log.Errorf("Updating firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to update firestore document\n")
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-
-	if _, err := documentRef.Delete(r.Context()); err != nil {
-		log.Errorf("Deleting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to delete firestore document\n")
-		return
-	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *api) callback(w http.ResponseWriter, r *http.Request) {
@@ -225,31 +155,10 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, loginPage, http.StatusFound) // redirect and set cookie doesn't work on chrome lol
 }
 
-func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
-	var userInfo struct {
-		Email string   `json:"email"`
-		Teams []string `json:"teams"`
+func respondf(w http.ResponseWriter, statusCode int, format string, args ...interface{}) {
+	w.WriteHeader(statusCode)
+
+	if _, wErr := w.Write([]byte(fmt.Sprintf(format, args...))); wErr != nil {
+		log.Errorf("unable to write response: %v", wErr)
 	}
-
-	userInfo.Teams = make([]string, 0) // initialize teams slice to get [] instead of null
-
-	for _, uuid := range r.Context().Value("groups").([]string) {
-		if _, found := a.teamUUIDs[uuid]; found {
-			userInfo.Teams = append(userInfo.Teams, a.teamUUIDs[uuid])
-		}
-	}
-
-	userInfo.Email = r.Context().Value("preferred_username").(string)
-
-	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {
-		log.Errorf("Serializing teams response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize teams for user\n")
-		return
-	}
-}
-
-func (a *api) login(w http.ResponseWriter, r *http.Request) {
-	cfg := auth.CreateOAuth2Config(a.config)
-	consentUrl := cfg.AuthCodeURL(a.config.State, oauth2.SetAuthURLParam("redirect_uri", cfg.RedirectURL))
-	http.Redirect(w, r, consentUrl, http.StatusFound)
 }
