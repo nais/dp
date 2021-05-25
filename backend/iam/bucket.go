@@ -26,12 +26,11 @@ func UpdateBucketAccessControl(ctx context.Context, bucketName, member string, e
 	if err != nil {
 		return err
 	}
-	userMember := "user:" + member
 	expression := getCondition(time.Now(), end)
 
 	policy.Bindings = append(policy.Bindings, &iampb.Binding{
 		Role:    "roles/storage.objectViewer",
-		Members: []string{userMember},
+		Members: []string{member},
 		Condition: &expr.Expr{
 			Title:      "Conditional access",
 			Expression: expression,

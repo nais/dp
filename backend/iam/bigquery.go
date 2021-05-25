@@ -54,8 +54,7 @@ func UpdateBigqueryTableAccessControl(ctx context.Context, projectID, datasetID,
 
 	// no support for V3 for BigQuery yet, and no support for conditions
 	role := "roles/bigquery.dataViewer"
-	userMember := "user:" + member
-	policy.Add(userMember, iam.RoleName(role))
+	policy.Add(member, iam.RoleName(role))
 
 	bqTable := bqClient.Dataset(datasetID).Table(tableID)
 	bqTable.IAM().SetPolicy(ctx, policy)
@@ -77,8 +76,7 @@ func RemoveMemberFromBigQueryTable(ctx context.Context, projectID, datasetID, ta
 
 	// no support for V3 for BigQuery yet, and no support for conditions
 	role := "roles/bigquery.dataViewer"
-	userMember := "user:" + member
-	policy.Remove(userMember, iam.RoleName(role))
+	policy.Remove(member, iam.RoleName(role))
 
 	bqTable := bqClient.Dataset(datasetID).Table(tableID)
 	bqTable.IAM().SetPolicy(ctx, policy)
@@ -113,6 +111,5 @@ func CheckAccessInBigQueryTable(ctx context.Context, projectID, datasetID, table
 
 	// no support for V3 for BigQuery yet, and no support for conditions
 	role := "roles/bigquery.dataViewer"
-	userMember := "user:" + member
-	return policy.HasRole(userMember, iam.RoleName(role)), nil
+	return policy.HasRole(member, iam.RoleName(role)), nil
 }

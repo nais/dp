@@ -75,8 +75,8 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 		r.Route("/access", func(r chi.Router) {
 			r.Group(func(r chi.Router) {
 				r.Use(authenticatorMiddleware)
-				r.Delete("/{productID}", api.removeAccessForProduct)
-				r.Post("/{productID}", api.grantAccessForProduct)
+				r.Delete("/{productID}", api.removeProductAccess)
+				r.Post("/{productID}", api.grantProductAccess)
 			})
 
 			r.Get("/{productID}", api.getAccessUpdatesForProduct)

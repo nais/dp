@@ -22,6 +22,11 @@ const (
 	VerifyType = "verify"
 )
 
+const (
+	UserType           = "user"
+	ServiceAccountType = "serviceAccount"
+)
+
 type AccessResponse struct {
 	ID      string               `json:"id"`
 	Access  map[string]time.Time `json:"access"`
@@ -31,6 +36,7 @@ type AccessResponse struct {
 
 type AccessSubject struct {
 	Subject string    `json:"subject" validate:"required"`
+	Type    string    `json:"type" validate:"required"`
 	Expires time.Time `json:"expires" validate:"required"`
 }
 
@@ -116,7 +122,7 @@ func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
+func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
@@ -145,23 +151,38 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var subject string
+	switch accessSubject.Type {
+	case UserType:
+		subject = "user:" + accessSubject.Subject
+	case ServiceAccountType:
+		subject = "serviceAccount:" + accessSubject.Subject
+	default:
+		{
+			log.Errorf("Invalid AccessSubject.Type: %v", accessSubject.Type)
+			respondf(w, http.StatusBadRequest, "invalid AccessSubject.Type\n")
+			return
+		}
+	}
+
 	requester := r.Context().Value("preferred_username").(string)
+	requesterMember := r.Context().Value("member_name").(string)
 	requesterGroups := r.Context().Value("teams").([]string)
 
-	if contains(requesterGroups, dpr.DataProduct.Team) || accessSubject.Subject == requester {
-		_, ok := dpr.DataProduct.Access[accessSubject.Subject]
+	if contains(requesterGroups, dpr.DataProduct.Team) || accessSubject.Subject == requesterMember {
+		_, ok := dpr.DataProduct.Access[subject]
 		if !ok {
 			log.Errorf("Requested subject does have an access entry")
 			respondf(w, http.StatusBadRequest, "requested subject does not have an access entry")
 			return
 		}
 
-		delete(dpr.DataProduct.Access, accessSubject.Subject)
+		delete(dpr.DataProduct.Access, subject)
 		documentRef.Update(r.Context(), []firestore.Update{{
 			Path:  "access",
 			Value: dpr.DataProduct.Access,
 		}})
-		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], accessSubject.Subject)
+		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], subject)
 
 		update := Delete(requester, dpr.ID, accessSubject.Subject)
 		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
@@ -171,10 +192,9 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 
 	log.Errorf("Requester is not authorized to make changes to this rule: product id: %v, requester: %v, subject: %v", dpr.ID, requester, accessSubject.Subject)
 	respondf(w, http.StatusUnauthorized, "you are unauthorized to make changes to this access rule")
-
 }
 
-func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
+func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
 	articleID := chi.URLParam(r, "productID")
 	documentRef := dpc.Doc(articleID)
@@ -209,9 +229,23 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var subject string
+	switch accessSubject.Type {
+	case UserType:
+		subject = "user:" + accessSubject.Subject
+	case ServiceAccountType:
+		subject = "serviceAccount:" + accessSubject.Subject
+	default:
+		{
+			log.Errorf("Invalid AccessSubject.Type: %v", accessSubject.Type)
+			respondf(w, http.StatusBadRequest, "invalid AccessSubject.Type\n")
+			return
+		}
+	}
+
 	requester := r.Context().Value("preferred_username").(string)
 
-	dpr.DataProduct.Access[accessSubject.Subject] = accessSubject.Expires
+	dpr.DataProduct.Access[subject] = accessSubject.Expires
 	documentRef.Update(r.Context(), []firestore.Update{{
 		Path:  "access",
 		Value: dpr.DataProduct.Access,

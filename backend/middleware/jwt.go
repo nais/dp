@@ -53,6 +53,7 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGr
 
 			email := strings.ToLower(claims["preferred_username"].(string))
 			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", email))
+			r = r.WithContext(context.WithValue(r.Context(), "member_name", "user:"+email))
 
 			groups, err := azureGroups.GetGroupsForUser(r.Context(), token, email)
 			if err != nil {
