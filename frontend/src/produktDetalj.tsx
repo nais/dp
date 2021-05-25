@@ -6,8 +6,10 @@ import { Feilmelding, Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import {
   DataProdukt,
   DataProduktResponse,
-  DataProduktTilgang,
+  DataProduktTilgangListe,
+  DataProduktTilgangResponse,
   hentProdukt,
+  hentTilganger,
 } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
@@ -21,6 +23,7 @@ interface ProduktDetaljParams {
 
 interface ProduktInfotabellProps {
   produkt: DataProduktResponse;
+  tilganger: DataProduktTilgangListe;
   isOwner: boolean;
 }
 
@@ -28,7 +31,11 @@ interface ProduktDetaljProps {
   setCrumb: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-const ProduktInfoFaktaboks = ({ produkt, isOwner }: ProduktInfotabellProps) => {
+const ProduktInfoFaktaboks = ({
+  tilganger,
+  produkt,
+  isOwner,
+}: ProduktInfotabellProps) => {
   moment.locale("nb");
 
   return (
@@ -50,22 +57,23 @@ const ProduktInfoFaktaboks = ({ produkt, isOwner }: ProduktInfotabellProps) => {
           ? ` (Oppdatert: ${moment(produkt.updated).fromNow()})`
           : ""}
       </Normaltekst>
-      <ProduktTilganger produkt={produkt.data_product} isOwner={isOwner} />
+      <ProduktTilganger tilganger={tilganger} isOwner={isOwner} />
     </div>
   );
 };
 
 const ProduktTilganger: React.FC<{
-  produkt: DataProdukt | null;
+  tilganger: DataProduktTilgangListe | null;
   isOwner: boolean;
-}> = ({ produkt, isOwner }) => {
+}> = ({ tilganger, isOwner }) => {
   const userContext = useContext(UserContext);
-  const produktTilgang = (tilgang: DataProduktTilgang) => {
+
+  const produktTilgang = (tilgang: DataProduktTilgangResponse) => {
     const accessEnd = moment(tilgang.expires).format("LLL");
 
     return (
       <div className="innslag">
-        {tilgang.subject}: til {accessEnd}
+        {tilgang.subject}: til {tilgang.expires}
       </div>
     );
   };
@@ -84,9 +92,15 @@ const ProduktTilganger: React.FC<{
     return entry.subject === userContext?.email;
   };
 
-  if (!produkt?.access) return <></>;
+  if (!tilganger) return <></>;
 
-  return <div></div>;
+  return (
+    <div>
+      {tilganger.map((tilgang) => (
+        <p>{tilgang.action}</p>
+      ))}
+    </div>
+  );
 };
 
 export const ProduktDetalj = ({
@@ -96,7 +110,11 @@ export const ProduktDetalj = ({
   const userContext = useContext(UserContext);
 
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
+  const [tilganger, setTilganger] = useState<DataProduktTilgangListe | null>(
+    null
+  );
   const [error, setError] = useState<string | null>();
+  const [tilgangerError, setTilgangerError] = useState<string | null>();
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [tilgangIsOpen, setTilgangIsOpen] = useState<boolean>(false);
   const [owner, setOwner] = useState<boolean>(false);
@@ -115,6 +133,17 @@ export const ProduktDetalj = ({
         });
     }
   };
+
+  useEffect(() => {
+    hentTilganger(produktID)
+      .then((p) => {
+        setTilganger(p);
+        setTilgangerError(null);
+      })
+      .catch((e) => {
+        setTilgangerError(e.toString());
+      });
+  }, [produktID]);
 
   useEffect(() => {
     hentProdukt(produktID)
@@ -170,7 +199,11 @@ export const ProduktDetalj = ({
       />
 
       <div className="produktdetalj">
-        <ProduktInfoFaktaboks produkt={produkt} isOwner={owner} />
+        <ProduktInfoFaktaboks
+          tilganger={tilganger}
+          produkt={produkt}
+          isOwner={owner}
+        />
         <div className="knapperad">
           {owner ? (
             <Fareknapp onClick={() => setIsOpen(true)}>Slett</Fareknapp>

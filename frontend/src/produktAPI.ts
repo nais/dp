@@ -11,6 +11,17 @@ const DataProduktTilgangOppdateringSchema = z.object({
   expires: z.date().nullable(),
 });
 
+const DataProduktTilgangResponseSchema = z
+  .object({
+    dataproduct_id: z.string(),
+    author: z.string(),
+    subject: z.string(),
+    action: z.string(),
+    time: z.string(),
+    expires: z.string(),
+  })
+  .partial();
+
 export const DataLagerBucketSchema = z.object({
   type: z.literal("bucket"),
   project_id: z.string(),
@@ -55,6 +66,7 @@ export const BrukerInfoSchema = z.object({
 });
 
 const DataProduktListSchema = DataProduktResponseSchema.array();
+const DataProduktTilgangListSchema = DataProduktTilgangResponseSchema.array().nullable();
 
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
 export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
@@ -65,12 +77,37 @@ export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
 export type DataProduktTilgangOppdatering = z.infer<
   typeof DataProduktTilgangOppdateringSchema
 >;
+export type DataProduktTilgangResponse = z.infer<
+  typeof DataProduktTilgangResponseSchema
+>;
+export type DataProduktTilgangListe = z.infer<
+  typeof DataProduktTilgangListSchema
+>;
 
 export const hentProdukter = async (): Promise<DataProduktListe> => {
   const res = await fetch(`${API_ROOT}/dataproducts`);
   const json = await res.json();
 
   return DataProduktListSchema.parse(json);
+};
+export const hentTilganger = async (
+  produktID: string
+): Promise<DataProduktTilgangListe> => {
+  let res: Response;
+
+  try {
+    res = await fetch(`${API_ROOT}/access/${produktID}`, {
+      credentials: "include",
+    });
+  } catch (e) {
+    console.log(e);
+    throw new Error(`${e}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  }
+  return DataProduktTilgangListSchema.parse(await res.json());
 };
 
 export const hentProdukt = async (

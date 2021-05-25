@@ -1,9 +1,10 @@
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useReducer, useState } from "react";
 import ProduktTabell from "./produktTabell";
 import { DataProduktListe, hentProdukter } from "./produktAPI";
 import ProduktFilter from "./produktFilter";
 import { Add } from "@navikt/ds-icons";
 import { Link } from "react-router-dom";
+import { UserContext } from "./userContext";
 
 import NavFrontendSpinner from "nav-frontend-spinner";
 import * as z from "zod";
@@ -73,6 +74,7 @@ const ProduktNyKnapp = (): JSX.Element => (
 );
 
 export const Hovedside = (): JSX.Element => {
+  const user = useContext(UserContext);
   const [state, dispatch] = useReducer(ProduktTabellReducer, initialState);
   const [error, setError] = useState<string | null>();
 
@@ -118,7 +120,7 @@ export const Hovedside = (): JSX.Element => {
     <div>
       <div className="filter-and-button">
         <ProduktFilter state={state} dispatch={dispatch} />
-        <ProduktNyKnapp />
+        {user ? <ProduktNyKnapp /> : <></>}
       </div>
       <ProduktTabell state={state} dispatch={dispatch} />
     </div>
