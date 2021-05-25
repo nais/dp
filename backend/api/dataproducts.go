@@ -113,7 +113,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(dp.Datastore) > 0 {
-		if errs := validateDatastore(dp.Datastore[0]); errs != nil {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
 			log.Errorf("Validation fails: %v", errs)
 			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 			return
@@ -214,7 +214,7 @@ func (a *api) createUpdates(dp DataProduct) ([]firestore.Update, error) {
 		})
 	}
 	if len(dp.Datastore) > 0 {
-		if errs := validateDatastore(dp.Datastore[0]); errs != nil {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
 			return nil, errs
 		}
 		updates = append(updates, firestore.Update{
@@ -232,7 +232,7 @@ func (a *api) createUpdates(dp DataProduct) ([]firestore.Update, error) {
 	return updates, nil
 }
 
-func validateDatastore(store map[string]string) error {
+func ValidateDatastore(store map[string]string) error {
 	datastoreType := store["type"]
 	if len(datastoreType) == 0 {
 		return fmt.Errorf("no type defined")
