@@ -79,27 +79,42 @@ const ProduktTilganger: React.FC<{
   };
 
   const entryShouldBeDisplayed = (
-    entry: {
-      subject: string;
-      expires: Date | null;
-    },
+    subject: string | undefined,
     isOwner: boolean
   ): boolean => {
     // Hvis produkteier, vis all tilgang;
     if (isOwner) return true;
 
     // Ellers, vis kun dine egne tilganger.
-    return entry.subject === userContext?.email;
+    return subject === userContext?.email;
   };
 
   if (!tilganger) return <></>;
 
+  const tilgangsLinje = (tilgang: DataProduktTilgangResponse) => {
+    return (
+      <tr>
+        <td>{tilgang.author}</td>
+        <td>{tilgang.action}</td>
+        <td>{tilgang.subject}</td>
+        <td>{tilgang.expires}</td>
+      </tr>
+    );
+  };
+
   return (
-    <div>
-      {tilganger.map((tilgang) => (
-        <p>{tilgang.action}</p>
-      ))}
-    </div>
+    <table>
+      <tr>
+        <th>author</th>
+        <th>action</th>
+        <th>subject</th>
+        <th>expires</th>
+      </tr>
+      {tilganger
+        .filter((tilgang) => tilgang.action !== "verify")
+        .filter((tilgang) => entryShouldBeDisplayed(tilgang.subject, isOwner))
+        .map((tilgang) => tilgangsLinje(tilgang))}
+    </table>
   );
 };
 

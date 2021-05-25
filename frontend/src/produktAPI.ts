@@ -9,6 +9,7 @@ const DataProduktTilgangSchema = z.record(z.any().nullable());
 const DataProduktTilgangOppdateringSchema = z.object({
   subject: z.string(),
   expires: z.date().nullable(),
+  type: z.string(),
 });
 
 const DataProduktTilgangResponseSchema = z
@@ -190,6 +191,7 @@ export const giTilgang = async (
   const produktOppdateringer: DataProduktTilgangOppdatering = {
     subject: subject,
     expires: expiry,
+    type: "user",
   };
 
   await oppdaterTilgang(produkt.id, produktOppdateringer);
