@@ -3,9 +3,10 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"net/http"
 
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
@@ -41,7 +42,7 @@ func New(client *firestore.Client, config config.Config, teamUUIDs map[string]st
 	latencyHistBuckets := []float64{.001, .005, .01, .025, .05, .1, .5, 1, 3, 5}
 	prometheusMiddleware := middleware.PrometheusMiddleware("backend", latencyHistBuckets...)
 	prometheusMiddleware.Initialize("/api/v1/", http.MethodGet, http.StatusOK)
-	authenticatorMiddleware := middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups)
+	authenticatorMiddleware := middleware.JWTValidatorMiddleware(auth.KeyDiscoveryURL(config.OAuth2.TenantID), config.OAuth2.ClientID, config.DevMode, azureGroups, teamUUIDs)
 
 	r := chi.NewRouter()
 
@@ -97,14 +98,7 @@ func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 		Teams []string `json:"teams"`
 	}
 
-	userInfo.Teams = make([]string, 0) // initialize teams slice to get [] instead of null
-
-	for _, uuid := range r.Context().Value("groups").([]string) {
-		if _, found := a.teamUUIDs[uuid]; found {
-			userInfo.Teams = append(userInfo.Teams, a.teamUUIDs[uuid])
-		}
-	}
-
+	userInfo.Teams = r.Context().Value("teams").([]string)
 	userInfo.Email = r.Context().Value("preferred_username").(string)
 
 	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {

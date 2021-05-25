@@ -20,7 +20,7 @@ func mockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
 	}
 }
 
-func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool, azureGroups auth.AzureGroups) func(http.Handler) http.Handler {
+func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool, azureGroups auth.AzureGroups, teamUUIDs map[string]string) func(http.Handler) http.Handler {
 	if mock {
 		return mockJWTValidatorMiddleware()
 	}
@@ -30,10 +30,10 @@ func JWTValidatorMiddleware(discoveryURL, clientID string, mock bool, azureGroup
 	}
 	validator := JWTValidator(certificates, clientID)
 
-	return TokenValidatorMiddleware(validator, azureGroups)
+	return TokenValidatorMiddleware(validator, azureGroups, teamUUIDs)
 }
 
-func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGroups) func(next http.Handler) http.Handler {
+func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGroups, teamUUIDs map[string]string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			var claims jwt.MapClaims
@@ -64,7 +64,15 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGr
 				}
 				return
 			}
-			r = r.WithContext(context.WithValue(r.Context(), "groups", groups))
+
+			teams := make([]string, 0)
+
+			for _, uuid := range groups {
+				if _, found := teamUUIDs[uuid]; found {
+					teams = append(teams, teamUUIDs[uuid])
+				}
+			}
+			r = r.WithContext(context.WithValue(r.Context(), "teams", teams))
 
 			next.ServeHTTP(w, r)
 		})
