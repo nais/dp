@@ -147,7 +147,7 @@ func (a *api) removeAccessForProduct(w http.ResponseWriter, r *http.Request) {
 
 	requester := r.Context().Value("preferred_username").(string)
 
-	if dpr.DataProduct.Owner == requester || accessSubject.Subject == requester {
+	if dpr.DataProduct.Team == requester || accessSubject.Subject == requester {
 		_, ok := dpr.DataProduct.Access[accessSubject.Subject]
 		if !ok {
 			log.Errorf("Requested subject does have an access entry")
@@ -210,7 +210,7 @@ func (a *api) grantAccessForProduct(w http.ResponseWriter, r *http.Request) {
 
 	requester := r.Context().Value("preferred_username").(string)
 
-	if dpr.DataProduct.Owner != requester {
+	if dpr.DataProduct.Team != requester {
 		log.Errorf("Requester is not authorized to make changes to this rule: product id: %v, requester: %v, subject: %v", dpr.ID, requester, accessSubject.Subject)
 		respondf(w, http.StatusUnauthorized, "you are unauthorized to make changes to this access rule")
 		return

@@ -21,7 +21,7 @@ type DataProduct struct {
 	Name        string               `firestore:"name" json:"name,omitempty" validate:"required"`
 	Description string               `firestore:"description" json:"description,omitempty"`
 	Datastore   []map[string]string  `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
-	Owner       string               `firestore:"owner" json:"owner,omitempty" validate:"required"`
+	Team        string               `firestore:"team" json:"team,omitempty" validate:"required"`
 	Access      map[string]time.Time `firestore:"access" json:"access"`
 }
 
@@ -222,10 +222,10 @@ func (a *api) createUpdates(dp DataProduct) ([]firestore.Update, error) {
 			Value: dp.Datastore,
 		})
 	}
-	if len(dp.Owner) > 0 {
+	if len(dp.Team) > 0 {
 		updates = append(updates, firestore.Update{
 			Path:  "owner",
-			Value: dp.Owner,
+			Value: dp.Team,
 		})
 	}
 
