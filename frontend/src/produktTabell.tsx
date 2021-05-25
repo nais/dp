@@ -13,7 +13,7 @@ const Produkt = ({ produkt }: ProduktProps) => {
   if (!produkt.data_product) return null;
   return (
     <tr>
-      <td>{produkt.data_product.owner}</td>
+      <td>{produkt.data_product.team}</td>
       <td>
         <Link to={`/produkt/${produkt.id}`}>{produkt.data_product.name}</Link>
       </td>

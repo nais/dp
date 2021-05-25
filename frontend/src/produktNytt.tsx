@@ -131,7 +131,7 @@ export const ProduktNytt = (): JSX.Element => {
         name: navn,
         description: beskrivelse,
         datastore: [datastore],
-        owner: eier,
+        team: eier,
         access: {},
       });
       const newID = await opprettProdukt(nyttProdukt);

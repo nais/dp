@@ -48,7 +48,7 @@ const ProduktInfoFaktaboks = ({
         {produkt.data_product?.description || "Ingen beskrivelse"}
       </Normaltekst>
       <Normaltekst>
-        Produkteier: {produkt.data_product?.owner || "uvisst"}
+        Produkteier: {produkt.data_product?.team || "uvisst"}
       </Normaltekst>
 
       <Normaltekst>
@@ -164,7 +164,7 @@ export const ProduktDetalj = ({
 
   useEffect(() => {
     if (produkt && userContext) {
-      setOwner(userContext.teams.includes(produkt.data_product.owner));
+      setOwner(userContext.teams.includes(produkt.data_product.team));
     }
   }, [produkt, userContext]);
 

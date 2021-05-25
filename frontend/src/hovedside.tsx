@@ -55,7 +55,7 @@ const ProduktTabellReducer = (
         ...prevState,
         filtered_products: prevState.products.filter((p) => {
           if (action.filter === "") return true;
-          return p.data_product?.owner === action.filter;
+          return p.data_product?.team === action.filter;
         }),
       };
   }

@@ -46,7 +46,7 @@ export type DataLager = z.infer<typeof DataLagerSchema>;
 export const DataProduktSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().optional(),
-  owner: z.string(),
+  team: z.string(),
   datastore: DataLagerSchema.array().nullable(),
   access: DataProduktTilgangSchema,
 });

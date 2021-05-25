@@ -19,10 +19,10 @@ export const ProduktFilter = ({
 
     state.products.forEach((x) => {
       if (
-        x?.data_product?.owner &&
-        !productOwners.includes(x.data_product.owner)
+        x?.data_product?.team &&
+        !productOwners.includes(x.data_product.team)
       ) {
-        productOwners.push(x.data_product.owner);
+        productOwners.push(x.data_product.team);
       }
       setProductOwners(productOwners);
     });
