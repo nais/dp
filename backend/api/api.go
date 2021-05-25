@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
@@ -133,8 +134,10 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	domain := a.config.Hostname
-	if domain != "localhost" {
+	if strings.Contains(domain, "dev.intern.nav.no") {
 		domain = "dev.intern.nav.no"
+	} else if strings.Contains(domain, "intern.nav.no") {
+		domain = "intern.nav.no"
 	}
 
 	w.Header().Set("Set-Cookie", fmt.Sprintf("jwt=%v;HttpOnly;Secure;Max-Age=86400;Path=/;Domain=%v", tokens.AccessToken, domain))
