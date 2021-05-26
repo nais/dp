@@ -11,6 +11,7 @@ import (
 
 	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
+	firestore2 "github.com/nais/dp/backend/firestore"
 	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
@@ -127,20 +128,20 @@ func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 	requesterMember := r.Context().Value("member_name").(string)
 	requesterGroups := r.Context().Value("teams").([]string)
 
-	if contains(requesterGroups, dpr.DataProduct.Team) || accessSubject.Subject == requesterMember {
-		_, ok := dpr.DataProduct.Access[subject]
+	if contains(requesterGroups, dpr.Dataproduct.Team) || accessSubject.Subject == requesterMember {
+		_, ok := dpr.Dataproduct.Access[subject]
 		if !ok {
 			log.Errorf("Requested subject does have an access entry")
 			respondf(w, http.StatusBadRequest, "requested subject does not have an access entry")
 			return
 		}
 
-		delete(dpr.DataProduct.Access, subject)
+		delete(dpr.Dataproduct.Access, subject)
 		documentRef.Update(r.Context(), []firestore.Update{{
 			Path:  "access",
-			Value: dpr.DataProduct.Access,
+			Value: dpr.Dataproduct.Access,
 		}})
-		iam.RemoveDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], subject)
+		iam.RemoveDatastoreAccess(r.Context(), dpr.Dataproduct.Datastore[0], subject)
 
 		update := Delete(requester, dpr.ID, accessSubject.Subject)
 		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
@@ -209,12 +210,12 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 
 	requester := r.Context().Value("preferred_username").(string)
 
-	dpr.DataProduct.Access[subject] = accessSubject.Expires
+	dpr.Dataproduct.Access[subject] = accessSubject.Expires
 	documentRef.Update(r.Context(), []firestore.Update{{
 		Path:  "access",
-		Value: dpr.DataProduct.Access,
+		Value: dpr.Dataproduct.Access,
 	}})
-	iam.UpdateDatastoreAccess(r.Context(), dpr.DataProduct.Datastore[0], dpr.DataProduct.Access)
+	iam.UpdateDatastoreAccess(r.Context(), dpr.Dataproduct.Datastore[0], dpr.Dataproduct.Access)
 
 	update := Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
 	UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
@@ -260,4 +261,22 @@ func contains(s []string, e string) bool {
 		}
 	}
 	return false
+}
+func documentToProductResponse(d *firestore.DocumentSnapshot) (firestore2.DataproductResponse, error) {
+	var dpr firestore2.DataproductResponse
+	var dp firestore2.Dataproduct
+
+	if err := d.DataTo(&dp); err != nil {
+		return dpr, err
+	}
+
+	if dp.Access == nil {
+		dp.Access = make(map[string]time.Time)
+	}
+	dpr.ID = d.Ref.ID
+	dpr.Updated = d.UpdateTime
+	dpr.Created = d.CreateTime
+	dpr.Dataproduct = dp
+
+	return dpr, nil
 }

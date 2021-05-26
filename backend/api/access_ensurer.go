@@ -59,14 +59,14 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 	if err != nil {
 		return err
 	}
-	if len(dataproduct.DataProduct.Datastore) == 0 {
+	if len(dataproduct.Dataproduct.Datastore) == 0 {
 		// we have no access to check here
 		return nil
 	}
-	datastore := dataproduct.DataProduct.Datastore[0]
+	datastore := dataproduct.Dataproduct.Datastore[0]
 	toDelete := make([]string, 0)
 
-	for subject, expiry := range dataproduct.DataProduct.Access {
+	for subject, expiry := range dataproduct.Dataproduct.Access {
 		if expiry.IsZero() {
 			log.Infof("Skipping %v in %v, zero-value expiry means it should last forever", subject, datastore["type"])
 			continue
@@ -100,11 +100,11 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 
 	if len(toDelete) > 0 {
 		for _, subject := range toDelete {
-			delete(dataproduct.DataProduct.Access, subject)
+			delete(dataproduct.Dataproduct.Access, subject)
 		}
 		snapshot.Ref.Update(ctx, []firestore.Update{{
 			Path:  "access",
-			Value: dataproduct.DataProduct.Access,
+			Value: dataproduct.Dataproduct.Access,
 		}})
 	}
 

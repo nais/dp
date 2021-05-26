@@ -12,10 +12,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/nais/dp/backend/iam"
-	"google.golang.org/api/iterator"
-
 	"github.com/go-chi/chi"
+	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -29,118 +27,6 @@ type DataProductInput struct {
 	Description string              `firestore:"description" json:"description,omitempty"`
 	Datastore   []map[string]string `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
 	Team        string              `firestore:"team" json:"team,omitempty" validate:"required"`
-}
-
-type DataProductResponse struct {
-	ID          string      `json:"id"`
-	DataProduct DataProduct `json:"data_product"`
-	Updated     time.Time   `json:"updated"`
-	Created     time.Time   `json:"created"`
-}
-
-func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	var dpi DataProductInput
-	var dp firestore2.Dataproduct
-
-	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
-		log.Errorf("Deserializing request document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
-		return
-	}
-
-	if errs := a.validate.Struct(dpi); errs != nil {
-		log.Errorf("Validation fails: %v", errs)
-		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-		return
-	}
-
-	if len(dpi.Datastore) > 0 {
-		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
-			log.Errorf("Validation fails: %v", errs)
-			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-			return
-		}
-	}
-
-	dp.Access = make(map[string]time.Time)
-	dp.Access[fmt.Sprintf("group:%v@nav.no", dpi.Team)] = time.Time{} // gives infinite access to the owners (team) of the dataproduct
-	dp.Datastore = dpi.Datastore
-	dp.Team = dpi.Team
-	dp.Name = dpi.Name
-	dp.Description = dpi.Description
-
-	id, err := a.firestore.CreateDataproduct(r.Context(), dp)
-
-	if err != nil {
-		respondf(w, http.StatusInternalServerError, "unable to create dataproduct\n")
-		return
-	}
-
-	respondf(w, http.StatusCreated, id)
-}
-
-func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-
-	document, err := documentRef.Get(r.Context())
-	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
-		if status.Code(err) == codes.NotFound {
-			respondf(w, http.StatusNotFound, "no such document\n")
-		} else {
-			respondf(w, http.StatusBadRequest, "unable to get document\n")
-		}
-		return
-	}
-
-	dpr, err := documentToProductResponse(document)
-	if err != nil {
-		log.Errorf("Deserializing firestore document: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
-		return
-	}
-
-	if err := json.NewEncoder(w).Encode(dpr); err != nil {
-		log.Errorf("Serializing dataproduct response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
-		return
-	}
-}
-
-func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	dataproducts := make([]DataProductResponse, 0)
-
-	iter := dpc.Documents(r.Context())
-	defer iter.Stop()
-	for {
-		document, err := iter.Next()
-		if err == iterator.Done {
-			break
-		}
-		if err != nil {
-			log.Errorf("Iterating documents: %v", err)
-			break
-		}
-
-		dpr, err := documentToProductResponse(document)
-		if err != nil {
-			log.Errorf("Deserializing firestore document: %v", err)
-			respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
-			return
-		}
-
-		dataproducts = append(dataproducts, dpr)
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(dataproducts); err != nil {
-		log.Errorf("Serializing dataproducts response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
-		return
-	}
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
@@ -195,6 +81,81 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
+	dataproducts, err := a.firestore.GetDataproducts(r.Context())
+	if err != nil {
+		log.Errorf("Getting dataproducts: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to get dataproducts")
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(dataproducts); err != nil {
+		log.Errorf("Serializing dataproducts response: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
+		return
+	}
+}
+
+func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
+	var dpi DataProductInput
+	var dp firestore2.Dataproduct
+
+	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
+		log.Errorf("Deserializing request document: %v", err)
+		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
+		return
+	}
+
+	if errs := a.validate.Struct(dpi); errs != nil {
+		log.Errorf("Validation fails: %v", errs)
+		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+		return
+	}
+
+	if len(dpi.Datastore) > 0 {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
+			log.Errorf("Validation fails: %v", errs)
+			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+			return
+		}
+	}
+
+	dp.Access = make(map[string]time.Time)
+	dp.Access[fmt.Sprintf("group:%v@nav.no", dpi.Team)] = time.Time{} // gives infinite access to the owners (team) of the dataproduct
+	dp.Datastore = dpi.Datastore
+	dp.Team = dpi.Team
+	dp.Name = dpi.Name
+	dp.Description = dpi.Description
+
+	id, err := a.firestore.CreateDataproduct(r.Context(), dp)
+
+	if err != nil {
+		respondf(w, http.StatusInternalServerError, "unable to create dataproduct\n")
+		return
+	}
+
+	respondf(w, http.StatusCreated, id)
+}
+
+func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
+	dataproduct, err := a.firestore.GetDataproduct(r.Context(), chi.URLParam(r, "productID"))
+
+	if err != nil {
+		log.Errorf("Getting firestore document: %v", err)
+		if status.Code(err) == codes.NotFound {
+			respondf(w, http.StatusNotFound, "not found\n")
+		} else {
+			respondf(w, http.StatusBadRequest, "unable to get document\n")
+		}
+	}
+
+	if err := json.NewEncoder(w).Encode(dataproduct); err != nil {
+		log.Errorf("Serializing dataproduct response: %v", err)
+		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
+		return
+	}
 }
 
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
@@ -276,23 +237,4 @@ func hasKeys(m map[string]string, keys ...string) error {
 		}
 	}
 	return nil
-}
-
-func documentToProductResponse(d *firestore.DocumentSnapshot) (DataProductResponse, error) {
-	var dpr DataProductResponse
-	var dp DataProduct
-
-	if err := d.DataTo(&dp); err != nil {
-		return dpr, err
-	}
-
-	if dp.Access == nil {
-		dp.Access = make(map[string]time.Time)
-	}
-	dpr.ID = d.Ref.ID
-	dpr.Updated = d.UpdateTime
-	dpr.Created = d.CreateTime
-	dpr.DataProduct = dp
-
-	return dpr, nil
 }
