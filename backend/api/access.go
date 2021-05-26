@@ -27,13 +27,6 @@ const (
 	ServiceAccountType = "serviceAccount"
 )
 
-type AccessResponse struct {
-	ID      string               `json:"id"`
-	Access  map[string]time.Time `json:"access"`
-	Updated time.Time            `json:"updated"`
-	Created time.Time            `json:"created"`
-}
-
 type AccessSubject struct {
 	Subject string    `json:"subject" validate:"required"`
 	Type    string    `json:"type" validate:"required"`
@@ -83,41 +76,6 @@ func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request)
 	if err := json.NewEncoder(w).Encode(updateResponse); err != nil {
 		log.Errorf("Serializing updateResponses: %v", err)
 		respondf(w, http.StatusInternalServerError, "unable to serialize updateResponses\n")
-		return
-	}
-}
-
-func (a *api) getAccessForProduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-	document, err := documentRef.Get(r.Context())
-	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
-		if status.Code(err) == codes.NotFound {
-			respondf(w, http.StatusNotFound, "no such document\n")
-		} else {
-			respondf(w, http.StatusBadRequest, "unable to get document\n")
-		}
-		return
-	}
-
-	dpr, err := documentToProductResponse(document)
-	if err != nil {
-		log.Errorf("Deserializing firestore document: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to deserialize document\n")
-		return
-	}
-
-	var response AccessResponse
-	response.Access = dpr.DataProduct.Access
-	response.ID = dpr.ID
-	response.Created = dpr.Created
-	response.Updated = dpr.Updated
-
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		log.Errorf("Serializing access response: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to serialize access response\n")
 		return
 	}
 }
@@ -226,6 +184,12 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 	if err := a.validate.Struct(accessSubject); err != nil {
 		log.Errorf("Validating request document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to validate request document\n")
+		return
+	}
+
+	if accessSubject.Expires.Before(time.Now()) {
+		log.Errorf("Invalid AccessSubject.Expires: %v is already an expired time", accessSubject.Expires)
+		respondf(w, http.StatusBadRequest, "invalid AccessSubject.Expires\n")
 		return
 	}
 

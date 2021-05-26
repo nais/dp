@@ -1,11 +1,12 @@
 package api
 
 import (
-	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
+
+	"cloud.google.com/go/firestore"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,11 +19,15 @@ import (
 )
 
 type DataProduct struct {
-	Name        string               `firestore:"name" json:"name,omitempty" validate:"required"`
-	Description string               `firestore:"description" json:"description,omitempty"`
-	Datastore   []map[string]string  `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
-	Team        string               `firestore:"team" json:"team,omitempty" validate:"required"`
-	Access      map[string]time.Time `firestore:"access" json:"access"`
+	DataProductInput
+	Access map[string]time.Time `firestore:"access" json:"access"`
+}
+
+type DataProductInput struct {
+	Name        string              `firestore:"name" json:"name,omitempty" validate:"required"`
+	Description string              `firestore:"description" json:"description,omitempty"`
+	Datastore   []map[string]string `firestore:"datastore" json:"datastore,omitempty" validate:"max=1"`
+	Team        string              `firestore:"team" json:"team,omitempty" validate:"required"`
 }
 
 type DataProductResponse struct {
@@ -98,27 +103,32 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
+	var dpi DataProductInput
 	var dp DataProduct
 
-	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
 		log.Errorf("Deserializing request document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
 		return
 	}
 
-	if errs := a.validate.Struct(dp); errs != nil {
+	if errs := a.validate.Struct(dpi); errs != nil {
 		log.Errorf("Validation fails: %v", errs)
 		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 		return
 	}
 
-	if len(dp.Datastore) > 0 {
+	if len(dpi.Datastore) > 0 {
 		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
 			log.Errorf("Validation fails: %v", errs)
 			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 			return
 		}
 	}
+
+	dp.Access = make(map[string]time.Time)
+	dp.Access[fmt.Sprintf("group:%v@nav.no", dpi.Team)] = time.Time{} // gives infinite access to the owners (team) of the dataproduct
+	dp.DataProductInput = dpi
 
 	documentRef, _, err := dpc.Add(r.Context(), dp)
 	if err != nil {
@@ -152,26 +162,26 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dp DataProduct
-	if err := json.NewDecoder(r.Body).Decode(&dp); err != nil {
+	requesterTeams := r.Context().Value("teams").([]string)
+
+	if !contains(requesterTeams, firebaseDp.Team) {
+		log.Errorf("updateDataproduct: Unauthorized to make changes to firestore document")
+		respondf(w, http.StatusUnauthorized, "unauthorized\n")
+		return
+	}
+
+	var dpi DataProductInput
+	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
 		log.Errorf("Deserializing request document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
 		return
 	}
 
-	updates, err := a.createUpdates(dp)
+	updates, err := a.createUpdates(dpi, firebaseDp.Team, firebaseDp.Access)
 	if err != nil {
 		log.Errorf("Validation fails: %v", err)
 		respondf(w, http.StatusBadRequest, "Validation failed: %v", err)
 		return
-	}
-
-	// In case of partial update, where an access update is made
-	// without passing any datastore objects.
-	if len(dp.Datastore) > 0 {
-		iam.UpdateDatastoreAccess(r.Context(), dp.Datastore[0], dp.Access)
-	} else {
-		iam.UpdateDatastoreAccess(r.Context(), firebaseDp.Datastore[0], dp.Access)
 	}
 
 	_, err = documentRef.Update(r.Context(), updates)
@@ -198,7 +208,7 @@ func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (a *api) createUpdates(dp DataProduct) ([]firestore.Update, error) {
+func (a *api) createUpdates(dp DataProductInput, currentTeam string, access map[string]time.Time) ([]firestore.Update, error) {
 	var updates []firestore.Update
 
 	if len(dp.Name) > 0 {
@@ -224,9 +234,17 @@ func (a *api) createUpdates(dp DataProduct) ([]firestore.Update, error) {
 	}
 	if len(dp.Team) > 0 {
 		updates = append(updates, firestore.Update{
-			Path:  "owner",
+			Path:  "team",
 			Value: dp.Team,
 		})
+
+		delete(access, fmt.Sprintf("group:%v@nav.no", currentTeam))
+		access[fmt.Sprintf("group:%v@nav.no", dp.Team)] = time.Time{}
+		updates = append(updates, firestore.Update{
+			Path:  "access",
+			Value: access,
+		})
+
 	}
 
 	return updates, nil

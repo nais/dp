@@ -66,6 +66,10 @@ func checkAccess(ctx context.Context, cfg config.Config, client *firestore.Clien
 	toDelete := make([]string, 0)
 
 	for subject, expiry := range dataproduct.DataProduct.Access {
+		if expiry.IsZero() {
+			log.Infof("Skipping %v in %v, zero-value expiry means it should last forever", subject, datastore["type"])
+			continue
+		}
 		if expiry.Before(time.Now()) {
 			log.Infof("Access expired, removing %v from %v", subject, datastore["type"])
 			if err := iam.RemoveDatastoreAccess(ctx, datastore, subject); err != nil {
