@@ -4,7 +4,6 @@ import { Knapp, Fareknapp } from "nav-frontend-knapper";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
 import { Feilmelding, Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import {
-  DataProdukt,
   DataProduktResponse,
   DataProduktTilgangListe,
   DataProduktTilgangResponse,
@@ -16,6 +15,7 @@ import "./produktDetalj.less";
 import "moment/locale/nb";
 import moment from "moment";
 import { UserContext } from "./userContext";
+import { DatalagerInfo } from "./produktDatalager";
 
 interface ProduktDetaljParams {
   produktID: string;
@@ -44,19 +44,21 @@ const ProduktInfoFaktaboks = ({
         {produkt.data_product?.name}
       </Systemtittel>
 
-      <Normaltekst className="beskrivelse">
-        {produkt.data_product?.description || "Ingen beskrivelse"}
-      </Normaltekst>
       <Normaltekst>
         Produkteier: {produkt.data_product?.team || "uvisst"}
       </Normaltekst>
-
       <Normaltekst>
         Opprettet {moment(produkt.created).format("LLL")}
         {produkt.created !== produkt.updated
           ? ` (Oppdatert: ${moment(produkt.updated).fromNow()})`
           : ""}
       </Normaltekst>
+      <Normaltekst className="beskrivelse">
+        {produkt.data_product?.description || "Ingen beskrivelse"}
+      </Normaltekst>
+      {produkt.data_product?.datastore &&
+        produkt.data_product?.datastore.map((ds) => <DatalagerInfo ds={ds} />)}
+
       <ProduktTilganger tilganger={tilganger} isOwner={isOwner} />
     </div>
   );

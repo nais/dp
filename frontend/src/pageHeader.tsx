@@ -3,7 +3,7 @@ import { BACKEND_ENDPOINT } from "./produktAPI";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Child, Next } from "@navikt/ds-icons";
 import { UserContext } from "./userContext";
-import NaisPrideLogo from "./naisLogo";
+import { NaisPrideLogo } from "./svgIcons";
 import { Link } from "react-router-dom";
 import { Systemtittel } from "nav-frontend-typografi";
 import "./pageHeader.less";

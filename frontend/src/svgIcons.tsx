@@ -1,4 +1,6 @@
-const NaisPrideLogo = () => (
+import "./svgIcons.less";
+
+export const NaisPrideLogo = () => (
   <svg
     className="nais-logo"
     version="1.1"
@@ -90,4 +92,55 @@ S7.99,41.33,8.52,41.81z"
     />
   </svg>
 );
-export default NaisPrideLogo;
+
+export const Bucket = () => (
+  <svg
+    id="Product_Icons"
+    className="BucketIcon"
+    data-name="Product Icons"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+  >
+    <title>Icon_24px_Color_CloudStorage</title>
+    <rect className="cls-1" x="2" y="4" width="20" height="7" />
+    <rect className="cls-2" x="20" y="4" width="2" height="7" />
+    <polygon className="cls-3" points="22 4 20 4 20 11 22 4" />
+    <rect className="cls-2" x="2" y="4" width="2" height="7" />
+    <rect className="cls-4" x="6" y="7" width="6" height="1" />
+    <rect className="cls-4" x="15" y="6" width="3" height="3" rx="1.5" />
+    <rect className="cls-1" x="2" y="13" width="20" height="7" />
+    <rect className="cls-2" x="20" y="13" width="2" height="7" />
+    <polygon className="cls-3" points="22 13 20 13 20 20 22 13" />
+    <rect className="cls-2" x="2" y="13" width="2" height="7" />
+    <rect className="cls-4" x="6" y="16" width="6" height="1" />
+    <rect className="cls-4" x="15" y="15" width="3" height="3" rx="1.5" />
+  </svg>
+);
+
+export const BigQueryIcon = () => (
+  <svg
+    id="Product_Icons"
+    className="BigQueryIcon"
+    data-name="Product Icons"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+  >
+    <path
+      className="cls-1"
+      d="M6.73,10.83v2.63A4.91,4.91,0,0,0,8.44,15.2V10.83Z"
+    />
+    <path
+      className="cls-2"
+      d="M9.89,8.41v7.53A7.62,7.62,0,0,0,11,16,8,8,0,0,0,12,16V8.41Z"
+    />
+    <path className="cls-1" d="M13.64,11.86v3.29a5,5,0,0,0,1.7-1.82V11.86Z" />
+    <path
+      className="cls-3"
+      d="M17.74,16.32l-1.42,1.42a.42.42,0,0,0,0,.6l3.54,3.54a.42.42,0,0,0,.59,0l1.43-1.43a.42.42,0,0,0,0-.59l-3.54-3.54a.42.42,0,0,0-.6,0"
+    />
+    <path
+      className="cls-2"
+      d="M11,2a9,9,0,1,0,9,9,9,9,0,0,0-9-9m0,15.69A6.68,6.68,0,1,1,17.69,11,6.68,6.68,0,0,1,11,17.69"
+    />
+  </svg>
+);
