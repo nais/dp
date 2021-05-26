@@ -6,6 +6,7 @@ import { UserContext } from "./userContext";
 import NaisPrideLogo from "./naisLogo";
 import { Link } from "react-router-dom";
 import { Systemtittel } from "nav-frontend-typografi";
+import "./pageHeader.less";
 
 const BrukerBoks: React.FC = () => {
   const user = useContext(UserContext);

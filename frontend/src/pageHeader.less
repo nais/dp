@@ -1,0 +1,57 @@
+@import "~nav-frontend-core";
+
+header {
+  align-items: center;
+  height: 5.625rem;
+  width: 100vw;
+  display: flex;
+  padding: 0 1.7rem;
+
+  border-bottom: 4px solid @navLysGra;
+
+  .brukerboks {
+    border: 1px solid black;
+    padding: 4px 5px 3px;
+    margin-left: auto;
+
+    svg {
+      padding: 2px 4px 0 2px;
+      height: 100%;
+      width: auto;
+    }
+  }
+
+  .innloggingsknapp {
+    margin-left: auto;
+  }
+
+  .nais-logo {
+    height: 100%;
+    width: auto;
+    padding: 10px 0;
+  }
+
+  .extra-padding * {
+    margin-top: 1px;
+    font-size: 130%;
+  }
+
+  .pil {
+    margin: 0 4px;
+  }
+
+  & a {
+    text-decoration: none;
+    color: black;
+
+    > .typo-systemtittel {
+      margin-left: 1rem;
+      margin-right: 2px;
+    }
+
+    & :hover {
+      text-decoration: underline;
+      color: #0067c5;
+    }
+  }
+}
