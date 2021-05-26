@@ -30,7 +30,7 @@ export const ProduktInfoFaktaboks: React.FC<{
         {produkt.data_product?.description || "Ingen beskrivelse"}
       </Normaltekst>
       {produkt.data_product?.datastore &&
-        produkt.data_product?.datastore.map((ds) => <DatalagerInfo ds={ds} />)}
+        produkt.data_product?.datastore.map((ds, index) => <DatalagerInfo key={index} ds={ds} />)}
 
       <ProduktTilganger produkt={produkt} tilganger={tilganger} />
     </div>

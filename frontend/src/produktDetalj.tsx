@@ -10,7 +10,6 @@ import {
 } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
-import { UserContext } from "./userContext";
 import { ProduktInfoFaktaboks } from "./produktDetaljFaktaboks";
 import { ProduktKnapperad } from "./produktDetaljKnapperad";
 
@@ -40,6 +39,7 @@ export const ProduktDetalj: React.FC<{
         setTilgangerError(null);
       })
       .catch((e) => {
+        console.log(e.toString())
         setTilgangerError(e.toString());
       });
   }, [produkt]);

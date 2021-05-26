@@ -20,8 +20,7 @@ const DataProduktTilgangResponseSchema = z
     action: z.string(),
     time: z.string(),
     expires: z.string(),
-  })
-  .partial();
+  });
 
 export const DataLagerBucketSchema = z.object({
   type: z.literal("bucket"),
@@ -210,3 +209,14 @@ export const isOwner = (produkt?: DataProdukt, teams?: string[]) => {
   }
   return false;
 };
+
+export const deleteAccess = async (productID: string, subject: string, type: string) => {
+  const res = await fetch(`${API_ROOT}/access/${productID}`,
+      {
+        method: 'delete',
+        body: JSON.stringify({subject, type}),
+        credentials: "include"
+      });
+
+  if (!res.ok) throw new Error(await res.text())
+}
