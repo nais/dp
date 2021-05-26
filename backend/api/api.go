@@ -1,15 +1,16 @@
 package api
 
 import (
+	"cloud.google.com/go/firestore"
 	"encoding/json"
 	"fmt"
+	firestore2 "github.com/nais/dp/backend/firestore"
 	"net/http"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 
-	"cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/nais/dp/backend/auth"
@@ -20,14 +21,16 @@ import (
 )
 
 type api struct {
+	firestore *firestore2.Firestore
 	client    *firestore.Client
 	validate  *validator.Validate
 	config    config.Config
 	teamUUIDs map[string]string
 }
 
-func New(client *firestore.Client, config config.Config, teamUUIDs map[string]string) chi.Router {
+func New(firestore *firestore2.Firestore, client *firestore.Client, config config.Config, teamUUIDs map[string]string) chi.Router {
 	api := api{
+		firestore: firestore,
 		client:    client,
 		validate:  validator.New(),
 		config:    config,

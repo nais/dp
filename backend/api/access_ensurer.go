@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	firestore2 "github.com/nais/dp/backend/firestore"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -14,7 +15,7 @@ import (
 
 const AccessEnsurance2000 = "AccessEnsurance2000"
 
-func EnsureAccess(ctx context.Context, cfg config.Config, client *firestore.Client, updateFrequency time.Duration) {
+func EnsureAccess(ctx context.Context, cfg config.Config, client *firestore2.Firestore, c *firestore.Client, updateFrequency time.Duration) {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 
@@ -22,7 +23,7 @@ func EnsureAccess(ctx context.Context, cfg config.Config, client *firestore.Clie
 		select {
 		case <-ticker.C:
 			log.Debugf("Checking access...")
-			if err := ensureAccesses(ctx, cfg, client); err != nil {
+			if err := ensureAccesses(ctx, cfg, c); err != nil {
 				log.Errorf("Checking access: %v", err)
 			}
 			ticker.Reset(updateFrequency)

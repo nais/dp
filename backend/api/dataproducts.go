@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	firestore2 "github.com/nais/dp/backend/firestore"
 	"net/http"
 	"time"
 
@@ -35,6 +36,47 @@ type DataProductResponse struct {
 	DataProduct DataProduct `json:"data_product"`
 	Updated     time.Time   `json:"updated"`
 	Created     time.Time   `json:"created"`
+}
+
+func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
+	var dpi DataProductInput
+	var dp firestore2.Dataproduct
+
+	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
+		log.Errorf("Deserializing request document: %v", err)
+		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
+		return
+	}
+
+	if errs := a.validate.Struct(dpi); errs != nil {
+		log.Errorf("Validation fails: %v", errs)
+		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+		return
+	}
+
+	if len(dpi.Datastore) > 0 {
+		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
+			log.Errorf("Validation fails: %v", errs)
+			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+			return
+		}
+	}
+
+	dp.Access = make(map[string]time.Time)
+	dp.Access[fmt.Sprintf("group:%v@nav.no", dpi.Team)] = time.Time{} // gives infinite access to the owners (team) of the dataproduct
+	dp.Datastore = dpi.Datastore
+	dp.Team = dpi.Team
+	dp.Name = dpi.Name
+	dp.Description = dpi.Description
+
+	id, err := a.firestore.CreateDataproduct(r.Context(), dp)
+
+	if err != nil {
+		respondf(w, http.StatusInternalServerError, "unable to create dataproduct\n")
+		return
+	}
+
+	respondf(w, http.StatusCreated, id)
 }
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
@@ -99,45 +141,6 @@ func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
 		respondf(w, http.StatusInternalServerError, "unable to serialize dataproduct response\n")
 		return
 	}
-}
-
-func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	var dpi DataProductInput
-	var dp DataProduct
-
-	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
-		log.Errorf("Deserializing request document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
-		return
-	}
-
-	if errs := a.validate.Struct(dpi); errs != nil {
-		log.Errorf("Validation fails: %v", errs)
-		respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-		return
-	}
-
-	if len(dpi.Datastore) > 0 {
-		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
-			log.Errorf("Validation fails: %v", errs)
-			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
-			return
-		}
-	}
-
-	dp.Access = make(map[string]time.Time)
-	dp.Access[fmt.Sprintf("group:%v@nav.no", dpi.Team)] = time.Time{} // gives infinite access to the owners (team) of the dataproduct
-	dp.DataProductInput = dpi
-
-	documentRef, _, err := dpc.Add(r.Context(), dp)
-	if err != nil {
-		log.Errorf("Adding dataproduct to collection: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to add dataproduct to collection\n")
-		return
-	}
-
-	respondf(w, http.StatusCreated, documentRef.ID)
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {

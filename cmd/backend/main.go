@@ -1,16 +1,17 @@
 package main
 
 import (
+	googlefirestore "cloud.google.com/go/firestore"
 	"context"
 	"fmt"
 	"github.com/nais/dp/backend/auth"
+	fs "github.com/nais/dp/backend/firestore"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/nais/dp/backend/logger"
 
-	firestore "cloud.google.com/go/firestore"
 	"github.com/nais/dp/backend/api"
 	"github.com/nais/dp/backend/config"
 	log "github.com/sirupsen/logrus"
@@ -46,16 +47,23 @@ func init() {
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	client, err := firestore.NewClient(ctx, cfg.Firestore.GoogleProjectID)
+
+	// TODO(jhrv): for temporarily keeping backwards compatability
+	googleFirestoreClient, err := googlefirestore.NewClient(ctx, cfg.Firestore.GoogleProjectID)
+	if err != nil {
+		log.Fatalf("Initializing firestore client: %v", err)
+	}
+
+	firestore, err := fs.New(ctx, cfg.Firestore.GoogleProjectID, cfg.Firestore.DataproductsCollection, cfg.Firestore.AccessUpdatesCollection)
 	if err != nil {
 		log.Fatalf("Initializing firestore client: %v", err)
 	}
 
 	teamUUIDs := make(map[string]string)
 	go auth.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
-	go api.EnsureAccess(ctx, cfg, client, EnsureAccessUpdateFrequency)
+	go api.EnsureAccess(ctx, cfg, firestore, googleFirestoreClient, EnsureAccessUpdateFrequency)
 
-	api := api.New(client, cfg, teamUUIDs)
+	api := api.New(firestore, googleFirestoreClient, cfg, teamUUIDs)
 	fmt.Println("running @", cfg.BindAddress)
 	fmt.Println(http.ListenAndServe(cfg.BindAddress, api))
 }
