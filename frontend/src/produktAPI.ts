@@ -202,3 +202,11 @@ export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   const json = await res.json();
   return BrukerInfoSchema.parse(json);
 };
+
+export const isOwner = (produkt?: DataProdukt, teams?: string[]) => {
+  if (!produkt || !teams) return false;
+  if (produkt && teams.length) {
+    return teams.includes(produkt.team);
+  }
+  return false;
+};

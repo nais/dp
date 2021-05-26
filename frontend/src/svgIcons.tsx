@@ -93,7 +93,7 @@ S7.99,41.33,8.52,41.81z"
   </svg>
 );
 
-export const Bucket = () => (
+export const BucketIcon = () => (
   <svg
     id="Product_Icons"
     className="BucketIcon"
