@@ -1,48 +1,23 @@
 @import "~nav-frontend-core";
 
-.tilgangEntry {
-  flex-grow: 1;
-  background: white;
-  border: 1px solid @navGra40;
-  max-width: 100%;
-  padding: 0.5rem;
-  margin: 0.5rem;
-  margin-left: 2rem;
-  margin-right: 0;
-  display: flex;
-  align-items: center;
+.produkt-tilganger {
+  padding: 0 !important;
 
-  > svg {
-    height: 35px !important;
-    margin-right: 10px;
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 0;
-    margin: 0;
-  }
-}
-
-.tilgangsBoks {
-  display: flex;
-  width: 100%;
-  align-items: flex-start;
-  margin-bottom: 1rem;
-
-  > h2 {
-    margin-top: 25.5px;
-    width: 150px;
-  }
-
-  .tilgangsTekst {
-    flex-grow: 1;
-  }
-
-  .tilgangerContainer {
-    flex-grow: 1;
+  .produkt-tilgang {
+    background: white;
+    border: 1px solid @navGra40;
+    padding: 0.4rem 0.2rem;
+    margin-bottom: 0.5rem;
+    display: flex;
     align-items: center;
-    margin-bottom: 1rem;
+
+    > svg {
+      height: 35px !important;
+      margin-right: 10px;
+    }
+
+    > .tilgangsTekst {
+      flex-grow: 1;
+    }
   }
 }
-

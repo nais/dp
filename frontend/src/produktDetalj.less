@@ -9,7 +9,7 @@
     }
   }
 
-  .produktdetalj {
+  .produkt-detalj {
     flex-direction: column;
 
     > div {
@@ -32,7 +32,7 @@
   }
 }
 
-.produktdetalj {
+.produkt-detalj {
   display: flex;
   align-items: flex-start;
 
@@ -65,16 +65,39 @@
     padding: 1em;
     flex-grow: 1;
 
-    .faktatekst {
-      margin-left: 1em;
+    > .faktaboks-avsnitt {
+      display: flex;
+
+      > h2 {
+        padding-top: 1rem;
+        width: 150px;
+      }
+
+      > div {
+        flex-grow: 1;
+        width: 100%;
+        padding: 0.5rem;
+        margin: 0.5rem;
+        margin-left: 2rem;
+        margin-right: 0;
+        align-items: center;
+
+        > svg {
+          height: 35px !important;
+          margin-right: 10px;
+        }
+
+        ul {
+          list-style: none;
+          padding-left: 0;
+          margin: 0;
+        }
+      }
     }
   }
+}
 
-  .faktaboks > table > tr > th {
-    text-align: right;
-  }
-
-  .tilganger {
-    background: white;
-  }
+.infoBoks {
+  background: white;
+  border: 1px solid @navGra40;
 }

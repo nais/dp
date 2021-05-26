@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
-import { Feilmelding } from "nav-frontend-typografi";
+import { Feilmelding, Systemtittel } from "nav-frontend-typografi";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
@@ -10,12 +10,18 @@ import {
 } from "./produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
-import { ProduktInfoFaktaboks } from "./produktDetaljFaktaboks";
+import { ProduktFaktaboks } from "./produktDetaljFaktaboks";
 import { ProduktKnapperad } from "./produktDetaljKnapperad";
+import { DatalagerInfo, ProduktDatalager } from "./produktDatalager";
+import { ProduktTilganger } from "./produktDetaljTilganger";
 
 interface ProduktDetaljParams {
   produktID: string;
 }
+
+const FaktaboksAvsnitt: React.FC<{}> = ({ children }) => (
+  <div className={"faktaboks-avsnitt"}>{children}</div>
+);
 
 export const ProduktDetalj: React.FC<{
   setCrumb: React.Dispatch<React.SetStateAction<string | null>>;
@@ -26,9 +32,8 @@ export const ProduktDetalj: React.FC<{
 
   const [produkt, setProdukt] = useState<DataProduktResponse | null>(null);
   const [error, setError] = useState<string | null>();
-  const [tilganger, setTilganger] = useState<DataProduktTilgangListe | null>(
-    null
-  );
+  const [tilganger, setTilganger] =
+    useState<DataProduktTilgangListe | null>(null);
   const [tilgangerError, setTilgangerError] = useState<string | null>();
 
   useEffect(() => {
@@ -39,7 +44,7 @@ export const ProduktDetalj: React.FC<{
         setTilgangerError(null);
       })
       .catch((e) => {
-        console.log(e.toString())
+        console.log(e.toString());
         setTilgangerError(e.toString());
       });
   }, [produkt]);
@@ -93,8 +98,8 @@ export const ProduktDetalj: React.FC<{
   if (produkt == null) return <></>;
 
   return (
-    <div>
-      <div className="produktdetalj">
+    <div className="produkt-detalj">
+      <div className={"faktaboks"}>
         <SlettProdukt
           isOpen={isOpen}
           setIsOpen={setIsOpen}
@@ -106,14 +111,27 @@ export const ProduktDetalj: React.FC<{
           callback={tilgangModalCallback}
           produkt={produkt}
         />
-        <ProduktInfoFaktaboks tilganger={tilganger} produkt={produkt} />
-        <ProduktKnapperad
-          produkt={produkt}
-          tilganger={tilganger}
-          openSlett={() => setIsOpen(true)}
-          openTilgang={() => setTilgangIsOpen(true)}
-        />
+
+        <FaktaboksAvsnitt>
+          <Systemtittel>Produkt</Systemtittel>
+          <ProduktFaktaboks tilganger={tilganger} produkt={produkt} />
+        </FaktaboksAvsnitt>
+        <FaktaboksAvsnitt>
+          <Systemtittel>Datalager</Systemtittel>
+          <ProduktDatalager produkt={produkt} />
+        </FaktaboksAvsnitt>
+        <FaktaboksAvsnitt>
+          <Systemtittel>Tilganger</Systemtittel>
+          <ProduktTilganger produkt={produkt} tilganger={tilganger} />
+        </FaktaboksAvsnitt>
       </div>
+
+      <ProduktKnapperad
+        produkt={produkt}
+        tilganger={tilganger}
+        openSlett={() => setIsOpen(true)}
+        openTilgang={() => setTilgangIsOpen(true)}
+      />
     </div>
   );
 };

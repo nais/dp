@@ -4,6 +4,7 @@ import { UserContext } from "./userContext";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
+  getCurrentAccessState,
   hentProdukt,
   isOwner,
 } from "./produktAPI";
@@ -18,8 +19,10 @@ export const ProduktKnapperad: React.FC<{
 
   const harTilgang = (tilganger: DataProduktTilgangListe): boolean => {
     if (!tilganger) return false;
+    const tilgangerBehandlet = getCurrentAccessState(tilganger);
+    if (!tilgangerBehandlet) return false;
 
-    for (const tilgang of tilganger) {
+    for (const tilgang of tilgangerBehandlet) {
       if (tilgang.subject == userContext?.email) {
         if (tilgang?.expires && new Date(tilgang.expires) > new Date()) {
           return true;

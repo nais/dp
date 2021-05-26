@@ -5,14 +5,14 @@ import { Normaltekst, Systemtittel } from "nav-frontend-typografi";
 import { DatalagerInfo } from "./produktDatalager";
 import { ProduktTilganger } from "./produktDetaljTilganger";
 
-export const ProduktInfoFaktaboks: React.FC<{
+export const ProduktFaktaboks: React.FC<{
   produkt: DataProduktResponse;
   tilganger: DataProduktTilgangListe;
 }> = ({ tilganger, produkt }) => {
   moment.locale("nb");
 
   return (
-    <div className={"faktaboks"}>
+    <div className={"infoBoks"}>
       <Systemtittel className={"produktnavn"}>
         {produkt.data_product?.name}
       </Systemtittel>
@@ -29,10 +29,6 @@ export const ProduktInfoFaktaboks: React.FC<{
       <Normaltekst className="beskrivelse">
         {produkt.data_product?.description || "Ingen beskrivelse"}
       </Normaltekst>
-      {produkt.data_product?.datastore &&
-        produkt.data_product?.datastore.map((ds, index) => <DatalagerInfo key={index} ds={ds} />)}
-
-      <ProduktTilganger produkt={produkt} tilganger={tilganger} />
     </div>
   );
 };

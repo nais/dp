@@ -1,5 +1,11 @@
 import React from "react";
-import { DataLager, DataLagerBigquery, DataLagerBucket } from "./produktAPI";
+import {
+  DataLager,
+  DataLagerBigquery,
+  DataLagerBucket,
+  DataProdukt,
+  DataProduktResponse,
+} from "./produktAPI";
 import { BigQueryIcon, BucketIcon } from "./svgIcons";
 import "./produktDatalager.less";
 import { Systemtittel, Undertittel } from "nav-frontend-typografi";
@@ -42,10 +48,20 @@ export const DatalagerInfo: React.FC<{ ds: DataLager }> = ({ ds }) => {
   );
 
   return (
-    <div className={"datalagerBoks"}>
-      <Systemtittel>Datalager</Systemtittel>
+    <>
       {ds.type === "bigquery" && BigQueryEntry(ds)}
       {ds.type === "bucket" && BucketEntry(ds)}
-    </div>
+    </>
   );
 };
+
+export const ProduktDatalager: React.FC<{ produkt: DataProduktResponse }> = ({
+  produkt,
+}) => (
+  <>
+    {produkt.data_product?.datastore &&
+      produkt.data_product?.datastore.map((ds, index) => (
+        <DatalagerInfo key={index} ds={ds} />
+      ))}
+  </>
+);

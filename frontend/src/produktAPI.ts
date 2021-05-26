@@ -12,15 +12,14 @@ const DataProduktTilgangOppdateringSchema = z.object({
   type: z.string(),
 });
 
-const DataProduktTilgangResponseSchema = z
-  .object({
-    dataproduct_id: z.string(),
-    author: z.string(),
-    subject: z.string(),
-    action: z.string(),
-    time: z.string(),
-    expires: z.string(),
-  });
+const DataProduktTilgangResponseSchema = z.object({
+  dataproduct_id: z.string(),
+  author: z.string(),
+  subject: z.string(),
+  action: z.string(),
+  time: z.string(),
+  expires: z.string(),
+});
 
 export const DataLagerBucketSchema = z.object({
   type: z.literal("bucket"),
@@ -66,7 +65,8 @@ export const BrukerInfoSchema = z.object({
 });
 
 const DataProduktListSchema = DataProduktResponseSchema.array();
-const DataProduktTilgangListSchema = DataProduktTilgangResponseSchema.array().nullable();
+const DataProduktTilgangListSchema =
+  DataProduktTilgangResponseSchema.array().nullable();
 
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
 export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
@@ -202,6 +202,38 @@ export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   return BrukerInfoSchema.parse(json);
 };
 
+export const getCurrentAccessState = (
+  dpal: DataProduktTilgangListe
+): DataProduktTilgangListe => {
+  if (!dpal) return [];
+  let processedList: DataProduktTilgangListe = [];
+  const reverseChronological = dpal.sort((x, y) =>
+    x.time.localeCompare(y.time)
+  );
+
+  const deleteAllGrantsForSubject = (subject: string) => {
+    if (!processedList) return;
+    processedList.forEach((access, idx) => {
+      if (subject === access.subject) {
+        if (processedList) processedList.splice(idx, 1);
+      }
+    });
+  };
+
+  for (const dpa of reverseChronological) {
+    switch (dpa.action) {
+      case "grant":
+        processedList.push({ ...dpa });
+        break;
+      case "delete":
+        deleteAllGrantsForSubject(dpa.subject);
+        break;
+    }
+  }
+
+  return processedList;
+};
+
 export const isOwner = (produkt?: DataProdukt, teams?: string[]) => {
   if (!produkt || !teams) return false;
   if (produkt && teams.length) {
@@ -210,13 +242,16 @@ export const isOwner = (produkt?: DataProdukt, teams?: string[]) => {
   return false;
 };
 
-export const deleteAccess = async (productID: string, subject: string, type: string) => {
-  const res = await fetch(`${API_ROOT}/access/${productID}`,
-      {
-        method: 'delete',
-        body: JSON.stringify({subject, type}),
-        credentials: "include"
-      });
+export const deleteAccess = async (
+  productID: string,
+  subject: string,
+  type: string
+) => {
+  const res = await fetch(`${API_ROOT}/access/${productID}`, {
+    method: "delete",
+    body: JSON.stringify({ subject, type }),
+    credentials: "include",
+  });
 
-  if (!res.ok) throw new Error(await res.text())
-}
+  if (!res.ok) throw new Error(await res.text());
+};
