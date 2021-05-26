@@ -102,6 +102,13 @@ const ProduktTilganger: React.FC<{
     );
   };
 
+  const synligeTilganger = tilganger
+    .filter((tilgang) => tilgang.action !== "verify")
+    .filter((tilgang) => entryShouldBeDisplayed(tilgang.subject, isOwner));
+
+  if (!synligeTilganger.length)
+    return <p>Ingen relevante tilganger definert</p>;
+
   return (
     <table>
       <tr>
@@ -110,10 +117,7 @@ const ProduktTilganger: React.FC<{
         <th>subject</th>
         <th>expires</th>
       </tr>
-      {tilganger
-        .filter((tilgang) => tilgang.action !== "verify")
-        .filter((tilgang) => entryShouldBeDisplayed(tilgang.subject, isOwner))
-        .map((tilgang) => tilgangsLinje(tilgang))}
+      {synligeTilganger.map((tilgang) => tilgangsLinje(tilgang))}
     </table>
   );
 };
