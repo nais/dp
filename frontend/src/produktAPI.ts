@@ -48,7 +48,7 @@ export const DataProduktSchema = z.object({
   name: z.string().nonempty(),
   description: z.string().optional(),
   team: z.string(),
-  datastore: DataLagerSchema.array().nullable(),
+  datastore: DataLagerSchema.array().optional(),
   access: DataProduktTilgangSchema,
 });
 
