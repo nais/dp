@@ -1,8 +1,7 @@
 import React from "react";
 import "nav-frontend-tabell-style";
 import NavFrontendSpinner from "nav-frontend-spinner";
-import { DataProduktResponse } from "./produktAPI";
-import { ProduktListeState } from "./hovedside";
+import {DataProduktListe, DataProduktResponse} from "./produktAPI";
 import { Link } from "react-router-dom";
 import "./produktTabell.less";
 interface ProduktProps {
@@ -22,12 +21,7 @@ const Produkt = ({ produkt }: ProduktProps) => {
   );
 };
 
-interface ProduktTabellProps {
-  state: ProduktListeState;
-  dispatch: any; // chickening out again
-}
-
-export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
+export const ProduktTabell: React.FC<{produkter?: DataProduktListe}> = ({ produkter }) => {
   return (
     <div className="produkt-liste">
       <table className="tabell">
@@ -39,22 +33,21 @@ export const ProduktTabell = ({ state, dispatch }: ProduktTabellProps) => {
           </tr>
         </thead>
         <tbody>
-          {state.loading ||
-            state.filtered_products.map((x) => (
+          {produkter && produkter.map((x) => (
               <Produkt key={x.id} produkt={x} />
             ))}
         </tbody>
       </table>
-      {!state.loading && !state.products.length ? (
+      {(typeof produkter !== 'undefined') && !produkter.length ? (
         <p style={{ textAlign: "center", fontStyle: "italic", margin: "2%" }}>
           Ingen dataprodukter i katalogen
         </p>
       ) : null}
-      {state.loading ? (
+      {!produkter && (
         <p style={{ textAlign: "center", margin: "2%" }}>
           <NavFrontendSpinner />
         </p>
-      ) : null}
+      )}
     </div>
   );
 };
