@@ -306,7 +306,7 @@ The access update log will reflect the access grant.
 ### `DELETE /api/v1/access/{productID}`
 
 Revokes access for a subject to the specified dataproduct.
-Can be accessed by an admin.
+Can be accessed by an owner, or by an authenticated user if they request to revoke their own access.
 Requires a JSON request body.
 
 | Field | Description | Required |
