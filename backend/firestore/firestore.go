@@ -137,6 +137,35 @@ func (f *Firestore) AddAccessUpdate(ctx context.Context, accessUpdate AccessUpda
 	return nil
 }
 
+func (f *Firestore) GetAccessUpdatesForDataproduct(ctx context.Context, id string) ([]AccessUpdate, error) {
+	var accessUpdates []AccessUpdate
+
+	query := f.accessUpdates.Where("dataproduct_id", "==", id).OrderBy("time", firestore.Desc)
+	iter := query.Documents(ctx)
+	defer iter.Stop()
+
+	for {
+		document, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Errorf("Iterating documents: %v", err)
+			break
+		}
+
+		var update AccessUpdate
+		if err := document.DataTo(&update); err != nil {
+			log.Errorf("Deserializing firestore document: %v", err)
+			return nil, fmt.Errorf("deserializing firestore document: %w", err)
+		}
+
+		accessUpdates = append(accessUpdates, update)
+	}
+
+	return accessUpdates, nil
+}
+
 func createUpdates(dp Dataproduct, currentTeam string, access map[string]time.Time) (updates []firestore.Update) {
 	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{

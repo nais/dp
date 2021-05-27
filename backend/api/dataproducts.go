@@ -108,7 +108,7 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 	dataproduct, err := a.firestore.GetDataproduct(r.Context(), chi.URLParam(r, "productID"))
 
 	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
+		log.Errorf("Getting dataproduct: %v", err)
 		if status.Code(err) == codes.NotFound {
 			respondf(w, http.StatusNotFound, "not found\n")
 		} else {
