@@ -60,9 +60,8 @@ export const ProduktDetalj: React.FC<{
       });
   }, [produktID]);
 
-  const tilgangModalCallback = (hasChanged: boolean) => {
+  const refreshAccessState = () => {
     setTilgangIsOpen(false);
-    if (hasChanged) {
       // TODO: Use hooks more elegantly
       hentProdukt(produktID)
         .then((p) => {
@@ -72,7 +71,6 @@ export const ProduktDetalj: React.FC<{
         .catch((e) => {
           setError(e.toString());
         });
-    }
   };
 
   useEffect(() => {
@@ -108,7 +106,7 @@ export const ProduktDetalj: React.FC<{
 
         <GiTilgang
           tilgangIsOpen={tilgangIsOpen}
-          callback={tilgangModalCallback}
+          refreshAccessState={refreshAccessState}
           produkt={produkt}
         />
 
@@ -122,7 +120,7 @@ export const ProduktDetalj: React.FC<{
         </FaktaboksAvsnitt>
         <FaktaboksAvsnitt>
           <Systemtittel>Tilganger</Systemtittel>
-          <ProduktTilganger produkt={produkt} tilganger={tilganger} />
+          <ProduktTilganger produkt={produkt} tilganger={tilganger} refreshAccessState={refreshAccessState}/>
         </FaktaboksAvsnitt>
       </div>
 

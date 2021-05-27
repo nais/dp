@@ -23,7 +23,7 @@ const (
 type AccessSubject struct {
 	Subject string    `json:"subject" validate:"required"`
 	Type    string    `json:"type" validate:"required"`
-	Expires time.Time `json:"expires" validate:"required"`
+	Expires time.Time `json:"expires"`
 }
 
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {

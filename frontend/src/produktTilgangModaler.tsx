@@ -19,8 +19,8 @@ interface SlettProduktProps {
 export const GiTilgang: React.FC<{
   produkt: DataProduktResponse;
   tilgangIsOpen: boolean;
-  callback: (hasChanged: boolean) => void;
-}> = ({ produkt, tilgangIsOpen, callback }) => {
+  refreshAccessState: () => void;
+}> = ({ produkt, tilgangIsOpen, refreshAccessState }) => {
   const [endDate, setEndDate] = useState<Date | null>(new Date());
   const [evig, setEvig] = useState<boolean>(false);
   const [feilmelding, setFeilmelding] = useState<string | null>(null);
@@ -29,9 +29,9 @@ export const GiTilgang: React.FC<{
 
   const handleSubmit = async () => {
     try {
-      await giTilgang(produkt, userContext.email, endDate);
+      await giTilgang(produkt, userContext.email, evig ? "" : endDate?.toISOString() || "");
       setFeilmelding(null);
-      callback(true);
+      refreshAccessState();
     } catch (e) {
       setFeilmelding(e.toString());
     }
@@ -41,7 +41,7 @@ export const GiTilgang: React.FC<{
     <Modal
       appElement={document.getElementById("app") || undefined}
       isOpen={tilgangIsOpen}
-      onRequestClose={() => callback(false)}
+      onRequestClose={() => refreshAccessState()}
       closeButton={false}
       contentLabel="Gi tilgang"
       className={"gitilgang"}
@@ -56,7 +56,7 @@ export const GiTilgang: React.FC<{
             pressed: true,
             onClick: (e) => setEvig(false),
           },
-          { children: "evig", onClick: (e) => setEvig(true) },
+          { children: "evig", onClick: (e) => setEvig(true)},
         ]}
       />
 
@@ -74,7 +74,7 @@ export const GiTilgang: React.FC<{
         </div>
       ) : null}
       <div className={"knapperad"}>
-        <Fareknapp onClick={() => callback(false)}>Avbryt</Fareknapp>
+        <Fareknapp onClick={() => refreshAccessState()}>Avbryt</Fareknapp>
         <Hovedknapp className={"bekreft"} onClick={() => handleSubmit()}>
           Bekreft
         </Hovedknapp>
