@@ -22,10 +22,11 @@ type Dataproduct struct {
 }
 
 type DataproductResponse struct {
-	ID          string      `json:"id"`
-	Dataproduct Dataproduct `json:"data_product"`
-	Updated     time.Time   `json:"updated"`
-	Created     time.Time   `json:"created"`
+	ID          string                 `json:"id"`
+	Dataproduct Dataproduct            `json:"data_product"`
+	Updated     time.Time              `json:"updated"`
+	Created     time.Time              `json:"created"`
+	DocRef      *firestore.DocumentRef `json:"-"`
 }
 
 func New(ctx context.Context, googleProjectID, dataproductCollection, accessCollection string) (*Firestore, error) {
@@ -87,21 +88,14 @@ func (f *Firestore) GetDataproducts(ctx context.Context) ([]*DataproductResponse
 }
 
 func (f *Firestore) UpdateDataproduct(ctx context.Context, id string, new Dataproduct) error {
-	doc, err := f.dataproducts.Doc(id).Get(ctx)
+	old, err := f.GetDataproduct(ctx, id)
 	if err != nil {
-		log.Errorf("Getting dataproduct from collection: %v", err)
-		return fmt.Errorf("getting dataproduct from collection: %w", err)
+		return fmt.Errorf("getting dataproduct: %w", err)
 	}
 
-	var old Dataproduct
-	if err := doc.DataTo(&old); err != nil {
-		return fmt.Errorf("populating fields in dataproduct struct: %w", err)
-	}
-
-	updates := createUpdates(new, old.Team, old.Access)
-	_, err = doc.Ref.Update(ctx, updates)
+	_, err = old.DocRef.Update(ctx, createUpdates(new, old.Dataproduct.Team, old.Dataproduct.Access))
 	if err != nil {
-		return fmt.Errorf("creating updates to document: %w", err)
+		return fmt.Errorf("updating dataproduct document: %w", err)
 	}
 
 	log.Debugf("Updated dataproduct: %v", id)
@@ -167,6 +161,7 @@ func toResponse(document *firestore.DocumentSnapshot) (*DataproductResponse, err
 	dpr.ID = document.Ref.ID
 	dpr.Updated = document.UpdateTime
 	dpr.Created = document.CreateTime
+	dpr.DocRef = document.Ref
 
 	return &dpr, nil
 }
