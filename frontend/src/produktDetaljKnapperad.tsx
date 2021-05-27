@@ -33,13 +33,14 @@ export const ProduktKnapperad: React.FC<{
     return false;
   };
 
+  const ownsProduct = () => isOwner(produkt?.data_product, userContext?.teams)
   return (
     <div className="knapperad">
-      {isOwner(produkt?.data_product, userContext?.teams) && (
+      {ownsProduct() && (
         <Fareknapp onClick={() => openSlett()}>Slett</Fareknapp>
       )}
 
-      {userContext && !harTilgang(tilganger) && (
+      {userContext && !harTilgang(tilganger) && !ownsProduct() && (
         <Knapp onClick={() => openTilgang()}>Få tilgang</Knapp>
       )}
     </div>
