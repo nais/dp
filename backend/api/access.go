@@ -188,7 +188,7 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if accessSubject.Expires.Before(time.Now()) {
+	if accessSubject.Expires.Before(time.Now()) && !accessSubject.Expires.IsZero() {
 		log.Errorf("Invalid AccessSubject.Expires: %v is already an expired time", accessSubject.Expires)
 		respondf(w, http.StatusBadRequest, "invalid AccessSubject.Expires\n")
 		return
