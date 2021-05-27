@@ -75,7 +75,10 @@ export const ProduktTilganger: React.FC<{
     console.log(synligeTilganger);
 
     if (!synligeTilganger?.length)
-        return <p>Ingen relevante tilganger definert</p>;
+        return (
+            <div className={"produkt-tilganger"}>
+                <p>Ingen relevante tilganger definert</p>
+            </div>);
 
     return (
         <div className={"produkt-tilganger"}>
