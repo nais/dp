@@ -284,7 +284,9 @@ Requires a JSON request body.
 |-------|-------------|----------|
 | `subject` | The subject who should be granted access | Yes |
 | `type` | The type of subject, can be either `"user"` or `"serviceAccount"` | Yes |
-| `expires` | The time the access should be revoked, must be in the future. ISO 8601 datetime formatted string | Yes |
+| `expires` | The time the access should be revoked, must be in the future. ISO 8601 datetime formatted string | No |
+
+⚠️ Omitting, or setting a `null` value to `expires` in the request body means that the access will last forever, or until somebody revokes it.
 
 #### Returns
 
