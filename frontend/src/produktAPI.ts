@@ -6,7 +6,7 @@ export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
 const DataProduktTilgangOppdateringSchema = z.object({
   subject: z.string(),
-  expires: z.date().nullable(),
+  expires: z.string(),
   type: z.string(),
 });
 
@@ -70,9 +70,7 @@ export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
-export type DataProduktTilgangOppdatering = z.infer<
-  typeof DataProduktTilgangOppdateringSchema
->;
+export type DataProduktTilgangOppdatering = z.infer<typeof DataProduktTilgangOppdateringSchema>;
 export type DataProduktTilgangResponse = z.infer<
   typeof DataProduktTilgangResponseSchema
 >;
@@ -181,7 +179,7 @@ export const oppdaterTilgang = async (
 export const giTilgang = async (
   produkt: DataProduktResponse,
   subject: string,
-  expiry: Date | null
+  expiry: string
 ) => {
   const produktOppdateringer: DataProduktTilgangOppdatering = {
     subject: subject,
