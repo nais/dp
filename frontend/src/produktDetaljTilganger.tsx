@@ -35,7 +35,7 @@ export const ProduktTilganger: React.FC<{
         return subject === userContext?.email;
     };
 
-    if (!tilganger) return <div>Du må være logget inn for å se informasjon om tilganger.</div>;
+    if (!tilganger) return <div>&nbsp;</div>;
 
     const tilgangsLinje = (tilgang: DataProduktTilgangResponse) => {
         const accessEnd = moment(tilgang.expires).format("LLL");
