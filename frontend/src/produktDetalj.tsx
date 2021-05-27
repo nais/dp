@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
-import { Feilmelding, Systemtittel } from "nav-frontend-typografi";
+import {Feilmelding, Ingress, Sidetittel, Systemtittel} from "nav-frontend-typografi";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
@@ -109,9 +109,11 @@ export const ProduktDetalj: React.FC<{
           refreshAccessState={refreshAccessState}
           produkt={produkt}
         />
+        <Sidetittel>{produkt.data_product.name}</Sidetittel>
 
         <FaktaboksAvsnitt>
           <Systemtittel>Produkt</Systemtittel>
+
           <ProduktFaktaboks tilganger={tilganger} produkt={produkt} />
         </FaktaboksAvsnitt>
         <FaktaboksAvsnitt>
