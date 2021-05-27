@@ -112,11 +112,11 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 		for _, subject := range toDelete {
 			delete(dataproduct.Dataproduct.Access, subject)
 		}
-		if err := dataproduct.DocRef.Update(a.ctx, []googlefirestore.Update{{
+		if _, err := dataproduct.DocRef.Update(a.ctx, []googlefirestore.Update{{
 			Path:  "access",
 			Value: dataproduct.Dataproduct.Access,
 		}}); err != nil {
-
+			log.Errorf("Updating access for dataproduct: %v", err)
 		}
 	}
 
