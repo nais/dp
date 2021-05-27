@@ -10,6 +10,12 @@ APP = dp
 test:
 	go test ./... -count=1
 
+integration-test:
+	./hack/with_firebase_emulator.sh make test
+
+run-local-firestore:
+	gcloud beta emulators firestore start --host-port=localhost:6969
+
 local-with-auth:
 	go run cmd/backend/main.go \
 	--teams-url=https://raw.githubusercontent.com/navikt/teams/main/teams.json \
