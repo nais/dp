@@ -1,7 +1,9 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import "./produktFilter.less";
 import Select from 'react-select'
 import {DataProduktListe} from "./produktAPI";
+import {Knapp} from "nav-frontend-knapper";
+import {UserContext} from "./userContext";
 
 export const ProduktFilter: React.FC<{
   produkter?: DataProduktListe,
@@ -13,6 +15,7 @@ export const ProduktFilter: React.FC<{
   setFilters,
 }): JSX.Element => {
   const [options, setOptions] = useState<{value: string, label: string}[]>([]);
+    const user = useContext(UserContext);
 
   useEffect(() => {
     if (!produkter) return;
@@ -37,6 +40,7 @@ export const ProduktFilter: React.FC<{
             onChange={(v) => setFilters(v.map(v=>v.value))}
             isMulti
         />
+          {user?.teams && <Knapp kompakt onClick={() => {setFilters(user.teams)}}>Vis mine</Knapp>}
       </div>
   );
 };
