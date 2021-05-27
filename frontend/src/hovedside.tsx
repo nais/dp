@@ -5,6 +5,8 @@ import ProduktFilter from "./produktFilter";
 import { Add } from "@navikt/ds-icons";
 import { Link } from "react-router-dom";
 import { UserContext } from "./userContext";
+import { useLocation } from "react-router-dom";
+import { useHistory } from 'react-router-dom'
 
 import NavFrontendSpinner from "nav-frontend-spinner";
 import * as z from "zod";
@@ -72,36 +74,47 @@ const ProduktNyKnapp = (): JSX.Element => (
     </Link>
   </div>
 );
-
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
 export const Hovedside = (): JSX.Element => {
   const user = useContext(UserContext);
-  const [state, dispatch] = useReducer(ProduktTabellReducer, initialState);
+  const query = useQuery();
+  const history = useHistory();
+  const queryParameters = (query.get('teams') || null)?.split(',');
+
   const [error, setError] = useState<string | null>();
+  const [filters, setFilters] = useState<string[]>(queryParameters? queryParameters : []);
+  const [produkter, setProdukter] = useState<DataProduktListe>();
 
-  const loadProducts = () => {
+  useEffect(() => {
+    if (!queryParameters) {
+      const localStorageFilters = window.localStorage.getItem("filters")
+      if (localStorageFilters?.length) setFilters(JSON.parse(localStorageFilters))
+    }
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem("filters", JSON.stringify(filters))
+
+    history.push({
+      search: filters.length ? '?teams=' + filters.join(',') : ''
+    })
+  }, [filters])
+
+  useEffect(() => {
     hentProdukter()
-      .then((produkter) => {
-        setError(null);
-
-        dispatch({
-          type: "FETCH_DONE",
-          results: produkter,
+        .then((produkter) => {
+          setProdukter(produkter);
+          setError(null);
+        })
+        .catch((e) => {
+          setError(e.toString());
         });
-      })
-      .catch((e) => {
-        if (e instanceof z.ZodError) {
-          console.log(JSON.stringify(e.errors, null, 2));
-        }
-        setError(`${e}`);
-      });
-  };
-
-  useEffect(loadProducts, []);
+  }, []);
 
   if (error) {
-    setTimeout(loadProducts, 1500);
-    console.log(error);
-    // log:           {error}
+    setTimeout(() => window.location.reload(false), 1500);
     return (
       <div className={"feilBoks"}>
         <div>
@@ -119,10 +132,10 @@ export const Hovedside = (): JSX.Element => {
   return (
     <div>
       <div className="filter-and-button">
-        <ProduktFilter state={state} dispatch={dispatch} />
+        <ProduktFilter produkter={produkter} filters={filters} setFilters={setFilters} />
         {user ? <ProduktNyKnapp /> : <></>}
       </div>
-      <ProduktTabell state={state} dispatch={dispatch} />
+      <ProduktTabell produkter={produkter?.filter(p => (!filters.length) || filters.includes(p.data_product.team))} />
     </div>
   );
 };

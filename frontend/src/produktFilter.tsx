@@ -1,55 +1,47 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { Select } from "nav-frontend-skjema";
-import { ProduktListeState } from "./hovedside";
+import React, {useContext, useEffect, useState} from "react";
 import "./produktFilter.less";
+import Select from 'react-select'
+import {DataProduktListe} from "./produktAPI";
+import {Knapp} from "nav-frontend-knapper";
+import {UserContext} from "./userContext";
 
-interface ProduktFilterProps {
-  state: ProduktListeState;
-  dispatch: any; // chickening out again
-}
-
-export const ProduktFilter = ({
-  state,
-  dispatch,
-}: ProduktFilterProps): JSX.Element => {
-  const [productOwners, setProductOwners] = useState<string[]>([]);
+export const ProduktFilter: React.FC<{
+  produkter?: DataProduktListe,
+  filters: string[],
+  setFilters: React.Dispatch<React.SetStateAction<string[]>>
+}> = ({
+    produkter,
+  filters,
+  setFilters,
+}): JSX.Element => {
+  const [options, setOptions] = useState<{value: string, label: string}[]>([]);
+    const user = useContext(UserContext);
 
   useEffect(() => {
-    const productOwners: string[] = [];
+    if (!produkter) return;
+    let teams: string[] = []
 
-    state.products.forEach((x) => {
-      if (
-        x?.data_product?.team &&
-        !productOwners.includes(x.data_product.team)
-      ) {
-        productOwners.push(x.data_product.team);
-      }
-      setProductOwners(productOwners);
-    });
-  }, [state.products]);
+    produkter.forEach(p => {
+      if (!teams.includes(p.data_product.team)) teams.push(p.data_product.team)
+    })
 
-  const selectTeam = (e: ChangeEvent<HTMLSelectElement>) => {
-    dispatch({
-      type: "FILTER_CHANGE",
-      filter: e.target.value,
-    });
-  };
+    setOptions(teams.map(t => ({value: t, label: t})))
+  }, [produkter]);
 
   return (
-    <Select
-      className="produkt-filter"
-      label={"Filtrer på produkteier"}
-      onChange={(e) => selectTeam(e)}
-    >
-      <option key="xxx" value="">
-        {"Velg team"}
-      </option>
-      {productOwners.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
-    </Select>
+      <div className={"produkt-filter"}>
+        <label className={"skjemaelement__label"}>
+          Filtrer på produkteier
+        </label>
+        <Select
+            className={"filter-dropdown"}
+            options={options}
+            value={filters.map(t => ({value: t, label: t}))}
+            onChange={(v) => setFilters(v.map(v=>v.value))}
+            isMulti
+        />
+          {user?.teams && <Knapp kompakt onClick={() => {setFilters(user.teams)}}>Vis mine</Knapp>}
+      </div>
   );
 };
 
