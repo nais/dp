@@ -4,8 +4,6 @@ export const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:8080";
 export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
-const DataProduktTilgangSchema = z.record(z.any().nullable());
-
 const DataProduktTilgangOppdateringSchema = z.object({
   subject: z.string(),
   expires: z.date().nullable(),
@@ -47,7 +45,6 @@ export const DataProduktSchema = z.object({
   description: z.string().optional(),
   team: z.string(),
   datastore: DataLagerSchema.array().optional(),
-  access: DataProduktTilgangSchema,
 });
 
 const DataProduktPartialSchema = DataProduktSchema.partial();
@@ -70,7 +67,6 @@ const DataProduktTilgangListSchema =
 
 export type DataProdukt = z.infer<typeof DataProduktSchema>;
 export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
-export type DataProduktTilgang = z.infer<typeof DataProduktTilgangSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
