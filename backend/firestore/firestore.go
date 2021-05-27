@@ -109,6 +109,16 @@ func (f *Firestore) UpdateDataproduct(ctx context.Context, id string, new Datapr
 	return nil
 }
 
+func (f *Firestore) DeleteDataproduct(ctx context.Context, id string) error {
+	documentRef := f.dataproducts.Doc(id)
+
+	if _, err := documentRef.Delete(ctx); err != nil {
+		return fmt.Errorf("deleting firestore document: %w", err)
+	}
+
+	return nil
+}
+
 func createUpdates(dp Dataproduct, currentTeam string, access map[string]time.Time) (updates []firestore.Update) {
 	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{

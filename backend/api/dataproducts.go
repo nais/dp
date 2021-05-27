@@ -60,8 +60,6 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	if err := a.firestore.UpdateDataproduct(r.Context(), dpID, dpi); err != nil {
 		respondf(w, http.StatusBadRequest, "Update failed: %v", err)
 	}
-
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *api) dataproducts(w http.ResponseWriter, r *http.Request) {
@@ -140,17 +138,14 @@ func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *api) deleteDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
+	dpID := chi.URLParam(r, "productID")
 
-	if _, err := documentRef.Delete(r.Context()); err != nil {
-		log.Errorf("Deleting firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to delete firestore document\n")
+	if err := a.firestore.DeleteDataproduct(r.Context(), dpID); err != nil {
+		log.Errorf("Deleting dataproduct: %v", err)
+		respondf(w, http.StatusBadRequest, "unable to delete dataproduct\n")
 		return
 	}
 
-	w.WriteHeader(http.StatusNoContent)
 }
 
 func (a *api) createUpdates(dp DataProductInput, currentTeam string, access map[string]time.Time) ([]firestore.Update, error) {
@@ -219,6 +214,7 @@ func hasKeys(m map[string]string, keys ...string) error {
 	}
 	return nil
 }
+
 func (a *api) hasAccess(ctx context.Context, dataproductID string) (bool, error) {
 	dp, err := a.firestore.GetDataproduct(ctx, dataproductID)
 	if err != nil {
