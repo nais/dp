@@ -86,6 +86,65 @@ func (f *Firestore) GetDataproducts(ctx context.Context) ([]*DataproductResponse
 	return dataproducts, nil
 }
 
+func (f *Firestore) UpdateDataproduct(ctx context.Context, id string, new Dataproduct) error {
+	doc, err := f.dataproducts.Doc(id).Get(ctx)
+	if err != nil {
+		log.Errorf("Getting dataproduct from collection: %v", err)
+		return fmt.Errorf("getting dataproduct from collection: %w", err)
+	}
+
+	var old Dataproduct
+	if err := doc.DataTo(&old); err != nil {
+		return fmt.Errorf("populating fields in dataproduct struct: %w", err)
+	}
+
+	updates := createUpdates(new, old.Team, old.Access)
+	_, err = doc.Ref.Update(ctx, updates)
+	if err != nil {
+		return fmt.Errorf("creating updates to document: %w", err)
+	}
+
+	log.Debugf("Updated dataproduct: %v", id)
+
+	return nil
+}
+
+func createUpdates(dp Dataproduct, currentTeam string, access map[string]time.Time) (updates []firestore.Update) {
+	if len(dp.Name) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "name",
+			Value: dp.Name,
+		})
+	}
+	if len(dp.Description) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "description",
+			Value: dp.Description,
+		})
+	}
+	if len(dp.Datastore) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "datastore",
+			Value: dp.Datastore,
+		})
+	}
+	if len(dp.Team) > 0 {
+		updates = append(updates, firestore.Update{
+			Path:  "team",
+			Value: dp.Team,
+		})
+
+		delete(access, fmt.Sprintf("group:%v@nav.no", currentTeam))
+		access[fmt.Sprintf("group:%v@nav.no", dp.Team)] = time.Time{}
+		updates = append(updates, firestore.Update{
+			Path:  "access",
+			Value: access,
+		})
+	}
+
+	return
+}
+
 func toResponse(document *firestore.DocumentSnapshot) (*DataproductResponse, error) {
 	var dp Dataproduct
 

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	firestore2 "github.com/nais/dp/backend/firestore"
@@ -30,54 +31,34 @@ type DataProductInput struct {
 }
 
 func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
-	dpc := a.client.Collection(a.config.Firestore.DataproductsCollection)
-	articleID := chi.URLParam(r, "productID")
-	documentRef := dpc.Doc(articleID)
-	document, err := documentRef.Get(r.Context())
-	if err != nil {
-		log.Errorf("Getting firestore document: %v", err)
-		if status.Code(err) == codes.NotFound {
-			respondf(w, http.StatusNotFound, "no such document\n")
-		} else {
-			respondf(w, http.StatusBadRequest, "unable to get firestore document\n")
-		}
-		return
-	}
+	dpID := chi.URLParam(r, "productID")
 
-	var firebaseDp DataProduct
-	if err := document.DataTo(&firebaseDp); err != nil {
-		log.Errorf("Deserializing firestore document: %v", err)
-		respondf(w, http.StatusInternalServerError, "unable to deserialize firestore document\n")
-		return
-	}
-
-	requesterTeams := r.Context().Value("teams").([]string)
-
-	if !contains(requesterTeams, firebaseDp.Team) {
-		log.Errorf("updateDataproduct: Unauthorized to make changes to firestore document")
-		respondf(w, http.StatusUnauthorized, "unauthorized\n")
-		return
-	}
-
-	var dpi DataProductInput
+	var dpi firestore2.Dataproduct
 	if err := json.NewDecoder(r.Body).Decode(&dpi); err != nil {
 		log.Errorf("Deserializing request document: %v", err)
 		respondf(w, http.StatusBadRequest, "unable to deserialize request document\n")
 		return
 	}
 
-	updates, err := a.createUpdates(dpi, firebaseDp.Team, firebaseDp.Access)
+	access, err := a.hasAccess(r.Context(), dpID)
+
 	if err != nil {
-		log.Errorf("Validation fails: %v", err)
-		respondf(w, http.StatusBadRequest, "Validation failed: %v", err)
+		respondf(w, http.StatusInternalServerError, "uh oh\n")
 		return
 	}
 
-	_, err = documentRef.Update(r.Context(), updates)
-	if err != nil {
-		log.Errorf("Updating firestore document: %v", err)
-		respondf(w, http.StatusBadRequest, "unable to update firestore document\n")
-		return
+	if !access {
+		respondf(w, http.StatusUnauthorized, "unauthorized\n")
+	}
+
+	for _, ds := range dpi.Datastore {
+		if err := ValidateDatastore(ds); err != nil {
+			respondf(w, http.StatusUnauthorized, "invalid datastore: %v\n", err)
+		}
+	}
+
+	if err := a.firestore.UpdateDataproduct(r.Context(), dpID, dpi); err != nil {
+		respondf(w, http.StatusBadRequest, "Update failed: %v", err)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
@@ -237,4 +218,13 @@ func hasKeys(m map[string]string, keys ...string) error {
 		}
 	}
 	return nil
+}
+func (a *api) hasAccess(ctx context.Context, dataproductID string) (bool, error) {
+	dp, err := a.firestore.GetDataproduct(ctx, dataproductID)
+	if err != nil {
+		return false, fmt.Errorf("getting dataproduct: %v", err)
+	}
+
+	requesterTeams := ctx.Value("teams").([]string)
+	return contains(requesterTeams, dp.Dataproduct.Team), nil
 }

@@ -162,3 +162,12 @@ func respondf(w http.ResponseWriter, statusCode int, format string, args ...inte
 		log.Errorf("unable to write response: %v", wErr)
 	}
 }
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}

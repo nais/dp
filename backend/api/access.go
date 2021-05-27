@@ -254,14 +254,6 @@ func Verify(author, productID string) (au AccessUpdate) {
 	return
 }
 
-func contains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}
 func documentToProductResponse(d *firestore.DocumentSnapshot) (firestore2.DataproductResponse, error) {
 	var dpr firestore2.DataproductResponse
 	var dp firestore2.Dataproduct
