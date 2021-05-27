@@ -26,8 +26,12 @@ export const ProduktFilter: React.FC<{
   }, [produkter]);
 
   return (
-      <div style={{width: "100%"}}>
+      <div className={"produkt-filter"}>
+        <label className={"skjemaelement__label"}>
+          Filtrer på produkteier
+        </label>
         <Select
+            className={"filter-dropdown"}
             options={options}
             value={filters.map(t => ({value: t, label: t}))}
             onChange={(v) => setFilters(v.map(v=>v.value))}

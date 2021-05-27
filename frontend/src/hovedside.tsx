@@ -81,19 +81,27 @@ export const Hovedside = (): JSX.Element => {
   const user = useContext(UserContext);
   const query = useQuery();
   const history = useHistory();
+  const queryParameters = (query.get('teams') || null)?.split(',');
 
   const [error, setError] = useState<string | null>();
-  const [filters, setFilters] = useState<string[]>([]);
+  const [filters, setFilters] = useState<string[]>(queryParameters? queryParameters : []);
   const [produkter, setProdukter] = useState<DataProduktListe>();
 
   useEffect(() => {
-    if (filters.length) {
-      query.set('teams', filters.join(','))
-    } else {
-      query.delete('teams')
+    if (!queryParameters) {
+      const localStorageFilters = window.localStorage.getItem("filters")
+      if (localStorageFilters?.length) setFilters(JSON.parse(localStorageFilters))
     }
-    history.push('?' + query.toString())
+  }, [])
+
+  useEffect(() => {
+    window.localStorage.setItem("filters", JSON.stringify(filters))
+
+    history.push({
+      search: filters.length ? '?teams=' + filters.join(',') : ''
+    })
   }, [filters])
+
   useEffect(() => {
     hentProdukter()
         .then((produkter) => {
