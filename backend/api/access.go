@@ -18,12 +18,6 @@ import (
 )
 
 const (
-	DeleteType = "delete"
-	GrantType  = "grant"
-	VerifyType = "verify"
-)
-
-const (
 	UserType           = "user"
 	ServiceAccountType = "serviceAccount"
 )
@@ -34,20 +28,11 @@ type AccessSubject struct {
 	Expires time.Time `json:"expires"`
 }
 
-type AccessUpdate struct {
-	ProductID  string    `firestore:"dataproduct_id" json:"dataproduct_id"`
-	Author     string    `firestore:"author" json:"author"`
-	Subject    string    `firestore:"subject" json:"subject"`
-	Action     string    `firestore:"action" json:"action"`
-	UpdateTime time.Time `firestore:"time" json:"time"`
-	Expires    time.Time `firestore:"expires" json:"expires"`
-}
-
 func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request) {
 	updates := a.client.Collection(a.config.Firestore.AccessUpdatesCollection)
 	productID := chi.URLParam(r, "productID")
 
-	updateResponse := make([]AccessUpdate, 0)
+	updateResponse := make([]firestore2.AccessUpdate, 0)
 
 	query := updates.Where("dataproduct_id", "==", productID).OrderBy("time", firestore.Desc)
 	iter := query.Documents(r.Context())
@@ -63,7 +48,7 @@ func (a *api) getAccessUpdatesForProduct(w http.ResponseWriter, r *http.Request)
 			break
 		}
 
-		var update AccessUpdate
+		var update firestore2.AccessUpdate
 		if err := document.DataTo(&update); err != nil {
 			log.Errorf("Deserializing firestore document: %v", err)
 			respondf(w, http.StatusInternalServerError, "unable to deserialize update\n")
@@ -143,8 +128,11 @@ func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 		}})
 		iam.RemoveDatastoreAccess(r.Context(), dpr.Dataproduct.Datastore[0], subject)
 
-		update := Delete(requester, dpr.ID, accessSubject.Subject)
-		UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
+		update := firestore2.Delete(requester, dpr.ID, accessSubject.Subject)
+		if err := a.firestore.AddAccessUpdate(r.Context(), update); err != nil {
+			log.Errorf("Adding access update: %v", err)
+		}
+
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -217,41 +205,14 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 	}})
 	iam.UpdateDatastoreAccess(r.Context(), dpr.Dataproduct.Datastore[0], dpr.Dataproduct.Access)
 
-	update := Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
+	update := firestore2.Grant(requester, dpr.ID, accessSubject.Subject, accessSubject.Expires)
 	UpdateHistory(r.Context(), a.client, a.config.Firestore.AccessUpdatesCollection, update)
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func UpdateHistory(ctx context.Context, client *firestore.Client, collectionName string, update AccessUpdate) {
+func UpdateHistory(ctx context.Context, client *firestore.Client, collectionName string, update firestore2.AccessUpdate) {
 	updates := client.Collection(collectionName)
 	updates.Add(ctx, update)
-}
-
-func Delete(author, productID, subject string) (au AccessUpdate) {
-	au.Action = DeleteType
-	au.UpdateTime = time.Now()
-	au.ProductID = productID
-	au.Subject = subject
-	au.Author = author
-	return
-}
-
-func Grant(author, productID, subject string, expiry time.Time) (au AccessUpdate) {
-	au.Action = GrantType
-	au.UpdateTime = time.Now()
-	au.Expires = expiry
-	au.ProductID = productID
-	au.Subject = subject
-	au.Author = author
-	return
-}
-
-func Verify(author, productID string) (au AccessUpdate) {
-	au.Action = VerifyType
-	au.UpdateTime = time.Now()
-	au.ProductID = productID
-	au.Author = author
-	return
 }
 
 func documentToProductResponse(d *firestore.DocumentSnapshot) (firestore2.DataproductResponse, error) {

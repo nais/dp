@@ -9,8 +9,15 @@ import (
 	"time"
 )
 
+const (
+	DeleteType = "delete"
+	GrantType  = "grant"
+	VerifyType = "verify"
+)
+
 type Firestore struct {
-	dataproducts *firestore.CollectionRef
+	dataproducts  *firestore.CollectionRef
+	accessUpdates *firestore.CollectionRef
 }
 
 type Dataproduct struct {
@@ -29,13 +36,23 @@ type DataproductResponse struct {
 	DocRef      *firestore.DocumentRef `json:"-"`
 }
 
-func New(ctx context.Context, googleProjectID, dataproductCollection, accessCollection string) (*Firestore, error) {
+type AccessUpdate struct {
+	ProductID  string    `firestore:"dataproduct_id" json:"dataproduct_id"`
+	Author     string    `firestore:"author" json:"author"`
+	Subject    string    `firestore:"subject" json:"subject"`
+	Action     string    `firestore:"action" json:"action"`
+	UpdateTime time.Time `firestore:"time" json:"time"`
+	Expires    time.Time `firestore:"expires" json:"expires"`
+}
+
+func New(ctx context.Context, googleProjectID, dataproductCollection, accessUpdatesCollection string) (*Firestore, error) {
 	client, err := firestore.NewClient(ctx, googleProjectID)
 	if err != nil {
 		return nil, fmt.Errorf("initializing firestore client: %v", err)
 	}
 	return &Firestore{
-		dataproducts: client.Collection(dataproductCollection),
+		dataproducts:  client.Collection(dataproductCollection),
+		accessUpdates: client.Collection(accessUpdatesCollection),
 	}, nil
 }
 
@@ -113,6 +130,13 @@ func (f *Firestore) DeleteDataproduct(ctx context.Context, id string) error {
 	return nil
 }
 
+func (f *Firestore) AddAccessUpdate(ctx context.Context, accessUpdate AccessUpdate) error {
+	if _, _, err := f.accessUpdates.Add(ctx, accessUpdate); err != nil {
+		return fmt.Errorf("adding access update: %w", err)
+	}
+	return nil
+}
+
 func createUpdates(dp Dataproduct, currentTeam string, access map[string]time.Time) (updates []firestore.Update) {
 	if len(dp.Name) > 0 {
 		updates = append(updates, firestore.Update{
@@ -164,4 +188,31 @@ func toResponse(document *firestore.DocumentSnapshot) (*DataproductResponse, err
 	dpr.DocRef = document.Ref
 
 	return &dpr, nil
+}
+
+func Delete(author, productID, subject string) (au AccessUpdate) {
+	au.Action = DeleteType
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+	return
+}
+
+func Grant(author, productID, subject string, expiry time.Time) (au AccessUpdate) {
+	au.Action = GrantType
+	au.UpdateTime = time.Now()
+	au.Expires = expiry
+	au.ProductID = productID
+	au.Subject = subject
+	au.Author = author
+	return
+}
+
+func Verify(author, productID string) (au AccessUpdate) {
+	au.Action = VerifyType
+	au.UpdateTime = time.Now()
+	au.ProductID = productID
+	au.Author = author
+	return
 }

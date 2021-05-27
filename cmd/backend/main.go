@@ -4,6 +4,7 @@ import (
 	googlefirestore "cloud.google.com/go/firestore"
 	"context"
 	"fmt"
+	"github.com/nais/dp/backend/accessensurer"
 	"github.com/nais/dp/backend/auth"
 	fs "github.com/nais/dp/backend/firestore"
 	"net/http"
@@ -61,7 +62,7 @@ func main() {
 
 	teamUUIDs := make(map[string]string)
 	go auth.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
-	go api.EnsureAccess(ctx, cfg, firestore, googleFirestoreClient, EnsureAccessUpdateFrequency)
+	go accessensurer.New(ctx, cfg, firestore, EnsureAccessUpdateFrequency).Run()
 
 	api := api.New(firestore, googleFirestoreClient, cfg, teamUUIDs)
 	fmt.Println("running @", cfg.BindAddress)
