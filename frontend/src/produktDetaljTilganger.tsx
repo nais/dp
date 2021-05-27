@@ -50,7 +50,7 @@ export const ProduktTilganger: React.FC<{
                     </Undertekst>
                 </div>
                 <Xknapp
-                    mini
+
                     type={"fare"}
                     onClick={async () => {
                         if (produkt?.id && tilgang?.subject)
