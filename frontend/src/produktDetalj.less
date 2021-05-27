@@ -1,27 +1,5 @@
 @import (reference) "~nav-frontend-core";
 
-@media screen and (max-width: 768px) {
-  .knapperad {
-    width: 100%;
-
-    & button {
-      width: 100%;
-    }
-  }
-
-  .produkt-detalj {
-    flex-direction: column;
-
-    > div {
-      margin: 0 !important;
-      margin-top: 10px !important;
-    }
-  }
-
-  .faktaboks {
-    width: 100%;
-  }
-}
 
 .slette-bekreftelse {
   min-width: 150px;
@@ -111,4 +89,43 @@
 .infoBoks {
   //background: white;
   //border: 1px solid @navGra40;
+}
+
+@media screen and (max-width: 768px) {
+  .knapperad {
+    width: 100%;
+
+    & button {
+      width: 100%;
+    }
+  }
+
+  .produkt-detalj {
+    .faktaboks {
+      min-width: 100%;
+      flex-grow: 1;
+
+      .faktaboks-avsnitt {
+        flex-direction: column;
+
+        > h2 {
+          text-align: left;
+          border-right: none;
+          text-decoration: underline;
+          text-decoration-color: @navBlaLighten60;
+          line-height: 1.2rem;
+          font-size: 1.5rem;
+        }
+      }
+    }
+
+    > div {
+      margin: 0;
+      margin-top: 10px;
+    }
+  }
+
+  .faktaboks {
+    width: 100%;
+  }
 }
