@@ -17,10 +17,6 @@ export const ProduktFaktaboks: React.FC<{
         <Ingress className="beskrivelse">
             {produkt.data_product?.description || "Ingen beskrivelse"}
         </Ingress>
-
-      <Normaltekst>
-        Eier: {produkt.data_product?.team || "uvisst"}
-      </Normaltekst>
       <Normaltekst>
         Opprettet: {moment(produkt.created).format("LLL")}
       </Normaltekst>

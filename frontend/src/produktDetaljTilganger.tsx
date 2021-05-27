@@ -11,7 +11,7 @@ import {UserContext} from "./userContext";
 import "moment/locale/nb";
 import moment from "moment";
 import {
-    Feilmelding,
+    Feilmelding, Normaltekst,
     Undertekst,
     Undertittel,
 } from "nav-frontend-typografi";
@@ -76,8 +76,8 @@ export const ProduktTilganger: React.FC<{
 
     if (!synligeTilganger?.length)
         return (
-            <div className={"produkt-tilganger"}>
-                <p>Ingen relevante tilganger definert</p>
+            <div>
+                <Normaltekst>Ingen relevante tilganger definert</Normaltekst>
             </div>);
 
     return (

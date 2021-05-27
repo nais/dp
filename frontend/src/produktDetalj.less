@@ -1,4 +1,4 @@
-@import "~nav-frontend-core";
+@import (reference) "~nav-frontend-core";
 
 @media screen and (max-width: 768px) {
   .knapperad {
@@ -44,7 +44,6 @@
     margin-bottom: 10px;
   }
 
-
   .knapperad {
     display: flex;
     flex-direction: column;
@@ -56,13 +55,17 @@
   }
 
   .faktaboks {
-    //background: @navLysGra;
-    //border: 2px solid black;
     padding: 1em;
     flex-grow: 1;
 
     >h1 {
       text-align: center;
+      margin-bottom: 2rem;
+
+      >a {
+        text-decoration: none;
+        color: black;
+      }
     }
 
     & .beskrivelse {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
 import {Feilmelding, Ingress, Sidetittel, Systemtittel} from "nav-frontend-typografi";
 import {
@@ -109,7 +109,11 @@ export const ProduktDetalj: React.FC<{
           refreshAccessState={refreshAccessState}
           produkt={produkt}
         />
-        <Sidetittel>{produkt.data_product.name}</Sidetittel>
+        <Sidetittel>
+          <Link to={{
+            pathname: "/",
+            search: `?teams=${produkt.data_product.team}`
+          }}>{produkt.data_product.team}</Link> / {produkt.data_product.name}</Sidetittel>
 
         <FaktaboksAvsnitt>
           <Systemtittel>Produkt</Systemtittel>

@@ -8,7 +8,7 @@ import {
 } from "./produktAPI";
 import { BigQueryIcon, BucketIcon } from "./svgIcons";
 import "./produktDatalager.less";
-import { Systemtittel, Undertittel } from "nav-frontend-typografi";
+import {Normaltekst, Systemtittel, Undertittel} from "nav-frontend-typografi";
 
 export const DatalagerInfo: React.FC<{ ds: DataLager }> = ({ ds }) => {
   const BigQueryEntry = (e: DataLagerBigquery) => (
@@ -59,9 +59,9 @@ export const ProduktDatalager: React.FC<{ produkt: DataProduktResponse }> = ({
   produkt,
 }) => (
   <>
-    {produkt.data_product?.datastore &&
+    {produkt.data_product?.datastore ?
       produkt.data_product?.datastore.map((ds, index) => (
         <DatalagerInfo key={index} ds={ds} />
-      ))}
+      )) : <div><Normaltekst>Ingen datalagre definert</Normaltekst></div>}
   </>
 );
