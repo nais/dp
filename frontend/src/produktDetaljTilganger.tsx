@@ -11,7 +11,7 @@ import {UserContext} from "./userContext";
 import "moment/locale/nb";
 import moment from "moment";
 import {
-    Feilmelding,
+    Feilmelding, Normaltekst,
     Undertekst,
     Undertittel,
 } from "nav-frontend-typografi";
@@ -35,7 +35,7 @@ export const ProduktTilganger: React.FC<{
         return subject === userContext?.email;
     };
 
-    if (!tilganger) return <></>;
+    if (!tilganger) return <div>&nbsp;</div>;
 
     const tilgangsLinje = (tilgang: DataProduktTilgangResponse) => {
         const accessEnd = moment(tilgang.expires).format("LLL");
@@ -50,7 +50,7 @@ export const ProduktTilganger: React.FC<{
                     </Undertekst>
                 </div>
                 <Xknapp
-                    mini
+
                     type={"fare"}
                     onClick={async () => {
                         if (produkt?.id && tilgang?.subject)
@@ -73,7 +73,10 @@ export const ProduktTilganger: React.FC<{
     );
 
     if (!synligeTilganger?.length)
-        return <p>Ingen relevante tilganger definert</p>;
+        return (
+            <div>
+                <Normaltekst>Ingen relevante tilganger definert</Normaltekst>
+            </div>);
 
     return (
         <div className={"produkt-tilganger"}>
