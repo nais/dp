@@ -29,7 +29,7 @@ export const GiTilgang: React.FC<{
 
   const handleSubmit = async () => {
     try {
-      await giTilgang(produkt, userContext.email, evig ? "" : endDate?.toISOString() || "");
+      await giTilgang(produkt, userContext.email, evig ? null : endDate?.toISOString() || null);
       setFeilmelding(null);
       refreshAccessState();
     } catch (e) {

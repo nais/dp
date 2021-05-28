@@ -6,7 +6,7 @@ export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
 const DataProduktTilgangOppdateringSchema = z.object({
   subject: z.string(),
-  expires: z.string(),
+  expires: z.string().nullable(),
   type: z.string(),
 });
 
@@ -179,7 +179,7 @@ export const oppdaterTilgang = async (
 export const giTilgang = async (
   produkt: DataProduktResponse,
   subject: string,
-  expiry: string
+  expiry: string | null
 ) => {
   const produktOppdateringer: DataProduktTilgangOppdatering = {
     subject: subject,
@@ -192,6 +192,7 @@ export const giTilgang = async (
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   const res = await fetch(`${API_ROOT}/userinfo`, { credentials: "include" });
+  if (!res.ok) throw new Error("unable to fetch userinfo")
   const json = await res.json();
   return BrukerInfoSchema.parse(json);
 };
