@@ -98,7 +98,7 @@ func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 
 		if err := iam.RemoveDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], subject); err != nil {
 			log.Errorf("Removing datastore access: %v", err)
-			respondf(w, http.StatusInternalServerError, "uh oh\n")
+			respondf(w, http.StatusInternalServerError, "Could not revoke datastore access: %v\n", err)
 			return
 		}
 
@@ -170,7 +170,11 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 		Value: dp.Dataproduct.Access,
 	}})
 
-	iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], dp.Dataproduct.Access)
+	if err := iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], dp.Dataproduct.Access); err != nil {
+		log.Errorf("Granting datastore access: %v", err)
+		respondf(w, http.StatusInternalServerError, "Could not grant datastore access: %v\n", err)
+		return
+	}
 
 	update := firestore.Grant(requester, dp.ID, accessSubject.Subject, accessSubject.Expires)
 	if err := a.firestore.AddAccessUpdate(r.Context(), update); err != nil {
