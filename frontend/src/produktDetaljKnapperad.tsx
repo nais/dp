@@ -40,7 +40,7 @@ export const ProduktKnapperad: React.FC<{
         <Fareknapp onClick={() => openSlett()}>Slett</Fareknapp>
       )}
 
-      {userContext && !harTilgang(tilganger) && !ownsProduct() && (
+      {userContext && !harTilgang(tilganger) && produkt?.data_product.datastore &&(
         <Knapp onClick={() => openTilgang()}>Få tilgang</Knapp>
       )}
     </div>
