@@ -72,8 +72,6 @@ export const ProduktTilganger: React.FC<{
             .filter((tilgang) => entryShouldBeDisplayed(tilgang.subject))
     );
 
-    console.log(synligeTilganger);
-
     if (!synligeTilganger?.length)
         return <p>Ingen relevante tilganger definert</p>;
 

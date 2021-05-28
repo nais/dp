@@ -167,7 +167,7 @@ export const oppdaterTilgang = async (
     body: JSON.stringify(oppdatertProdukt),
   });
 
-  if (res.status !== 204) {
+  if (!res.ok) {
     throw new Error(
       `Kunne ikke oppdatere produkt: ${res.status}: ${await res.text()}`
     );

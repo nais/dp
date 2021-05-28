@@ -80,7 +80,7 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(dpi.Datastore) > 0 {
-		if errs := ValidateDatastore(dp.Datastore[0]); errs != nil {
+		if errs := ValidateDatastore(dpi.Datastore[0]); errs != nil {
 			log.Errorf("Validation fails: %v", errs)
 			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
 			return
