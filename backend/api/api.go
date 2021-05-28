@@ -95,12 +95,14 @@ func (a *api) login(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 	var userInfo struct {
-		Email string   `json:"email"`
-		Teams []string `json:"teams"`
+		Email string    `json:"email"`
+		Teams []string  `json:"teams"`
+		TokenExpiry int `json:"token_expires"`
 	}
 
 	userInfo.Teams = r.Context().Value("teams").([]string)
 	userInfo.Email = r.Context().Value("preferred_username").(string)
+	userInfo.TokenExpiry = r.Context().Value("token_expiry").(int)
 
 	if err := json.NewEncoder(w).Encode(&userInfo); err != nil {
 		log.Errorf("Serializing teams response: %v", err)

@@ -3,13 +3,12 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/jwtauth"
 	"github.com/nais/dp/backend/auth"
 	log "github.com/sirupsen/logrus"
+	"net/http"
+	"strings"
 )
 
 func mockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
@@ -52,7 +51,10 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGr
 			}
 
 			email := strings.ToLower(claims["preferred_username"].(string))
+			exp := int(claims["exp"].(float64))
+
 			r = r.WithContext(context.WithValue(r.Context(), "preferred_username", email))
+			r = r.WithContext(context.WithValue(r.Context(), "token_expiry", exp))
 			r = r.WithContext(context.WithValue(r.Context(), "member_name", "user:"+email))
 
 			groups, err := azureGroups.GetGroupsForUser(r.Context(), token, email)
