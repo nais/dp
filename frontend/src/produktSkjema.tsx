@@ -12,7 +12,7 @@ import { ZodError } from "zod";
 import { Input, Select, SkjemaGruppe } from "nav-frontend-skjema";
 import { UserContext } from "./userContext";
 import { Feilmelding } from "nav-frontend-typografi";
-import { Fareknapp, Hovedknapp, Knapp } from "nav-frontend-knapper";
+import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
 
 const RessursVelger: React.FC<{
   datastore: DataLager | null;
@@ -85,14 +85,14 @@ const RessursVelger: React.FC<{
         </option>
         <option
           key="bigquery"
-          selected={datastore?.type == "bigquery"}
+          selected={datastore?.type === "bigquery"}
           value="bigquery"
         >
           BigQuery
         </option>
         <option
           key="bucket"
-          selected={datastore?.type == "bucket"}
+          selected={datastore?.type === "bucket"}
           value="bucket"
         >
           Bucket

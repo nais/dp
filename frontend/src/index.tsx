@@ -36,7 +36,7 @@ const App = (): JSX.Element => {
   useEffect(() => {
     validateSession();
     history.listen(validateSession);
-  }, []);
+  }, [history]);
 
   return (
     <div className={"dashboard-main"}>

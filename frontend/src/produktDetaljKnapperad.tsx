@@ -1,11 +1,10 @@
 import { Fareknapp, Knapp } from "nav-frontend-knapper";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import { UserContext } from "./userContext";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
   getCurrentAccessState,
-  hentProdukt,
   isOwner,
 } from "./produktAPI";
 import { useHistory } from "react-router-dom";
@@ -25,7 +24,7 @@ export const ProduktKnapperad: React.FC<{
     if (!tilgangerBehandlet) return false;
 
     for (const tilgang of tilgangerBehandlet) {
-      if (tilgang.subject == userContext?.email) {
+      if (tilgang.subject === userContext?.email) {
         if (tilgang?.expires && new Date(tilgang.expires) > new Date()) {
           return true;
         }

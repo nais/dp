@@ -3,12 +3,11 @@ import {
   DataLager,
   DataLagerBigquery,
   DataLagerBucket,
-  DataProdukt,
   DataProduktResponse,
 } from "./produktAPI";
 import { BigQueryIcon, BucketIcon } from "./svgIcons";
 import "./produktDatalager.less";
-import { Normaltekst, Systemtittel, Undertittel } from "nav-frontend-typografi";
+import { Normaltekst, Undertittel } from "nav-frontend-typografi";
 
 export const DatalagerInfo: React.FC<{ ds: DataLager }> = ({ ds }) => {
   const BigQueryEntry = (e: DataLagerBigquery) => (

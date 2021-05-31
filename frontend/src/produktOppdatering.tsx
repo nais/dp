@@ -5,9 +5,9 @@ import {
   DataProduktResponse,
   hentProdukt,
   oppdaterProdukt,
-  opprettProdukt,
 } from "./produktAPI";
 import ProduktSkjema from "./produktSkjema";
+import {Feilmelding} from "nav-frontend-typografi";
 
 export const ProduktOppdatering = (): JSX.Element => {
   const history = useHistory();
@@ -42,6 +42,7 @@ export const ProduktOppdatering = (): JSX.Element => {
           onProductReady={handleProduct}
         />
       )}
+      {error && <Feilmelding>{error}</Feilmelding>}
     </div>
   );
 };

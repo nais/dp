@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useReducer, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import ProduktTabell from "./produktTabell";
 import { DataProduktListe, hentProdukter } from "./produktAPI";
 import ProduktFilter from "./produktFilter";
@@ -9,7 +9,6 @@ import { useLocation } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 
 import NavFrontendSpinner from "nav-frontend-spinner";
-import * as z from "zod";
 import { Knapp } from "nav-frontend-knapper";
 import "./hovedside.less";
 
@@ -19,49 +18,6 @@ export type ProduktListeState = {
   products: DataProduktListe;
   filtered_products: DataProduktListe;
   filter: string | null;
-};
-
-const initialState: ProduktListeState = {
-  loading: true,
-  products: [],
-  filtered_products: [],
-  error: null,
-  filter: "",
-};
-
-type ProduktListeFetch = {
-  type: "FETCH_DONE";
-  results: DataProduktListe;
-};
-
-type ProduktListeFilter = {
-  type: "FILTER_CHANGE";
-  filter: string;
-};
-
-const ProduktTabellReducer = (
-  prevState: ProduktListeState,
-  action: ProduktListeFetch | ProduktListeFilter
-): ProduktListeState => {
-  switch (action.type) {
-    case "FETCH_DONE":
-      return {
-        ...prevState,
-        products: action.results,
-        filtered_products: action.results,
-        loading: false,
-        error: null,
-      };
-    case "FILTER_CHANGE":
-      return {
-        ...prevState,
-        filtered_products: prevState.products.filter((p) => {
-          if (action.filter === "") return true;
-          return p.data_product?.team === action.filter;
-        }),
-      };
-  }
-  return prevState;
 };
 
 const ProduktNyKnapp = (): JSX.Element => (
@@ -95,7 +51,7 @@ export const Hovedside = (): JSX.Element => {
       if (localStorageFilters?.length)
         setFilters(JSON.parse(localStorageFilters));
     }
-  }, []);
+  }, [queryParameters]);
 
   useEffect(() => {
     window.localStorage.setItem("filters", JSON.stringify(filters));
@@ -103,7 +59,7 @@ export const Hovedside = (): JSX.Element => {
     history.push({
       search: filters.length ? "?teams=" + filters.join(",") : "",
     });
-  }, [filters]);
+  }, [filters, history]);
 
   useEffect(() => {
     hentProdukter()

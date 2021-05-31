@@ -4,11 +4,7 @@ import moment from "moment";
 import {
   Ingress,
   Normaltekst,
-  Sidetittel,
-  Systemtittel,
 } from "nav-frontend-typografi";
-import { DatalagerInfo } from "./produktDatalager";
-import { ProduktTilganger } from "./produktDetaljTilganger";
 
 export const ProduktFaktaboks: React.FC<{
   produkt: DataProduktResponse;

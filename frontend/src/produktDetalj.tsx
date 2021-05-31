@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
 import {
   Feilmelding,
-  Ingress,
   Sidetittel,
   Systemtittel,
 } from "nav-frontend-typografi";
@@ -17,7 +16,7 @@ import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
 import { ProduktFaktaboks } from "./produktDetaljFaktaboks";
 import { ProduktKnapperad } from "./produktDetaljKnapperad";
-import { DatalagerInfo, ProduktDatalager } from "./produktDatalager";
+import { ProduktDatalager } from "./produktDatalager";
 import { ProduktTilganger } from "./produktDetaljTilganger";
 
 interface ProduktDetaljParams {
@@ -84,10 +83,11 @@ export const ProduktDetalj: React.FC<{
     }
   }, [produkt, setCrumb]);
 
-  if (error)
+  if (error || tilgangerError)
     return (
       <Feilmelding>
         <code>{error}</code>
+        <code>{tilgangerError}</code>
       </Feilmelding>
     );
 
