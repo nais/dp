@@ -1,11 +1,12 @@
 package accessensurer
 
 import (
-	googlefirestore "cloud.google.com/go/firestore"
 	"context"
 	"fmt"
-	"github.com/nais/dp/backend/firestore"
 	"time"
+
+	googlefirestore "cloud.google.com/go/firestore"
+	"github.com/nais/dp/backend/firestore"
 
 	"github.com/nais/dp/backend/config"
 	"github.com/nais/dp/backend/iam"
@@ -71,6 +72,7 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 	toDelete := make([]string, 0)
 
 	for subject, expiry := range dataproduct.Dataproduct.Access {
+		log.Debugf("Ensuring access for %v with expiry %v", subject, expiry)
 		if expiry.IsZero() {
 			log.Infof("Skipping %v in %v, zero-value expiry means it should last forever", subject, datastore["type"])
 			continue

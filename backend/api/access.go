@@ -96,6 +96,8 @@ func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 			Value: dp.Dataproduct.Access,
 		}})
 
+		log.Debugf("Revoking access for %v on datastore: %+v", subject, dp.Dataproduct.Datastore)
+
 		if err := iam.RemoveDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], subject); err != nil {
 			log.Errorf("Removing datastore access: %v", err)
 			respondf(w, http.StatusInternalServerError, "Could not revoke datastore access: %v\n", err)
@@ -126,6 +128,12 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 		} else {
 			respondf(w, http.StatusBadRequest, "unable to get document\n")
 		}
+		return
+	}
+
+	if len(dp.Dataproduct.Datastore) == 0 {
+		log.Errorf("No datastore associated with dataproduct: %v (%v)", dp.ID, dp.Dataproduct.Name)
+		respondf(w, http.StatusBadRequest, "no datastore associated with dataproduct: %v (%v)\n", dp.ID, dp.Dataproduct.Name)
 		return
 	}
 
@@ -170,7 +178,13 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 		Value: dp.Dataproduct.Access,
 	}})
 
-	if err := iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], dp.Dataproduct.Access); err != nil {
+	newAccess := map[string]time.Time{
+		subject: accessSubject.Expires,
+	}
+
+	log.Debugf("Granting access for %v on datastore: %+v", subject, dp.Dataproduct.Datastore)
+
+	if err := iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], newAccess); err != nil {
 		log.Errorf("Granting datastore access: %v", err)
 		respondf(w, http.StatusInternalServerError, "Could not grant datastore access: %v\n", err)
 		return
