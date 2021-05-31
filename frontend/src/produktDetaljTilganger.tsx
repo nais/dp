@@ -33,7 +33,8 @@ export const ProduktTilganger: React.FC<{
     // Hvis produkteier, vis all tilgang;
     if (isOwner(produkt?.data_product, userContext?.teams)) return true;
     // Ellers, vis kun dine egne tilganger.
-    return subject === userContext?.email;
+    const subjectTeam = subject?.split("@")[0]
+    return subject === userContext?.email || (!!subjectTeam && userContext.teams.includes(subjectTeam));
   };
 
   if (!tilganger) return <div>&nbsp;</div>;
