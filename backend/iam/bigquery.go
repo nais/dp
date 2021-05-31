@@ -20,7 +20,7 @@ func UpdateDatasetAccessControl(entity, projectID, datasetID string) error {
 	ds := client.Dataset(datasetID)
 	meta, err := ds.Metadata(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Getting metadata for %v in %v: %v", datasetID, projectID, err)
 	}
 
 	// Append a new access control entry to the existing access list.
@@ -35,7 +35,7 @@ func UpdateDatasetAccessControl(entity, projectID, datasetID string) error {
 	// Leverage the ETag for the update to assert there's been no modifications to the
 	// dataset since the metadata was originally read.
 	if _, err := ds.Update(ctx, update, meta.ETag); err != nil {
-		return err
+		return fmt.Errorf("Updating %v in %v: %v", datasetID, projectID, err)
 	}
 	return nil
 }
@@ -49,7 +49,7 @@ func UpdateBigqueryTableAccessControl(ctx context.Context, projectID, datasetID,
 
 	policy, err := getPolicy(ctx, bqClient, datasetID, tableID)
 	if err != nil {
-		return fmt.Errorf("getPolicy: %v", err)
+		return fmt.Errorf("Getting policy for %v.%v in %v: %v", datasetID, tableID, projectID, err)
 	}
 
 	// no support for V3 for BigQuery yet, and no support for conditions
@@ -71,7 +71,7 @@ func RemoveMemberFromBigQueryTable(ctx context.Context, projectID, datasetID, ta
 
 	policy, err := getPolicy(ctx, bqClient, datasetID, tableID)
 	if err != nil {
-		return fmt.Errorf("getPolicy: %v", err)
+		return fmt.Errorf("Getting policy for %v.%v in %v: %v", datasetID, tableID, projectID, err)
 	}
 
 	// no support for V3 for BigQuery yet, and no support for conditions
@@ -91,7 +91,7 @@ func getPolicy(ctx context.Context, bqclient *bigquery.Client, datasetID, tableI
 	var table *bigquery.Table = dataset.Table(tableID)
 	policy, err := table.IAM().Policy(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Getting policy for %v.%v: %v", datasetID, tableID, err)
 	}
 
 	return policy, nil
@@ -106,7 +106,7 @@ func CheckAccessInBigQueryTable(ctx context.Context, projectID, datasetID, table
 
 	policy, err := getPolicy(ctx, bqClient, datasetID, tableID)
 	if err != nil {
-		return false, fmt.Errorf("getPolicy: %v", err)
+		return false, fmt.Errorf("Getting policy for %v.%v in %v: %v", datasetID, tableID, projectID, err)
 	}
 
 	// no support for V3 for BigQuery yet, and no support for conditions
