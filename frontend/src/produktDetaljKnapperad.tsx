@@ -8,6 +8,7 @@ import {
     hentProdukt,
     isOwner,
 } from "./produktAPI";
+import {useHistory} from "react-router-dom";
 
 export const ProduktKnapperad: React.FC<{
     produkt: DataProduktResponse;
@@ -15,8 +16,9 @@ export const ProduktKnapperad: React.FC<{
     openSlett: () => void;
     openTilgang: () => void;
 }> = ({produkt, tilganger, openSlett, openTilgang}) => {
-    const userContext = useContext(UserContext);
+        const history = useHistory();
 
+        const userContext = useContext(UserContext);
     const harTilgang = (tilganger: DataProduktTilgangListe): boolean => {
         if (!tilganger) return false;
         const tilgangerBehandlet = getCurrentAccessState(tilganger);
@@ -34,20 +36,21 @@ export const ProduktKnapperad: React.FC<{
     };
 
     const ownsProduct = () => isOwner(produkt?.data_product, userContext?.teams)
-    return (
-        <div className="knapperad">
-            {ownsProduct() && (
-                <>
+        return (
+            <div className="knapperad">
+                {ownsProduct() && (
+                    <>
                     <Fareknapp onClick={() => openSlett()}>Slett</Fareknapp>
-                    <Knapp onClick={() => {
+                    <Knapp onClick={() => { history.push(`${produkt.id}/rediger`)
                     }}>Endre produkt</Knapp>
-                </>
-            )}
 
-            {userContext && !harTilgang(tilganger) && produkt?.data_product.datastore && (
-                <Knapp onClick={() => openTilgang()}>Få tilgang</Knapp>
-            )}
-        </div>
-    );
+                    </>
+                )}
+
+                {userContext && !harTilgang(tilganger) && produkt?.data_product.datastore && (
+                    <Knapp onClick={() => openTilgang()}>Få tilgang</Knapp>
+                )}
+            </div>
+        );
 }
 ;

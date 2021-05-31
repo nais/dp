@@ -109,6 +109,7 @@ export const Hovedside = (): JSX.Element => {
           setError(null);
         })
         .catch((e) => {
+          console.log(e)
           setError(e.toString());
         });
   }, []);

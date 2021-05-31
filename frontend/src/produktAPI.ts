@@ -42,7 +42,7 @@ export type DataLager = z.infer<typeof DataLagerSchema>;
 
 export const DataProduktSchema = z.object({
   name: z.string().nonempty(),
-  description: z.string().optional(),
+  description: z.string(),
   team: z.string(),
   datastore: DataLagerSchema.array().optional(),
 });
@@ -151,6 +151,23 @@ export const opprettProdukt = async (
   });
 
   if (res.status !== 201) {
+    throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+  }
+
+  return await res.text();
+};
+
+export const oppdaterProdukt = async (
+    produktID: string,
+    produkt: DataProdukt
+): Promise<string> => {
+  const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
+    method: "PUT",
+    credentials: "include",
+    body: JSON.stringify(produkt),
+  });
+
+  if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${await res.text()}`);
   }
 

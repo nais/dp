@@ -11,6 +11,7 @@ import {Systemtittel} from "nav-frontend-typografi";
 
 import {UserContext} from "./userContext";
 import PageHeader from "./pageHeader";
+import ProduktOppdatering from "./produktOppdatering";
 
 const App = (): JSX.Element => {
     const [crumb, setCrumb] = useState<string | null>(null);
@@ -28,6 +29,7 @@ const App = (): JSX.Element => {
     }
 
     useEffect(() => {
+        validateSession()
         history.listen(validateSession)
     }, []);
 
@@ -44,6 +46,10 @@ const App = (): JSX.Element => {
                                     setCrumb("Nytt produkt");
                                     return <ProduktNytt/>;
                                 }}
+                            />
+                            <Route
+                                path="/produkt/:produktID/rediger"
+                                children={<ProduktOppdatering />}
                             />
                             <Route
                                 path="/produkt/:produktID"
