@@ -1,7 +1,7 @@
 import React from "react";
 import "nav-frontend-tabell-style";
 import NavFrontendSpinner from "nav-frontend-spinner";
-import {DataProduktListe, DataProduktResponse} from "./produktAPI";
+import { DataProduktListe, DataProduktResponse } from "./produktAPI";
 import { Link } from "react-router-dom";
 import "./produktTabell.less";
 interface ProduktProps {
@@ -21,7 +21,9 @@ const Produkt = ({ produkt }: ProduktProps) => {
   );
 };
 
-export const ProduktTabell: React.FC<{produkter?: DataProduktListe}> = ({ produkter }) => {
+export const ProduktTabell: React.FC<{ produkter?: DataProduktListe }> = ({
+  produkter,
+}) => {
   return (
     <div className="produkt-liste">
       <table className="tabell">
@@ -33,12 +35,11 @@ export const ProduktTabell: React.FC<{produkter?: DataProduktListe}> = ({ produk
           </tr>
         </thead>
         <tbody>
-          {produkter && produkter.map((x) => (
-              <Produkt key={x.id} produkt={x} />
-            ))}
+          {produkter &&
+            produkter.map((x) => <Produkt key={x.id} produkt={x} />)}
         </tbody>
       </table>
-      {(typeof produkter !== 'undefined') && !produkter.length ? (
+      {typeof produkter !== "undefined" && !produkter.length ? (
         <p style={{ textAlign: "center", fontStyle: "italic", margin: "2%" }}>
           Ingen dataprodukter i katalogen
         </p>

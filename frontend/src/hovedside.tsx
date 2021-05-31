@@ -6,7 +6,7 @@ import { Add } from "@navikt/ds-icons";
 import { Link } from "react-router-dom";
 import { UserContext } from "./userContext";
 import { useLocation } from "react-router-dom";
-import { useHistory } from 'react-router-dom'
+import { useHistory } from "react-router-dom";
 
 import NavFrontendSpinner from "nav-frontend-spinner";
 import * as z from "zod";
@@ -81,37 +81,40 @@ export const Hovedside = (): JSX.Element => {
   const user = useContext(UserContext);
   const query = useQuery();
   const history = useHistory();
-  const queryParameters = (query.get('teams') || null)?.split(',');
+  const queryParameters = (query.get("teams") || null)?.split(",");
 
   const [error, setError] = useState<string | null>();
-  const [filters, setFilters] = useState<string[]>(queryParameters? queryParameters : []);
+  const [filters, setFilters] = useState<string[]>(
+    queryParameters ? queryParameters : []
+  );
   const [produkter, setProdukter] = useState<DataProduktListe>();
 
   useEffect(() => {
     if (!queryParameters) {
-      const localStorageFilters = window.localStorage.getItem("filters")
-      if (localStorageFilters?.length) setFilters(JSON.parse(localStorageFilters))
+      const localStorageFilters = window.localStorage.getItem("filters");
+      if (localStorageFilters?.length)
+        setFilters(JSON.parse(localStorageFilters));
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("filters", JSON.stringify(filters))
+    window.localStorage.setItem("filters", JSON.stringify(filters));
 
     history.push({
-      search: filters.length ? '?teams=' + filters.join(',') : ''
-    })
-  }, [filters])
+      search: filters.length ? "?teams=" + filters.join(",") : "",
+    });
+  }, [filters]);
 
   useEffect(() => {
     hentProdukter()
-        .then((produkter) => {
-          setProdukter(produkter);
-          setError(null);
-        })
-        .catch((e) => {
-          console.log(e)
-          setError(e.toString());
-        });
+      .then((produkter) => {
+        setProdukter(produkter);
+        setError(null);
+      })
+      .catch((e) => {
+        console.log(e);
+        setError(e.toString());
+      });
   }, []);
 
   if (error) {
@@ -133,10 +136,18 @@ export const Hovedside = (): JSX.Element => {
   return (
     <div>
       <div className="filter-and-button">
-        <ProduktFilter produkter={produkter} filters={filters} setFilters={setFilters} />
+        <ProduktFilter
+          produkter={produkter}
+          filters={filters}
+          setFilters={setFilters}
+        />
         {user ? <ProduktNyKnapp /> : <></>}
       </div>
-      <ProduktTabell produkter={produkter?.filter(p => (!filters.length) || filters.includes(p.data_product.team))} />
+      <ProduktTabell
+        produkter={produkter?.filter(
+          (p) => !filters.length || filters.includes(p.data_product.team)
+        )}
+      />
     </div>
   );
 };

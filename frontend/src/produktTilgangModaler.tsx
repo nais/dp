@@ -29,7 +29,11 @@ export const GiTilgang: React.FC<{
 
   const handleSubmit = async () => {
     try {
-      await giTilgang(produkt, userContext.email, evig ? null : endDate?.toISOString() || null);
+      await giTilgang(
+        produkt,
+        userContext.email,
+        evig ? null : endDate?.toISOString() || null
+      );
       setFeilmelding(null);
       refreshAccessState();
     } catch (e) {
@@ -56,7 +60,7 @@ export const GiTilgang: React.FC<{
             pressed: true,
             onClick: (e) => setEvig(false),
           },
-          { children: "evig", onClick: (e) => setEvig(true)},
+          { children: "evig", onClick: (e) => setEvig(true) },
         ]}
       />
 

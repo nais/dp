@@ -70,7 +70,9 @@ export type DataProduktPartial = z.infer<typeof DataProduktPartialSchema>;
 export type DataProduktResponse = z.infer<typeof DataProduktResponseSchema>;
 export type DataProduktListe = z.infer<typeof DataProduktListSchema>;
 export type BrukerInfo = z.infer<typeof BrukerInfoSchema>;
-export type DataProduktTilgangOppdatering = z.infer<typeof DataProduktTilgangOppdateringSchema>;
+export type DataProduktTilgangOppdatering = z.infer<
+  typeof DataProduktTilgangOppdateringSchema
+>;
 export type DataProduktTilgangResponse = z.infer<
   typeof DataProduktTilgangResponseSchema
 >;
@@ -158,8 +160,8 @@ export const opprettProdukt = async (
 };
 
 export const oppdaterProdukt = async (
-    produktID: string,
-    produkt: DataProdukt
+  produktID: string,
+  produkt: DataProdukt
 ): Promise<string> => {
   const res = await fetch(`${API_ROOT}/dataproducts/${produktID}`, {
     method: "PUT",
@@ -209,7 +211,7 @@ export const giTilgang = async (
 
 export const hentBrukerInfo = async (): Promise<BrukerInfo> => {
   const res = await fetch(`${API_ROOT}/userinfo`, { credentials: "include" });
-  if (!res.ok) throw new Error("unable to fetch userinfo")
+  if (!res.ok) throw new Error("unable to fetch userinfo");
   const json = await res.json();
   return BrukerInfoSchema.parse(json);
 };

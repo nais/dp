@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useContext } from "react";
 import { Link, useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
-import {Feilmelding, Ingress, Sidetittel, Systemtittel} from "nav-frontend-typografi";
+import {
+  Feilmelding,
+  Ingress,
+  Sidetittel,
+  Systemtittel,
+} from "nav-frontend-typografi";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
@@ -62,15 +67,15 @@ export const ProduktDetalj: React.FC<{
 
   const refreshAccessState = () => {
     setTilgangIsOpen(false);
-      // TODO: Use hooks more elegantly
-      hentProdukt(produktID)
-        .then((p) => {
-          setProdukt(p);
-          setError(null);
-        })
-        .catch((e) => {
-          setError(e.toString());
-        });
+    // TODO: Use hooks more elegantly
+    hentProdukt(produktID)
+      .then((p) => {
+        setProdukt(p);
+        setError(null);
+      })
+      .catch((e) => {
+        setError(e.toString());
+      });
   };
 
   useEffect(() => {
@@ -110,10 +115,16 @@ export const ProduktDetalj: React.FC<{
           produkt={produkt}
         />
         <Sidetittel>
-          <Link to={{
-            pathname: "/",
-            search: `?teams=${produkt.data_product.team}`
-          }}>{produkt.data_product.team}</Link> / {produkt.data_product.name}</Sidetittel>
+          <Link
+            to={{
+              pathname: "/",
+              search: `?teams=${produkt.data_product.team}`,
+            }}
+          >
+            {produkt.data_product.team}
+          </Link>{" "}
+          / {produkt.data_product.name}
+        </Sidetittel>
 
         <FaktaboksAvsnitt>
           <Systemtittel>Produkt</Systemtittel>
@@ -126,7 +137,11 @@ export const ProduktDetalj: React.FC<{
         </FaktaboksAvsnitt>
         <FaktaboksAvsnitt>
           <Systemtittel>Tilganger</Systemtittel>
-          <ProduktTilganger produkt={produkt} tilganger={tilganger} refreshAccessState={refreshAccessState}/>
+          <ProduktTilganger
+            produkt={produkt}
+            tilganger={tilganger}
+            refreshAccessState={refreshAccessState}
+          />
         </FaktaboksAvsnitt>
       </div>
 
