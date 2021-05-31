@@ -2,6 +2,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -24,7 +25,7 @@ func UpdateBucketAccessControl(ctx context.Context, bucketName, member string, e
 	bucket := client.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Getting policy for %v: %v", bucketName, err)
 	}
 	expression := getCondition(time.Now(), end)
 
@@ -37,7 +38,7 @@ func UpdateBucketAccessControl(ctx context.Context, bucketName, member string, e
 		},
 	})
 	if err := bucket.IAM().V3().SetPolicy(ctx, policy); err != nil {
-		return err
+		return fmt.Errorf("Setting policy for %v: %v", bucketName, err)
 	}
 	// NOTE: It may be necessary to retry this operation if IAM policies are
 	// being modified concurrently. SetPolicy will return an error if the policy
@@ -75,7 +76,7 @@ func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string
 	bucket := client.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("Getting policy for %v: %v", bucketName, err)
 	}
 
 	newBindings := make([]*iampb.Binding, 0)
@@ -94,7 +95,7 @@ func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string
 	policy.Bindings = newBindings
 
 	if err := bucket.IAM().V3().SetPolicy(ctx, policy); err != nil {
-		return err
+		return fmt.Errorf("Setting policy for %v: %v", bucketName, err)
 	}
 	// NOTE: It may be necessary to retry this operation if IAM policies are
 	// being modified concurrently. SetPolicy will return an error if the policy
@@ -113,7 +114,7 @@ func CheckAccessInBucket(ctx context.Context, bucketName, bucketMember string) (
 	bucket := client.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("Getting policy for %v: %v", bucketName, err)
 	}
 	for _, binding := range policy.Bindings {
 		if binding.Role == "roles/storage.objectViewer" {
