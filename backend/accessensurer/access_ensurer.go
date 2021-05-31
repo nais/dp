@@ -74,7 +74,11 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 	for subject, expiry := range dataproduct.Dataproduct.Access {
 		log.Debugf("Ensuring access for %v with expiry %v", subject, expiry)
 		if expiry.IsZero() {
-			log.Infof("Skipping %v in %v, zero-value expiry means it should last forever", subject, datastore["type"])
+			log.Infof("Ensuring access for %v in %v, zero-value expiry means it should last forever", subject, datastore["type"])
+			err := a.ensureAccess(dataproduct.ID, datastore, subject, expiry)
+			if err != nil {
+				return err
+			}
 			continue
 		}
 		if expiry.Before(time.Now()) {
@@ -91,21 +95,9 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 
 			toDelete = append(toDelete, subject)
 		} else {
-			access, err := iam.CheckDatastoreAccess(a.ctx, datastore, subject)
+			err := a.ensureAccess(dataproduct.ID, datastore, subject, expiry)
 			if err != nil {
 				return err
-			}
-			if !access {
-				log.Infof("Access state out of sync with Google %v, giving access to %v", datastore["type"], subject)
-				accessMap := map[string]time.Time{subject: expiry}
-				if err := iam.UpdateDatastoreAccess(a.ctx, datastore, accessMap); err != nil {
-					return err
-				}
-
-				update := firestore.Grant(AccessEnsurance2000, dataproduct.ID, subject, expiry)
-				if err := a.firestore.AddAccessUpdate(a.ctx, update); err != nil {
-					log.Errorf("Adding access update: %v", err)
-				}
 			}
 		}
 	}
@@ -125,6 +117,26 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 	update := firestore.Verify(AccessEnsurance2000, dataproduct.ID)
 	if err := a.firestore.AddAccessUpdate(a.ctx, update); err != nil {
 		log.Errorf("Adding access update: %v", err)
+	}
+	return nil
+}
+
+func (a *AccessEnsurer) ensureAccess(dataproductID string, datastore map[string]string, subject string, expiry time.Time) error {
+	access, err := iam.CheckDatastoreAccess(a.ctx, datastore, subject)
+	if err != nil {
+		return err
+	}
+	if !access {
+		log.Infof("Access state out of sync with Google %v, giving access to %v", datastore["type"], subject)
+		accessMap := map[string]time.Time{subject: expiry}
+		if err := iam.UpdateDatastoreAccess(a.ctx, datastore, accessMap); err != nil {
+			return err
+		}
+
+		update := firestore.Grant(AccessEnsurance2000, dataproductID, subject, expiry)
+		if err := a.firestore.AddAccessUpdate(a.ctx, update); err != nil {
+			log.Errorf("Adding access update: %v", err)
+		}
 	}
 	return nil
 }
