@@ -39,44 +39,42 @@ const App = (): JSX.Element => {
   }, [history]);
 
   return (
-    <div className={"dashboard-main"}>
-      <div className="app">
-        <UserContext.Provider value={user}>
-          <PageHeader crumbs={crumb} />
-          <main>
-            <Switch>
-              <Route
-                path="/produkt/nytt"
-                children={() => {
-                  setCrumb("Nytt produkt");
-                  return <ProduktNytt />;
-                }}
-              />
-              <Route
-                path="/produkt/:produktID/rediger"
-                children={<ProduktOppdatering />}
-              />
-              <Route
-                path="/produkt/:produktID"
-                children={<ProduktDetalj setCrumb={setCrumb} />}
-              />
-              <Route
-                exact
-                path="/"
-                children={() => {
-                  setCrumb(null);
-                  return <Hovedside />;
-                }}
-              />
-              <Route path="*">
-                <Systemtittel>404 - ikke funnet</Systemtittel>
-              </Route>
-            </Switch>
-          </main>
-        </UserContext.Provider>
-      </div>
+    <div className={"dashboard-main app"}>
+      <UserContext.Provider value={user}>
+        <PageHeader crumbs={crumb} />
+        <main>
+          <Switch>
+            <Route
+              path="/produkt/nytt"
+              children={() => {
+                setCrumb("Nytt produkt");
+                return <ProduktNytt />;
+              }}
+            />
+            <Route
+              path="/produkt/:produktID/rediger"
+              children={<ProduktOppdatering />}
+            />
+            <Route
+              path="/produkt/:produktID"
+              children={<ProduktDetalj setCrumb={setCrumb} />}
+            />
+            <Route
+              exact
+              path="/"
+              children={() => {
+                setCrumb(null);
+                return <Hovedside />;
+              }}
+            />
+            <Route path="*">
+              <Systemtittel>404 - ikke funnet</Systemtittel>
+            </Route>
+          </Switch>
+        </main>
+      </UserContext.Provider>
     </div>
-  );
+  );..
 };
 
 ReactDOM.render(
