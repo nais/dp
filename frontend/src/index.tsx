@@ -74,7 +74,7 @@ const App = (): JSX.Element => {
         </main>
       </UserContext.Provider>
     </div>
-  );..
+  );
 };
 
 ReactDOM.render(
