@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
-import {
-  Feilmelding,
-  Sidetittel,
-  Systemtittel,
-} from "nav-frontend-typografi";
+import { Feilmelding, Sidetittel, Systemtittel } from "nav-frontend-typografi";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,

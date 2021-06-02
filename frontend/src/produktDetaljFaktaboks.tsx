@@ -1,10 +1,7 @@
 import React from "react";
 import { DataProduktResponse, DataProduktTilgangListe } from "./produktAPI";
 import moment from "moment";
-import {
-  Ingress,
-  Normaltekst,
-} from "nav-frontend-typografi";
+import { Ingress, Normaltekst } from "nav-frontend-typografi";
 
 export const ProduktFaktaboks: React.FC<{
   produkt: DataProduktResponse;

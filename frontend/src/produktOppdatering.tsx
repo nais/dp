@@ -7,7 +7,7 @@ import {
   oppdaterProdukt,
 } from "./produktAPI";
 import ProduktSkjema from "./produktSkjema";
-import {Feilmelding} from "nav-frontend-typografi";
+import { Feilmelding } from "nav-frontend-typografi";
 
 export const ProduktOppdatering = (): JSX.Element => {
   const history = useHistory();

@@ -16,7 +16,10 @@ const Produkt = ({ produkt }: ProduktProps) => {
       <td>
         <Link to={`/produkt/${produkt.id}`}>{produkt.data_product.name}</Link>
       </td>
-      <td>{produkt.data_product.datastore && produkt.data_product.datastore[0].type}</td>
+      <td>
+        {produkt.data_product.datastore &&
+          produkt.data_product.datastore[0].type}
+      </td>
       <td>{produkt.data_product.description}</td>
     </tr>
   );
