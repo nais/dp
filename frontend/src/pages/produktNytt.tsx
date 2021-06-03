@@ -1,7 +1,6 @@
 import React from "react";
 
 import { opprettProdukt, DataProdukt } from "../lib/produktAPI";
-import "react-datepicker/dist/react-datepicker.css";
 import { useHistory } from "react-router-dom";
 import ProduktSkjema from "../components/produktSkjema";
 

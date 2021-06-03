@@ -5,6 +5,7 @@ import {
   DataProduktResponse,
   slettProdukt,
 } from "../lib/produktAPI";
+import "react-datepicker/dist/react-datepicker.css";
 import { UserContext } from "../lib/userContext";
 import Modal from "nav-frontend-modal";
 import { ToggleGruppe } from "nav-frontend-toggle";
