@@ -4,16 +4,35 @@ import { Hovedknapp } from "nav-frontend-knapper";
 import { Child, Next } from "@navikt/ds-icons";
 import { UserContext } from "../lib/userContext";
 import { NaisPrideLogo } from "./svgIcons";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useHistory } from "react-router-dom";
 import { Systemtittel } from "nav-frontend-typografi";
 import "./pageHeader.less";
 
 const BrukerBoks: React.FC = () => {
   const user = useContext(UserContext);
+  const history = useHistory();
+  const location = useLocation();
+
+  const hasPendingRedirect = (): boolean =>
+    !!window.localStorage.getItem("postLoginRedirect");
+  const popPendingRedirect = (): string => {
+    const newPath = window.localStorage.getItem("postLoginRedirect");
+    window.localStorage.removeItem("postLoginRedirect");
+    return newPath || "";
+  };
+  const pushPendingRedirect = (path: string) =>
+    window.localStorage.setItem("postLoginRedirect", path);
+  if (hasPendingRedirect()) history.push(popPendingRedirect());
 
   if (!user) {
     return (
-      <a className="innloggingsknapp" href={`${BACKEND_ENDPOINT}/login`}>
+      <a
+        className="innloggingsknapp"
+        onClick={() => {
+          pushPendingRedirect(location.pathname);
+        }}
+        href={`${BACKEND_ENDPOINT}/login`}
+      >
         <Hovedknapp className="innloggingsknapp">logg inn</Hovedknapp>
       </a>
     );
