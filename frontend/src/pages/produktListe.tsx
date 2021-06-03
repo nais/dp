@@ -12,14 +12,6 @@ import NavFrontendSpinner from "nav-frontend-spinner";
 import { Knapp } from "nav-frontend-knapper";
 import "./produktListe.less";
 
-export type ProduktListeState = {
-  loading: boolean;
-  error: string | null;
-  products: DataProduktListe;
-  filtered_products: DataProduktListe;
-  filter: string | null;
-};
-
 const ProduktNyKnapp = (): JSX.Element => (
   <div className={"nytt-produkt"}>
     <Link to="/produkt/nytt">
@@ -30,13 +22,16 @@ const ProduktNyKnapp = (): JSX.Element => (
     </Link>
   </div>
 );
+
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
+
 export const ProduktListe = (): JSX.Element => {
   const user = useContext(UserContext);
   const query = useQuery();
   const history = useHistory();
+
   const queryParameters = (query.get("teams") || null)?.split(",");
 
   const [error, setError] = useState<string | null>();
@@ -74,7 +69,7 @@ export const ProduktListe = (): JSX.Element => {
   }, []);
 
   if (error) {
-    setTimeout(() => window.location.reload(false), 1500);
+    setTimeout(() => window.location.reload(), 1500);
     return (
       <div className={"feilBoks"}>
         <div>
@@ -97,7 +92,7 @@ export const ProduktListe = (): JSX.Element => {
           filters={filters}
           setFilters={setFilters}
         />
-        {user ? <ProduktNyKnapp /> : <></>}
+        {user && <ProduktNyKnapp />}
       </div>
       <ProduktTabell
         produkter={produkter?.filter(
