@@ -1,7 +1,11 @@
 import { Feilmelding, Systemtittel } from "nav-frontend-typografi";
 import React, { useState, useContext } from "react";
-import { giTilgang, DataProduktResponse, slettProdukt } from "./produktAPI";
-import { UserContext } from "./userContext";
+import {
+  giTilgang,
+  DataProduktResponse,
+  slettProdukt,
+} from "../lib/produktAPI";
+import { UserContext } from "../lib/userContext";
 import Modal from "nav-frontend-modal";
 import { ToggleGruppe } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";

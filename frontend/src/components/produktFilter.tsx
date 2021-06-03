@@ -1,9 +1,9 @@
 import React, { useContext, useEffect, useState } from "react";
 import "./produktFilter.less";
 import Select from "react-select";
-import { DataProduktListe } from "./produktAPI";
+import { DataProduktListe } from "../lib/produktAPI";
 import { Knapp } from "nav-frontend-knapper";
-import { UserContext } from "./userContext";
+import { UserContext } from "../lib/userContext";
 
 export const ProduktFilter: React.FC<{
   produkter?: DataProduktListe;

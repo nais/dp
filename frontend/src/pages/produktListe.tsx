@@ -1,16 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
-import ProduktTabell from "./produktTabell";
-import { DataProduktListe, hentProdukter } from "./produktAPI";
-import ProduktFilter from "./produktFilter";
+import ProduktTabell from "../components/produktTabell";
+import { DataProduktListe, hentProdukter } from "../lib/produktAPI";
+import ProduktFilter from "../components/produktFilter";
 import { Add } from "@navikt/ds-icons";
 import { Link } from "react-router-dom";
-import { UserContext } from "./userContext";
+import { UserContext } from "../lib/userContext";
 import { useLocation } from "react-router-dom";
 import { useHistory } from "react-router-dom";
 
 import NavFrontendSpinner from "nav-frontend-spinner";
 import { Knapp } from "nav-frontend-knapper";
-import "./hovedside.less";
+import "./produktListe.less";
 
 export type ProduktListeState = {
   loading: boolean;
@@ -33,7 +33,7 @@ const ProduktNyKnapp = (): JSX.Element => (
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
-export const Hovedside = (): JSX.Element => {
+export const ProduktListe = (): JSX.Element => {
   const user = useContext(UserContext);
   const query = useQuery();
   const history = useHistory();

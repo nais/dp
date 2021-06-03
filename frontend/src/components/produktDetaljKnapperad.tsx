@@ -1,12 +1,12 @@
 import { Fareknapp, Knapp } from "nav-frontend-knapper";
 import React, { useContext } from "react";
-import { UserContext } from "./userContext";
+import { UserContext } from "../lib/userContext";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
   getCurrentAccessState,
   isOwner,
-} from "./produktAPI";
+} from "../lib/produktAPI";
 import { useHistory } from "react-router-dom";
 
 export const ProduktKnapperad: React.FC<{

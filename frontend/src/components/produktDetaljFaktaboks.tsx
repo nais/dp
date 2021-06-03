@@ -1,5 +1,8 @@
 import React from "react";
-import { DataProduktResponse, DataProduktTilgangListe } from "./produktAPI";
+import {
+  DataProduktResponse,
+  DataProduktTilgangListe,
+} from "../lib/produktAPI";
 import moment from "moment";
 import { Ingress, Normaltekst } from "nav-frontend-typografi";
 

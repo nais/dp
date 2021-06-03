@@ -6,8 +6,8 @@ import {
   getCurrentAccessState,
   deleteAccess,
   isOwner,
-} from "./produktAPI";
-import { UserContext } from "./userContext";
+} from "../lib/produktAPI";
+import { UserContext } from "../lib/userContext";
 import "moment/locale/nb";
 import moment from "moment";
 import {

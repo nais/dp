@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GiTilgang, SlettProdukt } from "./produktTilgangModaler";
+import { GiTilgang, SlettProdukt } from "../components/produktTilgangModaler";
 import { Feilmelding, Sidetittel, Systemtittel } from "nav-frontend-typografi";
 import {
   DataProduktResponse,
   DataProduktTilgangListe,
   hentProdukt,
   hentTilganger,
-} from "./produktAPI";
+} from "../lib/produktAPI";
 import NavFrontendSpinner from "nav-frontend-spinner";
 import "./produktDetalj.less";
-import { ProduktFaktaboks } from "./produktDetaljFaktaboks";
-import { ProduktKnapperad } from "./produktDetaljKnapperad";
-import { ProduktDatalager } from "./produktDatalager";
-import { ProduktTilganger } from "./produktDetaljTilganger";
+import { ProduktFaktaboks } from "../components/produktDetaljFaktaboks";
+import { ProduktKnapperad } from "../components/produktDetaljKnapperad";
+import { ProduktDatalager } from "../components/produktDatalager";
+import { ProduktTilganger } from "../components/produktDetaljTilganger";
 
 interface ProduktDetaljParams {
   produktID: string;

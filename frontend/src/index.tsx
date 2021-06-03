@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import "./index.less";
-import reportWebVitals from "./reportWebVitals";
-import { hentBrukerInfo, BrukerInfo } from "./produktAPI";
-import { Hovedside } from "./hovedside";
+import reportWebVitals from "./lib/reportWebVitals";
+import { hentBrukerInfo, BrukerInfo } from "./lib/produktAPI";
+import { ProduktListe } from "./pages/produktListe";
 import {
   useHistory,
   BrowserRouter as Router,
   Switch,
   Route,
 } from "react-router-dom";
-import ProduktDetalj from "./produktDetalj";
-import ProduktNytt from "./produktNytt";
+import ProduktDetalj from "./pages/produktDetalj";
+import ProduktNytt from "./pages/produktNytt";
 import { Systemtittel } from "nav-frontend-typografi";
 
-import { UserContext } from "./userContext";
-import PageHeader from "./pageHeader";
-import ProduktOppdatering from "./produktOppdatering";
+import { UserContext } from "./lib/userContext";
+import PageHeader from "./components/pageHeader";
+import ProduktOppdatering from "./pages/produktOppdatering";
 
 const App = (): JSX.Element => {
   const [crumb, setCrumb] = useState<string | null>(null);
@@ -64,7 +64,7 @@ const App = (): JSX.Element => {
               path="/"
               children={() => {
                 setCrumb(null);
-                return <Hovedside />;
+                return <ProduktListe />;
               }}
             />
             <Route path="*">

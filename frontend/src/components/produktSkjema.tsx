@@ -7,10 +7,10 @@ import {
   DataLagerBucketSchema,
   DataProdukt,
   DataProduktSchema,
-} from "./produktAPI";
+} from "../lib/produktAPI";
 import { ZodError } from "zod";
 import { Input, Select, SkjemaGruppe } from "nav-frontend-skjema";
-import { UserContext } from "./userContext";
+import { UserContext } from "../lib/userContext";
 import { Feilmelding } from "nav-frontend-typografi";
 import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
 

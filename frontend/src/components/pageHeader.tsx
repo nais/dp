@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
-import { BACKEND_ENDPOINT } from "./produktAPI";
+import { BACKEND_ENDPOINT } from "../lib/produktAPI";
 import { Hovedknapp } from "nav-frontend-knapper";
 import { Child, Next } from "@navikt/ds-icons";
-import { UserContext } from "./userContext";
+import { UserContext } from "../lib/userContext";
 import { NaisPrideLogo } from "./svgIcons";
 import { Link } from "react-router-dom";
 import { Systemtittel } from "nav-frontend-typografi";

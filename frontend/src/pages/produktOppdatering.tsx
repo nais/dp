@@ -5,8 +5,8 @@ import {
   DataProduktResponse,
   hentProdukt,
   oppdaterProdukt,
-} from "./produktAPI";
-import ProduktSkjema from "./produktSkjema";
+} from "../lib/produktAPI";
+import ProduktSkjema from "../components/produktSkjema";
 import { Feilmelding } from "nav-frontend-typografi";
 
 export const ProduktOppdatering = (): JSX.Element => {

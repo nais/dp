@@ -4,7 +4,7 @@ import {
   DataLagerBigquery,
   DataLagerBucket,
   DataProduktResponse,
-} from "./produktAPI";
+} from "../lib/produktAPI";
 import { BigQueryIcon, BucketIcon } from "./svgIcons";
 import "./produktDatalager.less";
 import { Normaltekst, Undertittel } from "nav-frontend-typografi";
