@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nais/dp/backend/firestore"
 	"net/http"
+	"os"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -24,6 +25,19 @@ type api struct {
 	validate  *validator.Validate
 	config    config.Config
 	teamUUIDs map[string]string
+}
+
+func ServeStatic(router *chi.Mux) {
+	root := "./public"
+	fs := http.FileServer(http.Dir(root))
+
+	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat(root + r.RequestURI); os.IsNotExist(err) {
+			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
+		} else {
+			fs.ServeHTTP(w, r)
+		}
+	})
 }
 
 func New(firestore *firestore.Firestore, config config.Config, teamUUIDs map[string]string) chi.Router {
@@ -83,6 +97,7 @@ func New(firestore *firestore.Firestore, config config.Config, teamUUIDs map[str
 			r.Get("/{productID}", api.getAccessUpdatesForProduct)
 		})
 	})
+	ServeStatic(r)
 
 	return r
 }
