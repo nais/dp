@@ -11,7 +11,15 @@ COPY . .
 RUN make test
 RUN make linux-build
 
+FROM node:16-alpine as frontend-builder
+COPY /frontend /frontend
+WORKDIR /frontend
+RUN yarn install
+RUN yarn build
+
+
 FROM alpine:3
 WORKDIR /app
+COPY --from=frontend-builder /frontend/build/ /app/public/
 COPY --from=builder /src/dp /app/dp
 CMD ["/app/dp"]
