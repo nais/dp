@@ -6,6 +6,7 @@ import (
 	"github.com/nais/dp/backend/accessensurer"
 	"github.com/nais/dp/backend/auth"
 	firestore "github.com/nais/dp/backend/firestore"
+	"github.com/nais/dp/backend/teamprojectsupdater"
 	"net/http"
 	"os"
 	"time"
@@ -23,6 +24,7 @@ var cfg = config.DefaultConfig()
 const (
 	TeamsUpdateFrequency        = 5 * time.Minute
 	EnsureAccessUpdateFrequency = 5 * time.Minute
+	TeamProjectsUpdateFrequency = 5 * time.Minute
 )
 
 func init() {
@@ -55,6 +57,10 @@ func main() {
 
 	teamUUIDs := make(map[string]string)
 	go auth.UpdateTeams(ctx, teamUUIDs, cfg.TeamsURL, cfg.TeamsToken, TeamsUpdateFrequency)
+
+	teamProjectsMapping := make(map[string][]string)
+	go teamprojectsupdater.New(ctx, teamProjectsMapping, cfg, TeamProjectsUpdateFrequency, nil).Run()
+
 	go accessensurer.New(ctx, cfg, firestore, EnsureAccessUpdateFrequency).Run()
 
 	api := api.New(firestore, cfg, teamUUIDs)

@@ -12,7 +12,7 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/go-chi/jwtauth v1.2.0
 	github.com/go-playground/universal-translator v0.17.0 // indirect
-	github.com/hashicorp/hcl/v2 v2.10.0
+	github.com/hashicorp/hcl v1.0.0
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/prometheus/client_golang v1.10.0
 	github.com/sirupsen/logrus v1.8.1

@@ -1,17 +1,17 @@
 package config
 
 type Config struct {
-	BindAddress         string
-	LogLevel            string
-	DevMode             bool
-	Firestore           FirestoreConfig
-	OAuth2              OAuth2Config
-	TeamsURL            string
-	TeamGCPProjectsDev  string
-	TeamGCPProjectsProd string
-	TeamsToken          string
-	Hostname            string
-	State               string
+	BindAddress               string
+	LogLevel                  string
+	DevMode                   bool
+	Firestore                 FirestoreConfig
+	OAuth2                    OAuth2Config
+	TeamsURL                  string
+	DevTeamProjectsOutputURL  string
+	ProdTeamProjectsOutputURL string
+	TeamsToken                string
+	Hostname                  string
+	State                     string
 }
 
 type FirestoreConfig struct {
@@ -33,8 +33,8 @@ func DefaultConfig() Config {
 		Firestore: FirestoreConfig{
 			GoogleProjectID: "aura-dev-d9f5",
 		},
-		TeamsURL:            "https://raw.githubusercontent.com/navikt/teams/main/teams.json",
-		TeamGCPProjectsDev:  "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/dev/teams.tf",
-		TeamGCPProjectsProd: "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/prod/teams.tf",
+		TeamsURL:                  "https://raw.githubusercontent.com/navikt/teams/main/teams.json",
+		DevTeamProjectsOutputURL:  "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/dev/teams.tf",
+		ProdTeamProjectsOutputURL: "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/prod/teams.tf",
 	}
 }

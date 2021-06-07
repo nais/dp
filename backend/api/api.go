@@ -110,9 +110,9 @@ func (a *api) login(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) userInfo(w http.ResponseWriter, r *http.Request) {
 	var userInfo struct {
-		Email string    `json:"email"`
-		Teams []string  `json:"teams"`
-		TokenExpiry int `json:"token_expires"`
+		Email       string   `json:"email"`
+		Teams       []string `json:"teams"`
+		TokenExpiry int      `json:"token_expires"`
 	}
 
 	userInfo.Teams = r.Context().Value("teams").([]string)
