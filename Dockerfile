@@ -14,9 +14,9 @@ RUN make linux-build
 FROM node:16-alpine as frontend-builder
 COPY /frontend /frontend
 WORKDIR /frontend
+ENV BACKEND_ENDPOINT /
 RUN yarn install
 RUN yarn build
-
 
 FROM alpine:3
 WORKDIR /app
