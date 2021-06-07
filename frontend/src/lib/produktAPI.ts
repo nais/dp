@@ -1,7 +1,6 @@
 import * as z from "zod";
-
 export const BACKEND_ENDPOINT =
-  process.env.REACT_APP_BACKEND_ENDPOINT || "http://localhost:8080";
+  process.env.NODE_ENV === "development" ? "http://localhost:8080" : "";
 export const API_ROOT = `${BACKEND_ENDPOINT}/api/v1`;
 
 const DataProduktTilgangOppdateringSchema = z.object({
