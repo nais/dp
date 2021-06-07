@@ -34,7 +34,7 @@ func DefaultConfig() Config {
 			GoogleProjectID: "aura-dev-d9f5",
 		},
 		TeamsURL:                  "https://raw.githubusercontent.com/navikt/teams/main/teams.json",
-		DevTeamProjectsOutputURL:  "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/dev/teams.tf",
-		ProdTeamProjectsOutputURL: "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/prod/teams.tf",
+		DevTeamProjectsOutputURL:  "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/dev-output.json",
+		ProdTeamProjectsOutputURL: "https://raw.githubusercontent.com/nais/teams/master/gcp-projects/prod-output.json",
 	}
 }

@@ -35,16 +35,24 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 
 	if !access {
 		respondf(w, http.StatusUnauthorized, "unauthorized\n")
+		return
 	}
 
 	for _, ds := range dpi.Datastore {
 		if err := ValidateDatastore(ds); err != nil {
 			respondf(w, http.StatusUnauthorized, "invalid datastore: %v\n", err)
+			return
+		}
+
+		if !a.requesterHasAccessToDatastore(r.Context(), dpi.Datastore[0]) {
+			respondf(w, http.StatusUnauthorized, "requester doesn't have access to datastore project\n")
+			return
 		}
 	}
 
 	if err := a.firestore.UpdateDataproduct(r.Context(), dpID, dpi); err != nil {
 		respondf(w, http.StatusBadRequest, "Update failed: %v", err)
+		return
 	}
 }
 
@@ -83,6 +91,11 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 		if errs := ValidateDatastore(dpi.Datastore[0]); errs != nil {
 			log.Errorf("Validation fails: %v", errs)
 			respondf(w, http.StatusBadRequest, "Validation failed: %v", errs)
+			return
+		}
+
+		if !a.requesterHasAccessToDatastore(r.Context(), dpi.Datastore[0]) {
+			respondf(w, http.StatusUnauthorized, "requester doesn't have access to datastore project\n")
 			return
 		}
 	}

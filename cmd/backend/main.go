@@ -37,6 +37,8 @@ func init() {
 	flag.StringVar(&cfg.Firestore.AccessUpdatesCollection, "access-updates-collection", os.Getenv("ACCESS_UPDATES_COLLECTION"), "Access updates collection name")
 	flag.StringVar(&cfg.Hostname, "hostname", os.Getenv("HOSTNAME"), "Hostname the application is served from")
 	flag.StringVar(&cfg.TeamsURL, "teams-url", cfg.TeamsURL, "URL for json containing teams and UUIDs")
+	flag.StringVar(&cfg.ProdTeamProjectsOutputURL, "prod-team-projects-url", cfg.ProdTeamProjectsOutputURL, "URL for json containing prod team projects")
+	flag.StringVar(&cfg.DevTeamProjectsOutputURL, "dev-team-projects-url", cfg.DevTeamProjectsOutputURL, "URL for json containing dev team projects")
 	flag.StringVar(&cfg.TeamsToken, "teams-token", os.Getenv("GITHUB_READ_TOKEN"), "Token for accessing teams json")
 	flag.StringVar(&cfg.State, "state", os.Getenv("DP_STATE"), "State to ensure consistency between OAuth2 requests")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "which log level to output")
@@ -63,7 +65,7 @@ func main() {
 
 	go accessensurer.New(ctx, cfg, firestore, EnsureAccessUpdateFrequency).Run()
 
-	api := api.New(firestore, cfg, teamUUIDs)
+	api := api.New(firestore, cfg, teamUUIDs, teamProjectsMapping)
 	fmt.Println("running @", cfg.BindAddress)
 	fmt.Println(http.ListenAndServe(cfg.BindAddress, api))
 }

@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/nais/dp/backend/firestore"
@@ -21,10 +22,11 @@ import (
 )
 
 type api struct {
-	firestore *firestore.Firestore
-	validate  *validator.Validate
-	config    config.Config
-	teamUUIDs map[string]string
+	firestore    *firestore.Firestore
+	validate     *validator.Validate
+	config       config.Config
+	teamUUIDs    map[string]string
+	teamProjects map[string][]string
 }
 
 func ServeStatic(router *chi.Mux) {
@@ -40,12 +42,13 @@ func ServeStatic(router *chi.Mux) {
 	})
 }
 
-func New(firestore *firestore.Firestore, config config.Config, teamUUIDs map[string]string) chi.Router {
+func New(firestore *firestore.Firestore, config config.Config, teamUUIDs map[string]string, teamProjects map[string][]string) chi.Router {
 	api := api{
 		firestore: firestore,
 		validate:  validator.New(),
 		config:    config,
 		teamUUIDs: teamUUIDs,
+		teamProjects: teamProjects,
 	}
 
 	azureGroups := auth.AzureGroups{
@@ -167,6 +170,17 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, loginPage, http.StatusFound) // redirect and set cookie doesn't work on chrome lol
+}
+
+func (a *api) requesterHasAccessToDatastore(requestContext context.Context, datastore map[string]string) bool {
+	requesterTeams := requestContext.Value("teams").([]string)
+
+	var requesterProjects []string
+	for _, team := range requesterTeams {
+		requesterProjects = append(requesterProjects, a.teamProjects[team]...)
+	}
+
+	return contains(requesterProjects, datastore["project_id"])
 }
 
 func respondf(w http.ResponseWriter, statusCode int, format string, args ...interface{}) {
