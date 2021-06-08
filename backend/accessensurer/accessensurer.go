@@ -17,15 +17,17 @@ const AccessEnsurance2000 = "AccessEnsurance2000"
 
 type AccessEnsurer struct {
 	ctx             context.Context
+	iam             *iam.Client
 	firestore       *firestore.Firestore
 	cfg             config.Config
 	updateFrequency time.Duration
 }
 
-func New(ctx context.Context, cfg config.Config, firestore *firestore.Firestore, updateFrequency time.Duration) *AccessEnsurer {
+func New(ctx context.Context, cfg config.Config, firestore *firestore.Firestore, iamClient *iam.Client, updateFrequency time.Duration) *AccessEnsurer {
 	return &AccessEnsurer{
 		ctx:             ctx,
 		firestore:       firestore,
+		iam:             iamClient,
 		cfg:             cfg,
 		updateFrequency: updateFrequency,
 	}
@@ -83,7 +85,7 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 		}
 		if expiry.Before(time.Now()) {
 			log.Infof("Access expired, removing %v from %v", subject, datastore["type"])
-			if err := iam.RemoveDatastoreAccess(a.ctx, datastore, subject); err != nil {
+			if err := a.iam.RemoveDatastoreAccess(a.ctx, datastore, subject); err != nil {
 				return err
 			}
 
@@ -122,14 +124,14 @@ func (a *AccessEnsurer) checkAccess(dataproduct *firestore.DataproductResponse) 
 }
 
 func (a *AccessEnsurer) ensureAccess(dataproductID string, datastore map[string]string, subject string, expiry time.Time) error {
-	access, err := iam.CheckDatastoreAccess(a.ctx, datastore, subject)
+	access, err := a.iam.CheckDatastoreAccess(a.ctx, datastore, subject)
 	if err != nil {
 		return err
 	}
 	if !access {
 		log.Infof("Access state out of sync with Google %v, giving access to %v", datastore["type"], subject)
 		accessMap := map[string]time.Time{subject: expiry}
-		if err := iam.UpdateDatastoreAccess(a.ctx, datastore, accessMap); err != nil {
+		if err := a.iam.UpdateDatastoreAccess(a.ctx, datastore, accessMap); err != nil {
 			return err
 		}
 

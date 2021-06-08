@@ -11,7 +11,6 @@ import (
 	googlefirestore "cloud.google.com/go/firestore"
 	"github.com/go-chi/chi"
 	"github.com/nais/dp/backend/firestore"
-	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -98,7 +97,7 @@ func (a *api) removeProductAccess(w http.ResponseWriter, r *http.Request) {
 
 		log.Debugf("Revoking access for %v on datastore: %+v", subject, dp.Dataproduct.Datastore)
 
-		if err := iam.RemoveDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], subject); err != nil {
+		if err := a.iam.RemoveDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], subject); err != nil {
 			log.Errorf("Removing datastore access: %v", err)
 			respondf(w, http.StatusInternalServerError, "Could not revoke datastore access: %v\n", err)
 			return
@@ -184,7 +183,7 @@ func (a *api) grantProductAccess(w http.ResponseWriter, r *http.Request) {
 
 	log.Debugf("Granting access for %v on datastore: %+v", subject, dp.Dataproduct.Datastore)
 
-	if err := iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], newAccess); err != nil {
+	if err := a.iam.UpdateDatastoreAccess(r.Context(), dp.Dataproduct.Datastore[0], newAccess); err != nil {
 		log.Errorf("Granting datastore access: %v", err)
 		respondf(w, http.StatusInternalServerError, "Could not grant datastore access: %v\n", err)
 		return

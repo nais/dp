@@ -6,6 +6,7 @@ import (
 	"github.com/nais/dp/backend/accessensurer"
 	"github.com/nais/dp/backend/auth"
 	firestore "github.com/nais/dp/backend/firestore"
+	"github.com/nais/dp/backend/iam"
 	"github.com/nais/dp/backend/teamprojectsupdater"
 	"net/http"
 	"os"
@@ -63,9 +64,10 @@ func main() {
 	teamProjectsMapping := make(map[string][]string)
 	go teamprojectsupdater.New(ctx, teamProjectsMapping, cfg, TeamProjectsUpdateFrequency, nil).Run()
 
-	go accessensurer.New(ctx, cfg, firestore, EnsureAccessUpdateFrequency).Run()
+	iam := iam.New(ctx)
+	go accessensurer.New(ctx, cfg, firestore, iam, EnsureAccessUpdateFrequency).Run()
 
-	api := api.New(firestore, cfg, teamUUIDs, teamProjectsMapping)
+	api := api.New(firestore,iam, cfg, teamUUIDs, teamProjectsMapping)
 	fmt.Println("running @", cfg.BindAddress)
 	fmt.Println(http.ListenAndServe(cfg.BindAddress, api))
 }

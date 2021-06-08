@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nais/dp/backend/firestore"
+	"github.com/nais/dp/backend/iam"
 	"net/http"
 	"os"
 	"strings"
@@ -23,6 +24,7 @@ import (
 
 type api struct {
 	firestore    *firestore.Firestore
+	iam          *iam.Client
 	validate     *validator.Validate
 	config       config.Config
 	teamUUIDs    map[string]string
@@ -42,12 +44,13 @@ func ServeStatic(router *chi.Mux) {
 	})
 }
 
-func New(firestore *firestore.Firestore, config config.Config, teamUUIDs map[string]string, teamProjects map[string][]string) chi.Router {
+func New(firestore *firestore.Firestore, iam *iam.Client, config config.Config, teamUUIDs map[string]string, teamProjects map[string][]string) chi.Router {
 	api := api{
-		firestore: firestore,
-		validate:  validator.New(),
-		config:    config,
-		teamUUIDs: teamUUIDs,
+		firestore:    firestore,
+		iam:          iam,
+		validate:     validator.New(),
+		config:       config,
+		teamUUIDs:    teamUUIDs,
 		teamProjects: teamProjects,
 	}
 

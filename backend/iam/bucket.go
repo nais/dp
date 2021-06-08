@@ -6,23 +6,13 @@ import (
 	"strings"
 	"time"
 
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/type/expr"
 
-	"cloud.google.com/go/storage"
 	iampb "google.golang.org/genproto/googleapis/iam/v1"
 )
 
-func UpdateBucketAccessControl(ctx context.Context, bucketName, member string, end time.Time) error {
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bucket := client.Bucket(bucketName)
+func (c *Client) UpdateBucketAccessControl(ctx context.Context, bucketName, member string, end time.Time) error {
+	bucket := c.storageClient.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
 		return fmt.Errorf("getting policy for %v: %v", bucketName, err)
@@ -65,15 +55,8 @@ func getCondition(start, end time.Time) string {
 	return expression
 }
 
-func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string) error {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-	bucket := client.Bucket(bucketName)
+func (c *Client) RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string) error {
+	bucket := c.storageClient.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
 		return fmt.Errorf("getting policy for %v: %v", bucketName, err)
@@ -103,15 +86,8 @@ func RemoveMemberFromBucket(ctx context.Context, bucketName, bucketMember string
 	return nil
 }
 
-func CheckAccessInBucket(ctx context.Context, bucketName, bucketMember string) (bool, error) {
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-	bucket := client.Bucket(bucketName)
+func (c *Client) checkAccessInBucket(ctx context.Context, bucketName, bucketMember string) (bool, error) {
+	bucket := c.storageClient.Bucket(bucketName)
 	policy, err := bucket.IAM().V3().Policy(ctx)
 	if err != nil {
 		return false, fmt.Errorf("getting policy for %v: %v", bucketName, err)

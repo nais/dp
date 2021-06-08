@@ -1,8 +1,10 @@
 package iam
 
 import (
+	"cloud.google.com/go/storage"
 	"context"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
@@ -11,7 +13,22 @@ const (
 	BigQueryType = "bigquery"
 )
 
-func CheckDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) (bool, error) {
+type Client struct {
+	storageClient *storage.Client
+}
+
+func New(ctx context.Context) *Client {
+	storageClient, err := storage.NewClient(ctx)
+	if err != nil {
+		log.Fatalf("Initializing storage client: %v", err)
+	}
+
+	return &Client{
+		storageClient: storageClient,
+	}
+}
+
+func (c *Client) CheckDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) (bool, error) {
 	datastoreType := datastore["type"]
 	if len(datastoreType) == 0 {
 		return false, fmt.Errorf("no type defined")
@@ -19,7 +36,7 @@ func CheckDatastoreAccess(ctx context.Context, datastore map[string]string, subj
 
 	switch datastoreType {
 	case BucketType:
-		return CheckAccessInBucket(ctx, datastore["bucket_id"], subject)
+		return c.checkAccessInBucket(ctx, datastore["bucket_id"], subject)
 	case BigQueryType:
 		return CheckAccessInBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
 	}
@@ -27,7 +44,7 @@ func CheckDatastoreAccess(ctx context.Context, datastore map[string]string, subj
 	return false, fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
-func UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, accessMap map[string]time.Time) error {
+func (c *Client) UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, accessMap map[string]time.Time) error {
 	datastoreType := datastore["type"]
 	if len(datastoreType) == 0 {
 		return fmt.Errorf("no type defined")
@@ -36,7 +53,7 @@ func UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, acc
 	switch datastoreType {
 	case BucketType:
 		for subject, expiry := range accessMap {
-			if err := UpdateBucketAccessControl(ctx, datastore["bucket_id"], subject, expiry); err != nil {
+			if err := c.UpdateBucketAccessControl(ctx, datastore["bucket_id"], subject, expiry); err != nil {
 				return err
 			}
 			return nil
@@ -53,7 +70,7 @@ func UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, acc
 	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
-func RemoveDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) error {
+func (c *Client) RemoveDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) error {
 	datastoreType := datastore["type"]
 	if len(datastoreType) == 0 {
 		return fmt.Errorf("no type defined")
@@ -61,7 +78,7 @@ func RemoveDatastoreAccess(ctx context.Context, datastore map[string]string, sub
 
 	switch datastoreType {
 	case BucketType:
-		return RemoveMemberFromBucket(ctx, datastore["bucket_id"], subject)
+		return c.RemoveMemberFromBucket(ctx, datastore["bucket_id"], subject)
 	case BigQueryType:
 		return RemoveMemberFromBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
 	}
