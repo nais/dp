@@ -23,6 +23,7 @@ func CheckDatastoreAccess(ctx context.Context, datastore map[string]string, subj
 	case BigQueryType:
 		return CheckAccessInBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
 	}
+
 	return false, fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
@@ -48,6 +49,7 @@ func UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, acc
 			return nil
 		}
 	}
+
 	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
 
@@ -63,5 +65,6 @@ func RemoveDatastoreAccess(ctx context.Context, datastore map[string]string, sub
 	case BigQueryType:
 		return RemoveMemberFromBigQueryTable(ctx, datastore["project_id"], datastore["dataset_id"], datastore["resource_id"], subject)
 	}
+
 	return fmt.Errorf("unknown datastore type: %v", datastoreType)
 }
