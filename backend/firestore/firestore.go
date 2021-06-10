@@ -76,7 +76,7 @@ func (f *Firestore) GetDataproduct(ctx context.Context, id string) (*Dataproduct
 }
 
 func (f *Firestore) GetDataproducts(ctx context.Context) ([]*DataproductResponse, error) {
-	var dataproducts []*DataproductResponse
+	dataproducts := []*DataproductResponse{}
 
 	iter := f.dataproducts.Documents(ctx)
 	defer iter.Stop()
