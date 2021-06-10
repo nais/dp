@@ -186,6 +186,12 @@ func (a *api) requesterHasAccessToDatastore(requestContext context.Context, data
 	return contains(requesterProjects, datastore["project_id"])
 }
 
+func (a *api) teamOwnsDatastoreProject(dataproduct firestore.Dataproduct) bool {
+	ownerProjectsIDs := a.teamProjects[dataproduct.Team]
+	datastoreProjectID := dataproduct.Datastore[0]["project_id"]
+	return contains(ownerProjectsIDs, datastoreProjectID)
+}
+
 func respondf(w http.ResponseWriter, statusCode int, format string, args ...interface{}) {
 	w.WriteHeader(statusCode)
 

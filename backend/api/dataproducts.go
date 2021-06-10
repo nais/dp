@@ -94,6 +94,11 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if !a.teamOwnsDatastoreProject(dpi) {
+			respondf(w, http.StatusUnauthorized, "specified team doesn't own project where the datastore resides")
+			return
+		}
+
 		if !a.requesterHasAccessToDatastore(r.Context(), dpi.Datastore[0]) {
 			respondf(w, http.StatusUnauthorized, "requester doesn't have access to datastore project\n")
 			return
