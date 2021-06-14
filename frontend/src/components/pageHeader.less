@@ -8,18 +8,6 @@ header {
   padding: 0 1.7rem;
   border-bottom: 4px solid @navLysGra;
 
-  .brukerboks {
-    border: 1px solid black;
-    padding: 4px 5px 3px;
-    margin-left: auto;
-
-    svg {
-      padding: 2px 4px 0 2px;
-      height: 100%;
-      width: auto;
-    }
-  }
-
   .innloggingsknapp {
     margin-left: auto;
   }
@@ -52,5 +40,20 @@ header {
       text-decoration: underline;
       color: #0067c5;
     }
+  }
+}
+
+.brukerboks {
+  border: 1px solid black;
+  padding: 4px 5px 3px;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+
+  svg {
+    padding: 0 4px 0 2px;
+    height: 100%;
+    width: auto;
+    break-after: avoid;
   }
 }

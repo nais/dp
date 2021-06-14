@@ -8,12 +8,13 @@ import {
 import "react-datepicker/dist/react-datepicker.css";
 import { UserContext } from "../lib/userContext";
 import Modal from "nav-frontend-modal";
-import { ToggleGruppe } from "nav-frontend-toggle";
+import { ToggleKnappPure } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";
-import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
+import { Fareknapp, Hovedknapp, Knapp } from "nav-frontend-knapper";
 
 import DatePicker from "react-datepicker";
 import "./produktTilgangModaler.less";
+import { Child, Warning } from "@navikt/ds-icons";
 
 interface SlettProduktProps {
   produktID: string;
@@ -46,6 +47,8 @@ export const GiTilgang: React.FC<{
     }
   };
 
+  console.log(evig);
+
   return (
     <Modal
       appElement={document.getElementById("app") || undefined}
@@ -55,33 +58,38 @@ export const GiTilgang: React.FC<{
       contentLabel="Gi tilgang"
       className={"gitilgang"}
     >
-      <Systemtittel>Gi tilgang til {userContext.email}?</Systemtittel>
+      <Systemtittel>Gi tilgang</Systemtittel>
       {feilmelding ? <Feilmelding>{feilmelding}</Feilmelding> : null}
-      <ToggleGruppe
-        minstEn={true}
-        defaultToggles={[
-          {
-            children: "velg sluttdato...",
-            pressed: true,
-            onClick: (e) => setEvig(false),
-          },
-          { children: "evig", onClick: (e) => setEvig(true) },
-        ]}
-      />
-
-      {!evig ? (
-        <div className={"datovalg"}>
-          <DatePicker
-            selected={endDate}
-            onChange={(e) => setEndDate(e as Date)}
-            selectsEnd
-            endDate={endDate}
-            startDate={new Date()}
-            minDate={new Date()}
-            inline
-          />
+      <div className={"tilgang-skjema"}>
+        <div className={"tilgang-rad"}>
+          <label>Til:</label>
+          <div className={"brukerboks"}>
+            <Child />
+            {userContext.email}
+          </div>
         </div>
-      ) : null}
+        <div className={"tilgang-rad"}>
+          <label>Sluttdato:</label>
+          <div className={evig ? "datovalg datovalg-disabled" : "datovalg"}>
+            <div className={"kalender"} onClick={() => setEvig(false)}>
+              <DatePicker
+                selected={endDate}
+                onChange={(e) => setEndDate(e as Date)}
+                selectsEnd
+                endDate={endDate}
+                startDate={new Date()}
+                minDate={new Date()}
+                inline
+              />
+            </div>
+
+            <ToggleKnappPure pressed={evig} onClick={(ev) => setEvig(!evig)}>
+              <Warning style={{ marginRight: "0.25rem" }} />
+              Evig
+            </ToggleKnappPure>
+          </div>
+        </div>
+      </div>
       <div className={"knapperad"}>
         <Fareknapp onClick={() => refreshAccessState()}>Avbryt</Fareknapp>
         <Hovedknapp className={"bekreft"} onClick={() => handleSubmit()}>
