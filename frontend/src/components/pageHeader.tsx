@@ -50,11 +50,13 @@ export const PageHeader: React.FC<{ crumbs: string | null }> = ({ crumbs }) => {
   return (
     <header>
       <NaisPrideLogo />
-      <Link to="/">
-        <Systemtittel>Dataprodukter</Systemtittel>
-      </Link>
-      {crumbs ? <Next className="pil" /> : null}
-      {crumbs ? <Systemtittel>{crumbs}</Systemtittel> : null}
+      <div className={"crumb-trail"}>
+        <Link to="/">
+          <Systemtittel>Dataprodukter</Systemtittel>
+        </Link>
+        {crumbs ? <Next className="pil" /> : null}
+        {crumbs ? <Systemtittel>{crumbs}</Systemtittel> : null}
+      </div>
       <BrukerBoks />
     </header>
   );

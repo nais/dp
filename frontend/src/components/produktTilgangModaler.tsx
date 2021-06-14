@@ -10,7 +10,7 @@ import { UserContext } from "../lib/userContext";
 import Modal from "nav-frontend-modal";
 import { ToggleKnappPure } from "nav-frontend-toggle";
 import { useHistory } from "react-router-dom";
-import { Fareknapp, Hovedknapp, Knapp } from "nav-frontend-knapper";
+import { Fareknapp, Hovedknapp } from "nav-frontend-knapper";
 
 import DatePicker from "react-datepicker";
 import "./produktTilgangModaler.less";
