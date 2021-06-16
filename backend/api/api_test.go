@@ -255,15 +255,19 @@ func TestAPI(t *testing.T) {
 	f, err := firestore.New(ctx, "aura-dev-api", "dp", "au")
 	assert.NoError(t, err)
 
-	mux := api.New(f, &mockAuthorizer{}, config.Config{
-		DevMode: true,
-	},
+	mux := api.New(
+		f,
+		&mockAuthorizer{},
+		config.Config{
+			DevMode: true,
+		},
 		map[string]string{
 			"team": "",
 		},
 		map[string][]string{
 			"team": {"project-id"},
-		})
+		},
+	)
 
 	testServer := httptest.NewServer(mux)
 	defer testServer.Close()
