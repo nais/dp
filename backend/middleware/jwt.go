@@ -3,17 +3,27 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"net/http"
+	"strings"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-chi/jwtauth"
 	"github.com/nais/dp/backend/auth"
 	log "github.com/sirupsen/logrus"
-	"net/http"
-	"strings"
 )
 
 func mockJWTValidatorMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			teams := []string{
+				"team",
+			}
+			if mockTeam := r.Header.Get("X-Mock-Team"); mockTeam != "" {
+				teams[0] = mockTeam
+			}
+			ctx := context.WithValue(r.Context(), "teams", teams)
+			ctx = context.WithValue(ctx, "member_name", "mock_mockerson")
+			r = r.WithContext(context.WithValue(ctx, "preferred_username", "mockuser"))
 			next.ServeHTTP(w, r)
 		})
 	}

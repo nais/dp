@@ -4,27 +4,30 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/nais/dp/backend/firestore"
-	"github.com/nais/dp/backend/iam"
 	"net/http"
 	"os"
 	"strings"
-
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/oauth2"
+	"time"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/cors"
 	"github.com/nais/dp/backend/auth"
 	"github.com/nais/dp/backend/config"
+	"github.com/nais/dp/backend/firestore"
 	"github.com/nais/dp/backend/middleware"
-
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/oauth2"
 	"gopkg.in/go-playground/validator.v9"
 )
 
+type authorizer interface {
+	UpdateDatastoreAccess(ctx context.Context, datastore map[string]string, accessMap map[string]time.Time) error
+	RemoveDatastoreAccess(ctx context.Context, datastore map[string]string, subject string) error
+}
+
 type api struct {
 	firestore    *firestore.Firestore
-	iam          *iam.Client
+	iam          authorizer
 	validate     *validator.Validate
 	config       config.Config
 	teamUUIDs    map[string]string
@@ -44,7 +47,7 @@ func ServeStatic(router *chi.Mux) {
 	})
 }
 
-func New(firestore *firestore.Firestore, iam *iam.Client, config config.Config, teamUUIDs map[string]string, teamProjects map[string][]string) chi.Router {
+func New(firestore *firestore.Firestore, iam authorizer, config config.Config, teamUUIDs map[string]string, teamProjects map[string][]string) chi.Router {
 	api := api{
 		firestore:    firestore,
 		iam:          iam,
@@ -149,7 +152,6 @@ func (a *api) callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokens, err := cfg.Exchange(r.Context(), code)
-
 	if err != nil {
 		log.Errorf("Exchanging authorization code for tokens: %v", err)
 		respondf(w, http.StatusForbidden, "uh oh")
