@@ -41,9 +41,9 @@ func TokenValidatorMiddleware(jwtValidator jwt.Keyfunc, azureGroups auth.AzureGr
 
 			_, err := jwt.ParseWithClaims(token, &claims, jwtValidator)
 			if err != nil {
-				log.Errorf("parsing token: %v", err)
+				log.Debugf("parsing token: %v", err)
 				w.WriteHeader(http.StatusForbidden)
-				_, err = fmt.Fprintf(w, "Unauthorized access: %s", err.Error())
+				_, err = fmt.Fprintf(w, "unauthorized access")
 				if err != nil {
 					log.Errorf("Writing http response: %v", err)
 				}

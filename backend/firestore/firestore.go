@@ -6,6 +6,8 @@ import (
 	"fmt"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/api/iterator"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -47,6 +49,7 @@ type AccessUpdate struct {
 
 func New(ctx context.Context, googleProjectID, dataproductCollection, accessUpdatesCollection string) (*Firestore, error) {
 	client, err := firestore.NewClient(ctx, googleProjectID)
+
 	if err != nil {
 		return nil, fmt.Errorf("initializing firestore client: %v", err)
 	}
@@ -93,7 +96,11 @@ func (f *Firestore) GetDataproducts(ctx context.Context) ([]*DataproductResponse
 		}
 
 		dpr, err := toResponse(document)
+
 		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				continue
+			}
 			log.Errorf("Creating DataproductResponse: %v", err)
 			return nil, fmt.Errorf("creating DataproductResponse: %w", err)
 		}
@@ -207,6 +214,10 @@ func toResponse(document *firestore.DocumentSnapshot) (*DataproductResponse, err
 
 	if err := document.DataTo(&dp); err != nil {
 		return nil, fmt.Errorf("populating fields in dataproduct struct: %w", err)
+	}
+
+	if len(dp.Name) == 0 { // empty/invalid dataproduct. This is known to happen during creation of Firestore collections
+		return nil, status.Errorf(codes.NotFound, "no valid dataproduct in path: %v", document.Ref.Path)
 	}
 
 	var dpr DataproductResponse
