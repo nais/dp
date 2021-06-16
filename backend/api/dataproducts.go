@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/nais/dp/backend/firestore"
 	"net/http"
 	"time"
 
@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/go-chi/chi"
+	"github.com/nais/dp/backend/firestore"
 	"github.com/nais/dp/backend/iam"
 	log "github.com/sirupsen/logrus"
 )
@@ -27,7 +28,6 @@ func (a *api) updateDataproduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	access, err := a.hasAccess(r.Context(), dpID)
-
 	if err != nil {
 		respondf(w, http.StatusInternalServerError, "uh oh\n")
 		return
@@ -113,7 +113,6 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 	dp.Description = dpi.Description
 
 	id, err := a.firestore.CreateDataproduct(r.Context(), dp)
-
 	if err != nil {
 		respondf(w, http.StatusInternalServerError, "unable to create dataproduct\n")
 		return
@@ -124,10 +123,12 @@ func (a *api) createDataproduct(w http.ResponseWriter, r *http.Request) {
 
 func (a *api) getDataproduct(w http.ResponseWriter, r *http.Request) {
 	dataproduct, err := a.firestore.GetDataproduct(r.Context(), chi.URLParam(r, "productID"))
-
 	if err != nil {
 		log.Errorf("Getting dataproduct: %v", err)
-		if status.Code(err) == codes.NotFound {
+
+		// err might be wrapped, so unwrap and check the unwrapped error as well (nil if not wrapped)
+		nested := errors.Unwrap(err)
+		if status.Code(err) == codes.NotFound || status.Code(nested) == codes.NotFound {
 			respondf(w, http.StatusNotFound, "not found\n")
 		} else {
 			respondf(w, http.StatusBadRequest, "unable to get document\n")
