@@ -50,6 +50,8 @@ func (t *TeamProjectsUpdater) Run() {
 			if err := FetchTeamGoogleProjectsMapping(t.ctx, t.teamProjects, t.cfg); err != nil {
 				log.Errorf("Fetching teams from url: %v: %v", t.cfg.ProdTeamProjectsOutputURL, err)
 			}
+
+			log.Infof("Updated team GCP projects map for %v teams", len(t.teamProjects))
 			ticker.Reset(t.updateFrequency)
 		case <-t.ctx.Done():
 			return
