@@ -1,4 +1,8 @@
 import React, { useContext, useEffect, useState } from "react";
+import ReactMde from "react-mde";
+import "react-mde/lib/styles/css/react-mde-all.css";
+import ReactMarkdown from "react-markdown";
+
 import {
   DataLager,
   DataLagerBigquery,
@@ -117,6 +121,9 @@ export const ProduktSkjema: React.FC<{
   const [datastore, setDatastore] = useState<DataLager | null>(null);
   const [formErrors, setFormErrors] = useState<ZodError["formErrors"]>();
   const [dsFormErrors, setDsFormErrors] = useState<ZodError["formErrors"]>();
+  const [markdownMode, setMarkdownMode] =
+    useState<"write" | "preview">("write");
+
   // Correctly initialize form to default value on page render
   useEffect(() => setEier((e) => user?.teams?.[0] || e), [user]);
 
@@ -175,11 +182,17 @@ export const ProduktSkjema: React.FC<{
         feil={formErrors?.fieldErrors?.name}
         onChange={(e) => setNavn(e.target.value)}
       />
-      <Input
-        label="Beskrivelse"
-        feil={formErrors?.fieldErrors?.description}
+      {formErrors?.fieldErrors?.description && (
+        <Feilmelding>{formErrors?.fieldErrors?.description}</Feilmelding>
+      )}
+      <ReactMde
+        selectedTab={markdownMode}
+        onTabChange={setMarkdownMode}
         value={beskrivelse}
-        onChange={(e) => setBeskrivelse(e.target.value)}
+        onChange={setBeskrivelse}
+        generateMarkdownPreview={(markdown) =>
+          Promise.resolve(<ReactMarkdown children={markdown} />)
+        }
       />
       <Select
         label="Eier (team)"

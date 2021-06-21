@@ -17,10 +17,6 @@
     margin: 1em 1em 0 1em;
   }
 
-  .produktnavn {
-    margin-bottom: 10px;
-  }
-
   .knapperad {
     display: flex;
     flex-direction: column;
@@ -45,11 +41,6 @@
       }
     }
 
-    & .beskrivelse {
-      margin: 0 0 1.5rem 0;
-      font-style: italic;
-    }
-
     > .faktaboks-avsnitt {
       display: flex;
 
@@ -68,26 +59,21 @@
         margin: 1rem 0.5rem 0 0;
         align-items: center;
 
-        //background: @navBlaLighten80;
         > svg {
           height: 90px !important;
           margin-right: 1rem;
           background: @navBlaLighten80;
         }
+      }
 
-        ul {
-          list-style: none;
-          padding-left: 0;
-          margin: 0;
-        }
+      .beskrivelse {
+        background: #f4f4f4;
+        border: 1px solid @navGra40;
+        padding: 0.2rem 1rem;
+        margin-bottom: 0.5rem;
       }
     }
   }
-}
-
-.infoBoks {
-  //background: white;
-  //border: 1px solid @navGra40;
 }
 
 @media screen and (max-width: 768px) {

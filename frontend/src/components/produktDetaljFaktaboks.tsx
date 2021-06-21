@@ -5,6 +5,7 @@ import {
 } from "../lib/produktAPI";
 import moment from "moment";
 import { Ingress, Normaltekst } from "nav-frontend-typografi";
+import ReactMarkdown from "react-markdown";
 
 export const ProduktFaktaboks: React.FC<{
   produkt: DataProduktResponse;
@@ -15,7 +16,10 @@ export const ProduktFaktaboks: React.FC<{
   return (
     <div className={"infoBoks"}>
       <Ingress className="beskrivelse">
-        {produkt.data_product?.description || "Ingen beskrivelse"}
+        {(produkt.data_product?.description && (
+          <ReactMarkdown children={produkt.data_product?.description} />
+        )) ||
+          "Ingen beskrivelse"}
       </Ingress>
       <Normaltekst>
         Opprettet: {moment(produkt.created).format("LLL")}
